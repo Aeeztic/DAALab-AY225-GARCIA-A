@@ -61,7 +61,7 @@ class DijkstraApp:
             messagebox.showerror("Error", f"{e}"); self.root.destroy(); return
 
         self.metric_var = tk.StringVar(value='D')
-        self.create_widgets()
+        self.create_widgets()   
         self.run_dijkstra()
 
     def load_data(self):
@@ -131,14 +131,14 @@ class DijkstraApp:
         tk.Label(hdr, text="◈  DIJKSTRA  SHORTEST  PATH  FINDER  ◈",
                  font=("Courier New", 15, "bold"), fg=CYBER_ACCENT1, bg=CYBER_BG).pack()
         tk.Label(hdr, text="─── CYBERDECK NAVIGATION SYSTEM v3.0 ───",
-                 font=("Courier New", 8), fg=CYBER_DIMTEXT, bg=CYBER_BG).pack()
+                 font=("Courier New", 15), fg=CYBER_DIMTEXT, bg=CYBER_BG).pack()
 
         # Controls — metric only, no origin picker
         ctrl = tk.Frame(self.root, bg=CYBER_PANEL, pady=8, padx=12,
                         highlightbackground=CYBER_ACCENT1, highlightthickness=1)
         ctrl.pack(side=tk.TOP, fill=tk.X, padx=8, pady=(0, 4))
 
-        tk.Label(ctrl, text="METRIC:", font=("Courier New", 10, "bold"),
+        tk.Label(ctrl, text="METRIC:", font=("Courier New", 12, "bold"),
                  fg=CYBER_ACCENT3, bg=CYBER_PANEL).pack(side=tk.LEFT, padx=(0, 6))
 
         btn = dict(font=("Courier New", 10, "bold"), bg=CYBER_PANEL, fg=CYBER_TEXT,
@@ -176,7 +176,7 @@ class DijkstraApp:
         to.pack(side=tk.RIGHT, fill=tk.Y, padx=(6, 0))
         ti = tk.Frame(to, bg=CYBER_BG, padx=8, pady=8)
         ti.pack(fill=tk.BOTH, expand=True)
-        tk.Label(ti, text="SHORTEST PATHS", font=("Courier New", 11, "bold"),
+        tk.Label(ti, text="SHORTEST PATHS", font=("Courier New", 14, "bold"),
                  fg=CYBER_ACCENT3, bg=CYBER_BG).pack(pady=(0, 6))
         self.table_frame = tk.Frame(ti, bg=CYBER_BG)
         self.table_frame.pack(fill=tk.BOTH, expand=True)
@@ -193,7 +193,7 @@ class DijkstraApp:
 
         # Column headers
         for col, txt, w in [(0, "DEST", 6), (1, "COST", 14), (2, "PATH", 24)]:
-            tk.Label(self.table_frame, text=txt, font=("Courier New", 9, "bold"),
+            tk.Label(self.table_frame, text=txt, font=("Courier New", 12, "bold"),
                      fg=CYBER_ACCENT3, bg=CYBER_PANEL, padx=8, pady=4,
                      anchor='w', width=w).grid(row=0, column=col, padx=1, pady=1, sticky='ew')
 
@@ -207,25 +207,25 @@ class DijkstraApp:
             bg = CYBER_NODEBG if row_idx % 2 == 0 else CYBER_BG
 
             tk.Label(self.table_frame, text=f"  {node}",
-                     font=("Courier New", 9, "bold"), fg=CYBER_PURPLE, bg=bg,
+                     font=("Courier New", 12, "bold"), fg=CYBER_PURPLE, bg=bg,
                      padx=8, pady=3, anchor='w', width=6
                      ).grid(row=row_idx, column=0, padx=1, pady=1, sticky='ew')
             tk.Label(self.table_frame, text=f"  {cost:.1f} {unit}",
-                     font=("Courier New", 9), fg=CYBER_ACCENT1, bg=bg,
+                     font=("Courier New", 12), fg=CYBER_ACCENT1, bg=bg,
                      padx=8, pady=3, anchor='w', width=14
                      ).grid(row=row_idx, column=1, padx=1, pady=1, sticky='ew')
             tk.Label(self.table_frame, text=f"  {path_str}",
-                     font=("Courier New", 9), fg=CYBER_TEXT, bg=bg,
+                     font=("Courier New", 12), fg=CYBER_TEXT, bg=bg,
                      padx=8, pady=3, anchor='w', width=24
                      ).grid(row=row_idx, column=2, padx=1, pady=1, sticky='ew')
 
         # Total row
         tr = row_idx + 1
-        tk.Label(self.table_frame, text="  TOTAL", font=("Courier New", 9, "bold"),
+        tk.Label(self.table_frame, text="  TOTAL", font=("Courier New", 12, "bold"),
                  fg=CYBER_ACCENT3, bg=CYBER_PANEL, padx=8, pady=4, anchor='w', width=6
                  ).grid(row=tr, column=0, padx=1, pady=(4,1), sticky='ew')
         tk.Label(self.table_frame, text=f"  {total:.1f} {unit}",
-                 font=("Courier New", 9, "bold"), fg=CYBER_ACCENT3, bg=CYBER_PANEL,
+                 font=("Courier New", 12, "bold"), fg=CYBER_ACCENT3, bg=CYBER_PANEL,
                  padx=8, pady=4, anchor='w', width=14
                  ).grid(row=tr, column=1, padx=1, pady=(4,1), sticky='ew')
         tk.Label(self.table_frame, text="", bg=CYBER_PANEL, width=24
@@ -267,13 +267,13 @@ class DijkstraApp:
                                node_color=CYBER_NODEBG, node_size=750,
                                edgecolors=CYBER_PURPLE, linewidths=2.0)
         nx.draw_networkx_labels(G, pos, ax=self.ax, font_color=CYBER_TEXT,
-                                font_size=10, font_family="monospace", font_weight="bold")
+                                font_size=12, font_family="monospace", font_weight="bold")
 
         for node, cost in self.lengths.items():
             if node == origin or node not in pos: continue
             x, y = pos[node]
             self.ax.annotate(f"{cost:.0f}", xy=(x, y), xytext=(x+0.05, y+0.08),
-                             fontsize=8, color=CYBER_ACCENT3,
+                             fontsize=12, color=CYBER_ACCENT3,
                              fontfamily="monospace", fontweight="bold",
                              bbox=dict(boxstyle="round,pad=0.15", fc=CYBER_BG,
                                        ec=CYBER_ACCENT3, alpha=0.85, lw=0.8))
@@ -282,7 +282,7 @@ class DijkstraApp:
         nx.draw_networkx_edge_labels(G, pos,
                                      edge_labels={k: f"{v:.0f}" for k, v in edge_labels.items()},
                                      ax=self.ax, font_color=CYBER_DIMTEXT,
-                                     font_size=7, font_family="monospace",
+                                     font_size=12, font_family="monospace",
                                      bbox=dict(boxstyle="round,pad=0.1",
                                                fc=CYBER_BG, ec="none", alpha=0.7))
 
