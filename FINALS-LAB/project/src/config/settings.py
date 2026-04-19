@@ -5,6 +5,7 @@ All constants, paths, and schema definitions.
 Imported by pipeline.py, train.py, predict.py, and FastAPI.
 """
 
+import os
 from pathlib import Path
 import polars as pl
 
@@ -13,7 +14,8 @@ import polars as pl
 # PATHS
 # ─────────────────────────────────────────────
 
-BASE_DIR = Path("C:/Users/aaron Jamez/OneDrive/Desktop/DAALab-AY225-Garcia-A/FINALS-LAB/project") # project root
+# Project root (portable across machines).
+BASE_DIR = Path(__file__).resolve().parents[2]
 
 RAW_CSV    = BASE_DIR / "data" / "raw" / "students.csv"
 DATA_DIR   = BASE_DIR / "data" / "processed"
