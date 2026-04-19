@@ -13,7 +13,7 @@ import polars as pl
 # PATHS
 # ─────────────────────────────────────────────
 
-BASE_DIR = Path("C:/Users/aaron Jamez/OneDrive/Desktop/DAALab-AY225-Garcia-A/FINALS-LAB/project") # project root
+BASE_DIR = Path(__file__).resolve().parents[2]# project root
 
 RAW_CSV    = BASE_DIR / "data" / "raw" / "students.csv"
 DATA_DIR   = BASE_DIR / "data" / "processed"
