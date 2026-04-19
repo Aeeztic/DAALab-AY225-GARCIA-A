@@ -1,0 +1,363 @@
+{
+  "target": "placed",
+  "feature_columns": [
+    "age",
+    "cgpa",
+    "backlogs",
+    "attendance",
+    "tenth_percentage",
+    "twelfth_percentage",
+    "college_tier",
+    "python_skill",
+    "c++_skill",
+    "java_skill",
+    "ml_skill",
+    "web_dev_skill",
+    "communication_skill",
+    "aptitude_score",
+    "logical_reasoning",
+    "internships",
+    "projects",
+    "github_projects",
+    "hackathons",
+    "certifications",
+    "coding_contest_rating",
+    "teamwork",
+    "leadership",
+    "problem_solving",
+    "time_management",
+    "city_tier",
+    "family_income",
+    "avg_technical_skill",
+    "avg_soft_skill",
+    "avg_problem_solving",
+    "activity_score",
+    "academic_growth",
+    "academic_avg",
+    "clean_record",
+    "good_attendance",
+    "has_internship",
+    "competitive_coder",
+    "projects_per_year",
+    "branch_encoded",
+    "gender_encoded"
+  ],
+  "numeric_features": [
+    "age",
+    "cgpa",
+    "backlogs",
+    "attendance",
+    "tenth_percentage",
+    "twelfth_percentage",
+    "college_tier",
+    "python_skill",
+    "c++_skill",
+    "java_skill",
+    "ml_skill",
+    "web_dev_skill",
+    "communication_skill",
+    "aptitude_score",
+    "logical_reasoning",
+    "internships",
+    "projects",
+    "github_projects",
+    "hackathons",
+    "certifications",
+    "coding_contest_rating",
+    "teamwork",
+    "leadership",
+    "problem_solving",
+    "time_management",
+    "city_tier",
+    "family_income",
+    "avg_technical_skill",
+    "avg_soft_skill",
+    "avg_problem_solving",
+    "activity_score",
+    "academic_growth",
+    "academic_avg",
+    "clean_record",
+    "good_attendance",
+    "has_internship",
+    "competitive_coder",
+    "projects_per_year",
+    "branch_encoded",
+    "gender_encoded"
+  ],
+  "engineered_features": [
+    "avg_technical_skill",
+    "avg_soft_skill",
+    "avg_problem_solving",
+    "activity_score",
+    "academic_growth",
+    "academic_avg",
+    "clean_record",
+    "good_attendance",
+    "has_internship",
+    "competitive_coder",
+    "projects_per_year"
+  ],
+  "branch_encoding": {
+    "CSE": 0,
+    "IT": 1,
+    "ECE": 2,
+    "EEE": 3,
+    "MECH": 4,
+    "CIVIL": 5,
+    "CHEM": 6,
+    "BIO": 7,
+    "OTHER": 8
+  },
+  "gender_encoding": {
+    "Male": 0,
+    "Female": 1,
+    "Other": 2
+  },
+  "train_stats": {
+    "age": {
+      "mean": 22.5018,
+      "std": 1.7085,
+      "min": 20,
+      "max": 25
+    },
+    "cgpa": {
+      "mean": 7.4986,
+      "std": 0.9884,
+      "min": 5.0,
+      "max": 10.0
+    },
+    "backlogs": {
+      "mean": 1.1999,
+      "std": 1.0945,
+      "min": 0,
+      "max": 10
+    },
+    "attendance": {
+      "mean": 79.9224,
+      "std": 9.8082,
+      "min": 40.0,
+      "max": 100.0
+    },
+    "tenth_percentage": {
+      "mean": 77.9509,
+      "std": 9.8619,
+      "min": 40.0,
+      "max": 100.0
+    },
+    "twelfth_percentage": {
+      "mean": 74.9158,
+      "std": 11.7857,
+      "min": 40.0,
+      "max": 100.0
+    },
+    "college_tier": {
+      "mean": 2.0002,
+      "std": 0.8165,
+      "min": 1,
+      "max": 3
+    },
+    "python_skill": {
+      "mean": 4.5025,
+      "std": 2.874,
+      "min": 0,
+      "max": 9
+    },
+    "c++_skill": {
+      "mean": 4.5056,
+      "std": 2.871,
+      "min": 0,
+      "max": 9
+    },
+    "java_skill": {
+      "mean": 4.4987,
+      "std": 2.8732,
+      "min": 0,
+      "max": 9
+    },
+    "ml_skill": {
+      "mean": 4.4951,
+      "std": 2.8731,
+      "min": 0,
+      "max": 9
+    },
+    "web_dev_skill": {
+      "mean": 4.4996,
+      "std": 2.8712,
+      "min": 0,
+      "max": 9
+    },
+    "communication_skill": {
+      "mean": 4.5026,
+      "std": 2.8725,
+      "min": 0,
+      "max": 9
+    },
+    "aptitude_score": {
+      "mean": 59.958,
+      "std": 14.9412,
+      "min": 0.0,
+      "max": 100.0
+    },
+    "logical_reasoning": {
+      "mean": 64.9669,
+      "std": 14.8858,
+      "min": 0.0,
+      "max": 100.0
+    },
+    "internships": {
+      "mean": 1.499,
+      "std": 1.2248,
+      "min": 0,
+      "max": 11
+    },
+    "projects": {
+      "mean": 3.0013,
+      "std": 1.7325,
+      "min": 0,
+      "max": 15
+    },
+    "github_projects": {
+      "mean": 3.9989,
+      "std": 1.9988,
+      "min": 0,
+      "max": 16
+    },
+    "hackathons": {
+      "mean": 0.999,
+      "std": 1.0002,
+      "min": 0,
+      "max": 8
+    },
+    "certifications": {
+      "mean": 1.9969,
+      "std": 1.4159,
+      "min": 0,
+      "max": 12
+    },
+    "coding_contest_rating": {
+      "mean": 1200.1717,
+      "std": 399.7101,
+      "min": 0.0,
+      "max": 3000.0
+    },
+    "teamwork": {
+      "mean": 4.5008,
+      "std": 2.8713,
+      "min": 0,
+      "max": 9
+    },
+    "leadership": {
+      "mean": 4.4975,
+      "std": 2.8728,
+      "min": 0,
+      "max": 9
+    },
+    "problem_solving": {
+      "mean": 4.5011,
+      "std": 2.8715,
+      "min": 0,
+      "max": 9
+    },
+    "time_management": {
+      "mean": 4.4958,
+      "std": 2.874,
+      "min": 0,
+      "max": 9
+    },
+    "city_tier": {
+      "mean": 2.0003,
+      "std": 0.8168,
+      "min": 1,
+      "max": 3
+    },
+    "family_income": {
+      "mean": 8.0069,
+      "std": 2.9732,
+      "min": 1.0,
+      "max": 21.6832
+    },
+    "avg_technical_skill": {
+      "mean": 4.5003,
+      "std": 1.2855,
+      "min": 0.0,
+      "max": 9.0
+    },
+    "avg_soft_skill": {
+      "mean": 4.4992,
+      "std": 1.4366,
+      "min": 0.0,
+      "max": 9.0
+    },
+    "avg_problem_solving": {
+      "mean": 43.142,
+      "std": 7.0996,
+      "min": 8.722,
+      "max": 69.6667
+    },
+    "activity_score": {
+      "mean": 11.4951,
+      "std": 3.3901,
+      "min": 0,
+      "max": 33
+    },
+    "academic_growth": {
+      "mean": -3.0351,
+      "std": 15.3627,
+      "min": -60.0,
+      "max": 59.7543
+    },
+    "academic_avg": {
+      "mean": 0.7595,
+      "std": 0.0609,
+      "min": 0.4931,
+      "max": 1.0
+    },
+    "clean_record": {
+      "mean": 0.301,
+      "std": 0.4587,
+      "min": 0,
+      "max": 1
+    },
+    "good_attendance": {
+      "mean": 0.6912,
+      "std": 0.462,
+      "min": 0,
+      "max": 1
+    },
+    "has_internship": {
+      "mean": 0.7769,
+      "std": 0.4164,
+      "min": 0,
+      "max": 1
+    },
+    "competitive_coder": {
+      "mean": 0.691,
+      "std": 0.4621,
+      "min": 0,
+      "max": 1
+    },
+    "projects_per_year": {
+      "mean": 0.609,
+      "std": 0.4289,
+      "min": 0.0,
+      "max": 5.0
+    },
+    "branch_encoded": {
+      "mean": 4.5032,
+      "std": 3.5458,
+      "min": 0,
+      "max": 8
+    },
+    "gender_encoded": {
+      "mean": 0.5006,
+      "std": 0.5,
+      "min": 0,
+      "max": 1
+    }
+  },
+  "class_balance": {
+    "placed": 350050,
+    "not_placed": 349950,
+    "total": 700000
+  }
+}

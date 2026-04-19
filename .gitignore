@@ -1,0 +1,8 @@
+FINALS-LAB/project/data/processed/test.parquet
+FINALS-LAB/project/data/processed/train.parquet
+FINALS-LAB/project/data/processed/val.parquet
+FINALS-LAB/project/data/raw/students.csv
+FINALS-LAB/project/src/__pycache__/__init__.cpython-314.pyc
+FINALS-LAB/project/src/data/__pycache__/pipeline.cpython-314.pyc
+FINALS-LAB/project/src/ml/__pycache__/train.cpython-314.pyc
+FINALS-LAB/project/src/config/__pycache__/settings.cpython-314.pyc
