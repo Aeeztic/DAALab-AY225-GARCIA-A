@@ -6,3 +6,12 @@ FINALS-LAB/project/src/__pycache__/__init__.cpython-314.pyc
 FINALS-LAB/project/src/data/__pycache__/pipeline.cpython-314.pyc
 FINALS-LAB/project/src/ml/__pycache__/train.cpython-314.pyc
 FINALS-LAB/project/src/config/__pycache__/settings.cpython-314.pyc
+FINALS-LAB/project/src/config/settings.py
+FINALS-LAB/project/src/ml/model/model_metadata.json
+
+FINALS-LAB/project/src/ml/model/model.ubj
+FINALS-LAB/project/src/ml/model/placement_model.pkl
+FINALS-LAB/project/src/ml/model/shap_values_train.parquet
+FINALS-LAB/project/src/ml/model/plots/roc_curve.png
+FINALS-LAB/project/src/ml/model/plots/shap_beeswarm.png
+FINALS-LAB/project/src/ml/model/plots/shap_importance.png
