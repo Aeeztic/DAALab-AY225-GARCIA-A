@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Random HTML Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+            background-color: #f4f4f4;
+        }
+        .box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            max-width: 500px;
+            margin: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="box" id="randomContent"></div>
+
+    <script>
+        // Array of HTML snippets
+        const snippets = [
+            "<h2>Welcome!</h2><p>This is a random greeting.</p>",
+            "<h2>Fun Fact</h2><p>Bananas are berries, but strawberries are not.</p>",
+            "<h2>Quote</h2><p>“Code is like humor. When you have to explain it, it’s bad.”</p>",
+            "<h2>Tip</h2><p>Always comment your code for better readability.</p>",
+            "<h2>Random Number</h2><p>" + Math.floor(Math.random() * 100) + "</p>"
+        ];
+
+        // Pick a random snippet
+        const randomIndex = Math.floor(Math.random() * snippets.length);
+        document.getElementById("randomContent").innerHTML = snippets[randomIndex];
+    </script>
+</body>
+</html>
