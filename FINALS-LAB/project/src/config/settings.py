@@ -14,7 +14,12 @@ import polars as pl
 # PATHS
 # ─────────────────────────────────────────────
 
-BASE_DIR = Path("C:/Users/aaron Jamez/OneDrive/Desktop/DAALab-AY225-Garcia-A/FINALS-LAB/project") # project root
+_PROJECT_ROOT_ENV = os.getenv("PROJECT_ROOT")
+if _PROJECT_ROOT_ENV:
+    BASE_DIR = Path(_PROJECT_ROOT_ENV).expanduser().resolve()
+else:
+    # settings.py -> config -> src -> project root
+    BASE_DIR = Path(__file__).resolve().parents[2]
 
 RAW_CSV    = BASE_DIR / "data" / "raw" / "students.csv"
 DATA_DIR   = BASE_DIR / "data" / "processed"

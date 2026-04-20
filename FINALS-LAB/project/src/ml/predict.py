@@ -704,3 +704,4 @@ def predict_batch_fast(raw_inputs: list[dict[str, Any]]) -> dict[str, Any]:
         "placement_rate": placement_rate,
         "predictions": finalized,
     }
+
