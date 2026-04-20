@@ -2,18 +2,46 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import math
+from functools import lru_cache
 from typing import Any, Literal
 
 import polars as pl
 from fastapi import APIRouter, HTTPException, Query, status
 
-from src.config.settings import BRANCH_ORDER, DATA_DIR, TARGET
+from src.config.settings import DATA_DIR, TARGET
 
 LOGGER = logging.getLogger(__name__)
 
 router = APIRouter(tags=["students"])
+
+
+@lru_cache(maxsize=1)
+def _load_branch_encoding() -> dict[str, int]:
+    """Load and normalize branch encoding from feature metadata."""
+    metadata_path = DATA_DIR / "feature_metadata.json"
+    with metadata_path.open("r", encoding="utf-8") as handle:
+        metadata = json.load(handle)
+
+    raw_mapping = metadata.get("branch_encoding")
+    if not isinstance(raw_mapping, dict):
+        raise RuntimeError("feature_metadata.json is missing a valid branch_encoding mapping")
+
+    normalized_mapping: dict[str, int] = {}
+    for label, encoded in raw_mapping.items():
+        if not isinstance(label, str):
+            continue
+        try:
+            normalized_mapping[label.strip().upper()] = int(encoded)
+        except (TypeError, ValueError):
+            continue
+
+    if not normalized_mapping:
+        raise RuntimeError("feature_metadata.json contains an empty branch_encoding mapping")
+
+    return normalized_mapping
 
 
 @router.get("/students")
@@ -38,6 +66,7 @@ async def get_students(
         schema = lf.collect_schema()
         schema_items = list(schema.items())
         available_columns = {name for name, _ in schema_items}
+        branch_encoding = _load_branch_encoding()
 
         if cgpa_min is not None:
             lf = lf.filter(pl.col("cgpa") >= cgpa_min)
@@ -54,12 +83,13 @@ async def get_students(
             if "branch" in available_columns:
                 lf = lf.filter(pl.col("branch") == normalized_branch)
             elif "branch_encoded" in available_columns:
-                if normalized_branch not in BRANCH_ORDER:
+                encoded_branch = branch_encoding.get(normalized_branch)
+                if encoded_branch is None:
                     raise HTTPException(
                         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                        detail=f"branch must be one of: {', '.join(BRANCH_ORDER)}",
+                        detail=f"branch must be one of: {', '.join(sorted(branch_encoding))}",
                     )
-                lf = lf.filter(pl.col("branch_encoded") == BRANCH_ORDER.index(normalized_branch))
+                lf = lf.filter(pl.col("branch_encoded") == encoded_branch)
             else:
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -86,8 +116,8 @@ async def get_students(
                     lf = lf.filter(search_expr)
                 elif "branch_encoded" in available_columns:
                     matching_codes = [
-                        index
-                        for index, label in enumerate(BRANCH_ORDER)
+                        encoded
+                        for label, encoded in branch_encoding.items()
                         if search_value in label.lower()
                     ]
                     if matching_codes:
