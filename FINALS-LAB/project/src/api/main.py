@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.api.routes.batch import router as batch_router
 from src.api.routes.predict import router as predict_router
 from src.api.routes.stats import router as stats_router
+from src.api.routes.students import router as students_router
 
 LOGGER = logging.getLogger(__name__)
 
@@ -46,6 +47,7 @@ def _register_routes(app: FastAPI) -> None:
     """Register API routers and health endpoint."""
     app.include_router(predict_router)
     app.include_router(stats_router)
+    app.include_router(students_router)
     app.include_router(batch_router)
 
     @app.get("/health", tags=["system"])
