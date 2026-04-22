@@ -23,7 +23,7 @@ def _as_float(value: float | None, *, precision: int = 6) -> float:
 @router.get("/stats/overview")
 async def get_stats_overview() -> dict[str, float | int]:
 	"""Return dataset-level overview statistics from processed test parquet."""
-	parquet_path = str(DATA_DIR / "test.parquet")
+	parquet_path = str(DATA_DIR / "students.parquet")
 
 	try:
 		agg_lf = (
