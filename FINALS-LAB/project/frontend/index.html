@@ -1,652 +1,355 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Student Placement Analytics</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DataSci Collab · 2-Student Git Activity</title>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=IBM+Plex+Mono:wght@300;400;600&display=swap" rel="stylesheet" />
+
   <style>
+    /* ──────────────────────────────────────────────
+       DESIGN TOKENS (Academic Editorial)
+    ────────────────────────────────────────────── */
     :root {
-      --bg: #f4f7fb;
-      --surface: #ffffff;
-      --surface-muted: #f8fafc;
-      --text: #142033;
-      --text-muted: #5f6b7d;
-      --primary: #1f6feb;
-      --primary-soft: #e8f1ff;
-      --success: #137333;
-      --success-soft: #e8f5ee;
-      --danger: #b42318;
-      --danger-soft: #feeceb;
-      --warning: #9a6700;
-      --warning-soft: #fff5db;
-      --border: #d9e2ef;
-      --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
-      --radius-lg: 20px;
-      --radius-md: 14px;
-      --radius-sm: 10px;
-      --space-1: 8px;
-      --space-2: 16px;
-      --space-3: 24px;
-      --space-4: 32px;
-      --space-5: 40px;
+      --bg:        #f5f1eb;       /* warm parchment */
+      --surface:   #faf8f4;       /* elevated card */
+      --surface2:  #ede9e1;       /* slightly deeper */
+      --border:    #d8d1c4;       /* soft rule */
+      --navy:      #1a2035;       /* primary text / headings */
+      --coral:     #d94f3d;       /* Student 1 accent */
+      --sage:      #3a7d5c;       /* Student 2 accent */
+      --gold:      #b5820d;       /* shared stat accent */
+      --text:      #2e3348;       /* body text */
+      --text-dim:  #8a8577;       /* muted text */
+      --display:   'Playfair Display', Georgia, serif;
+      --mono:      'IBM Plex Mono', 'Courier New', monospace;
+      --radius:    4px;
+      --radius-lg: 10px;
+      --shadow:    0 2px 16px rgba(26,32,53,0.08);
+      --shadow-md: 0 6px 32px rgba(26,32,53,0.12);
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    html,
     body {
-      margin: 0;
-      padding: 0;
-      min-height: 100%;
+      font-family: var(--mono);
+      background: var(--bg);
       color: var(--text);
-      background:
-        radial-gradient(circle at 15% -10%, #dce9ff 0%, transparent 40%),
-        radial-gradient(circle at 100% 10%, #dff6f1 0%, transparent 28%),
-        var(--bg);
-      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    }
-
-    body {
+      min-height: 100vh;
+      padding-bottom: 80px;
       line-height: 1.45;
     }
 
-    .topbar {
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-      border-bottom: 1px solid rgba(20, 32, 51, 0.08);
-      backdrop-filter: blur(8px);
-      background: rgba(244, 247, 251, 0.9);
-    }
-
-    .topbar__inner {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: var(--space-2) var(--space-3);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: var(--space-2);
-    }
-
-    .topbar h1 {
-      margin: 0;
-      font-size: clamp(1.2rem, 1.2vw + 1rem, 1.8rem);
-      letter-spacing: 0.01em;
-    }
-
-    .topbar p {
-      margin: 2px 0 0;
-      color: var(--text-muted);
-      font-size: 0.95rem;
-    }
-
-    .status-chip {
-      border: 1px solid #c7d8ff;
-      background: var(--primary-soft);
-      color: #174ea6;
-      padding: 6px 12px;
-      border-radius: 999px;
-      font-size: 0.8rem;
-      font-weight: 700;
-      white-space: nowrap;
-    }
-
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: var(--space-4) var(--space-3) var(--space-5);
-      display: grid;
-      gap: var(--space-3);
-    }
-
-    .panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow);
-      padding: var(--space-3);
-      animation: fade-in 320ms ease;
-    }
-
-    .panel__title {
-      margin: 0 0 var(--space-2);
-      font-size: 1.1rem;
-    }
-
-    .panel__subtitle {
-      margin: -8px 0 var(--space-2);
-      color: var(--text-muted);
-      font-size: 0.92rem;
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: var(--space-2);
-    }
-
-    .stat-card {
-      background: linear-gradient(165deg, #ffffff 0%, #f8fbff 100%);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      padding: var(--space-2);
-      min-height: 150px;
-      transition: transform 180ms ease, box-shadow 180ms ease;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .stat-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 12px 22px rgba(31, 111, 235, 0.14);
-    }
-
-    .stat-card::before {
-      content: "";
-      position: absolute;
-      inset: auto -40px -50px auto;
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      opacity: 0.13;
-    }
-
-    .stat-card--blue::before { background: #5a9fff; }
-    .stat-card--teal::before { background: #1fa896; }
-    .stat-card--amber::before { background: #d99e2b; }
-    .stat-card--violet::before { background: #6b7cd9; }
-
-    .stat-card__icon {
-      width: 38px;
-      height: 38px;
-      border-radius: 10px;
-      display: grid;
-      place-items: center;
-      margin-bottom: 14px;
-      background: #edf3ff;
-      color: #1f6feb;
-    }
-
-    .stat-card__label {
-      color: var(--text-muted);
-      font-size: 0.9rem;
-      margin: 0 0 8px;
-    }
-
-    .stat-card__value {
-      margin: 0;
-      font-size: clamp(1.4rem, 1.6vw + 1rem, 2rem);
-      font-weight: 800;
-      letter-spacing: 0.01em;
-    }
-
-    .stat-card__meta {
-      margin: 6px 0 0;
-      color: var(--text-muted);
-      font-size: 0.8rem;
-    }
-
-    .skeleton {
-      display: inline-block;
-      border-radius: 8px;
-      color: transparent;
-      background: linear-gradient(
-        90deg,
-        #ebf0f7 0%,
-        #f5f8fc 50%,
-        #ebf0f7 100%
-      );
-      background-size: 220% 100%;
-      animation: shimmer 1.15s linear infinite;
-      min-width: 120px;
-      min-height: 1.15em;
-    }
-
-    .stats-error {
-      margin-top: var(--space-2);
-      padding: 10px 12px;
-      border-radius: var(--radius-sm);
-      border: 1px solid #f2c1bd;
-      color: var(--danger);
-      background: var(--danger-soft);
-      display: none;
-      font-size: 0.92rem;
-    }
-
-    .workspace {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: var(--space-3);
-    }
-
-    .filters-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: var(--space-2);
-      align-items: end;
-    }
-
-    .field {
-      display: grid;
-      gap: 6px;
-    }
-
-    .field label {
-      font-size: 0.86rem;
-      font-weight: 700;
-      color: #334155;
-    }
-
-    .field input,
-    .field select,
-    .field button {
-      height: 42px;
-      border-radius: var(--radius-sm);
-      border: 1px solid #c8d5e6;
-      padding: 0 12px;
-      font: inherit;
-      background: #fff;
-      transition: border-color 150ms ease, box-shadow 150ms ease;
-    }
-
-    .field input:focus,
-    .field select:focus {
-      outline: none;
-      border-color: #5c9cff;
-      box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.15);
-    }
-
-    .field input:disabled,
-    .field select:disabled,
-    .field button:disabled {
-      opacity: 0.65;
-      cursor: not-allowed;
-    }
-
-    .error-text {
-      min-height: 18px;
-      margin: 0;
-      color: var(--danger);
-      font-size: 0.8rem;
-    }
-
-    .button {
-      cursor: pointer;
-      font-weight: 700;
-      border: 1px solid #c8d5e6;
-      background: #fff;
-    }
-
-    .button:hover:not(:disabled) {
-      background: #f3f8ff;
-    }
-
-    .button--primary {
-      background: var(--primary);
-      border-color: var(--primary);
+    /* ── MASTHEAD ─────────────────────────────── */
+    .masthead {
+      background: var(--navy);
       color: #fff;
+      padding: 36px 48px 30px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      gap: 24px;
     }
 
-    .button--primary:hover:not(:disabled) {
-      background: #165fce;
-    }
-
-    .table-toolbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: var(--space-2);
-      margin-bottom: var(--space-2);
-    }
-
-    .table-status {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.88rem;
-      color: var(--text-muted);
-      min-height: 24px;
-    }
-
-    .spinner {
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      border: 2px solid rgba(31, 111, 235, 0.2);
-      border-top-color: var(--primary);
-      animation: spin 0.8s linear infinite;
-      flex-shrink: 0;
-    }
-
-    .table-wrap {
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      overflow: auto;
-      max-height: 460px;
-      background: #fff;
-    }
-
-    table {
-      width: 100%;
-      min-width: 760px;
-      border-collapse: collapse;
-      font-size: 0.92rem;
-    }
-
-    thead th {
-      position: sticky;
-      top: 0;
-      z-index: 2;
-      text-align: left;
-      background: #f2f7ff;
-      color: #304563;
-      border-bottom: 1px solid var(--border);
-      padding: 12px;
-      font-size: 0.82rem;
+    .masthead-left .overline {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 3px;
       text-transform: uppercase;
-      letter-spacing: 0.04em;
+      color: #7a8499;
+      margin-bottom: 10px;
     }
 
-    tbody td {
-      padding: 11px 12px;
-      border-bottom: 1px solid #edf2f8;
-      color: #26364f;
+    .masthead-left h1 {
+      font-family: var(--display);
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: #fff;
+      line-height: 1.15;
+    }
+
+    .masthead-left h1 em { font-style: italic; color: #c8b98a; }
+
+    .masthead-left .sub {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: #7a8499;
+      margin-top: 8px;
+      letter-spacing: 0.5px;
+    }
+
+    .masthead-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+
+    .branch-pill {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 20px;
+      padding: 5px 12px;
+      color: #c8b98a;
+      letter-spacing: 0.5px;
+    }
+
+    .branch-pill .dot {
+      display: inline-block;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #4ade80;
+      margin-right: 6px;
+      animation: blink 2s infinite;
       vertical-align: middle;
     }
 
-    tbody tr:nth-child(even) {
-      background: #fbfdff;
-    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
 
-    tbody tr:hover {
-      background: #eef5ff;
-    }
+    .rule { height: 1px; background: linear-gradient(90deg, var(--coral) 0%, var(--sage) 100%); margin: 0; }
 
-    .empty-row td {
-      text-align: center;
-      color: var(--text-muted);
-      padding: 22px;
-      background: #fafcff;
-    }
+    /* ── ASSIGNMENT BANNER ───────────────────────── */
+    .assignment-banner { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border-bottom: 1px solid var(--border); }
+    .assign-block { padding: 24px 40px; position: relative; }
+    .assign-block.s1 { background: #fff8f7; border-right: 1px solid var(--border); }
+    .assign-block.s2 { background: #f4fbf8; }
+    .assign-block::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; }
+    .assign-block.s1::before { background: var(--coral); }
+    .assign-block.s2::before { background: var(--sage); }
 
-    .badge {
-      display: inline-flex;
-      padding: 4px 9px;
-      border-radius: 999px;
-      font-size: 0.78rem;
-      font-weight: 700;
-      border: 1px solid transparent;
-    }
-
-    .badge--success {
-      color: var(--success);
-      background: var(--success-soft);
-      border-color: #b8dfc9;
-    }
-
-    .badge--danger {
-      color: var(--danger);
-      background: var(--danger-soft);
-      border-color: #f2c1bd;
-    }
-
-    .pagination {
-      margin-top: var(--space-2);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: var(--space-2);
-    }
-
-    .pagination__info {
-      color: var(--text-muted);
-      font-size: 0.9rem;
-    }
-
-    .pagination__actions {
-      display: flex;
-      gap: 8px;
-    }
-
-    .predict-layout {
-      display: grid;
-      grid-template-columns: 1.4fr 1fr;
-      gap: var(--space-3);
-      align-items: start;
-    }
-
-    .predict-form {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: var(--space-2);
-    }
-
-    .predict-form .field--full {
-      grid-column: 1 / -1;
-    }
-
-    .predict-hint {
-      margin: -6px 0 0;
-      color: var(--text-muted);
-      font-size: 0.82rem;
-    }
-
-    .predict-actions {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-top: 6px;
-    }
-
-    .predict-error {
-      min-height: 20px;
-      color: var(--danger);
-      font-size: 0.88rem;
-      margin: 0;
-    }
-
-    .result-card {
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-      padding: var(--space-2);
-      min-height: 250px;
-    }
-
-    .result-title {
-      margin: 0 0 8px;
-      font-size: 0.9rem;
-      color: var(--text-muted);
-      font-weight: 700;
+    .assign-label {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      letter-spacing: 3px;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+    .s1 .assign-label { color: var(--coral); }
+    .s2 .assign-label { color: var(--sage); }
+
+    .assign-block h3 {
+      font-family: var(--display);
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 12px;
     }
 
-    .result-value {
-      margin: 0;
-      font-size: 1.45rem;
-      font-weight: 800;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
+    .task-list { list-style: none; font-size: 0.74rem; color: var(--text-dim); line-height: 1.9; }
+    .task-list li::before { content: '▸  '; }
+    .branch-tag {
+      display: inline-block;
+      margin-top: 12px;
+      font-size: 0.66rem;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 3px 9px;
+      color: var(--text-dim);
     }
 
-    .result-prob {
-      margin: 12px 0 8px;
-      color: var(--text-muted);
-      font-size: 0.92rem;
+    /* ── MAIN LAYOUT ─────────────────────────────── */
+    main { max-width: 1260px; margin: 0 auto; padding: 48px 36px; display: flex; flex-direction: column; gap: 56px; }
+
+    .section-head {
+      display: flex; align-items: baseline; justify-content: space-between;
+      margin-bottom: 22px; padding-bottom: 14px; border-bottom: 2px solid var(--navy);
     }
+    .section-head-left { display: flex; align-items: baseline; gap: 16px; }
+    .section-num { font-family: var(--display); font-size: 3rem; font-weight: 900; color: var(--border); line-height: 1; margin-right: 4px; }
+    .section-head h2 { font-family: var(--display); font-size: 1.35rem; font-weight: 700; color: var(--navy); }
 
-    .progress-track {
-      width: 100%;
-      height: 12px;
-      border-radius: 999px;
-      background: #e8eef7;
-      overflow: hidden;
-      border: 1px solid #d5deea;
+    .owner-badge {
+      font-family: var(--mono); font-size: 0.62rem; letter-spacing: 2px;
+      text-transform: uppercase; padding: 4px 12px; border-radius: 20px; font-weight: 600;
     }
+    .badge-s1 { background: #fde8e6; color: var(--coral); border: 1px solid #f5bdb9; }
+    .badge-s2 { background: #ddf2e9; color: var(--sage);  border: 1px solid #a8dcc3; }
 
-    .progress-bar {
-      height: 100%;
-      width: 0;
-      background: linear-gradient(90deg, #1f6feb 0%, #4f8df5 100%);
-      transition: width 420ms ease;
+    .todo-box { border-radius: var(--radius); padding: 14px 18px; font-size: 0.75rem; line-height: 1.75; margin-bottom: 24px; }
+    .todo-box.s1 { background: #fff3f2; border: 1px solid #f5bdb9; border-left: 4px solid var(--coral); color: #9b2c2c; }
+    .todo-box strong { display: block; font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; }
+
+    .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 26px; box-shadow: var(--shadow); }
+
+    /* ── FORMS & TOOLBARS ────────────────────────── */
+    .toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; align-items: center; }
+    
+    input[type="text"], input[type="number"], select {
+      background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+      font-family: var(--mono); font-size: 0.76rem; padding: 8px 12px;
+      border-radius: var(--radius); outline: none; transition: all 0.2s; width: 100%;
     }
+    .toolbar input[type="number"] { width: 160px; }
+    .toolbar select { width: 140px; }
 
-    .muted {
-      color: var(--text-muted);
+    input:focus, select:focus { border-color: var(--coral); box-shadow: 0 0 0 3px rgba(217,79,61,0.12); }
+    input:disabled, select:disabled, button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    .field label { font-size: 0.7rem; font-weight: 600; color: var(--navy); text-transform: uppercase; letter-spacing: 1px; }
+
+    button {
+      font-family: var(--mono); font-size: 0.74rem; padding: 8px 16px;
+      border-radius: var(--radius); cursor: pointer; transition: all 0.18s;
+      border: 1px solid var(--border); background: var(--surface2); color: var(--text); letter-spacing: 0.3px;
     }
+    button:hover:not(:disabled) { border-color: var(--coral); color: var(--coral); background: #fff3f2; }
+    button.primary { background: var(--navy); color: #fff; border-color: var(--navy); }
+    button.primary:hover:not(:disabled) { background: #2e3a56; border-color: #2e3a56; }
 
-    @keyframes shimmer {
-      0% { background-position: 100% 50%; }
-      100% { background-position: -100% 50%; }
-    }
+    .error-text { color: var(--coral); font-size: 0.65rem; min-height: 14px; margin-top: 2px; }
+    .stats-error { background: #fff3f2; border: 1px solid #f5bdb9; color: var(--coral); padding: 10px; border-radius: var(--radius); font-size: 0.75rem; margin-top: 16px; display: none; }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
+    /* ── TABLE ────────────────────────────────────── */
+    .table-scroll { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.78rem; background: #fff; }
+    thead th { background: var(--navy); color: #c8b98a; text-align: left; padding: 10px 14px; font-size: 0.65rem; letter-spacing: 1.5px; text-transform: uppercase; white-space: nowrap; position: sticky; top: 0; }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background 0.12s; }
+    tbody tr:hover { background: var(--surface2); }
+    tbody td { padding: 9px 14px; color: var(--text); }
+    tbody td.num { color: var(--gold); }
+    .empty-row td { text-align: center; color: var(--text-dim); padding: 30px; font-style: italic; }
 
-    @keyframes fade-in {
-      from { opacity: 0; transform: translateY(4px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+    .badge { display: inline-flex; padding: 4px 9px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .badge--success { color: #2a7a50; background: #ddf2e9; border: 1px solid #a8dcc3; }
+    .badge--danger { color: #d94f3d; background: #fde8e6; border: 1px solid #f5bdb9; }
 
-    @media (max-width: 980px) {
-      .stats-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
+    /* ── SUMMARY STAT CARDS ──────────────────────── */
+    .stat-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+    .stat-tile { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 16px; box-shadow: var(--shadow); text-align: center; position: relative; overflow: hidden; }
+    .stat-tile .st-label { font-size: 0.6rem; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 10px; }
+    .stat-tile .st-val { font-family: var(--display); font-size: 1.9rem; font-weight: 700; color: var(--coral); line-height: 1; }
+    .stat-tile .st-sub { font-size: 0.65rem; color: var(--text-dim); margin-top: 6px; }
 
-      .filters-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
+    .skeleton { display: inline-block; color: transparent !important; background: linear-gradient(90deg, var(--surface2) 0%, #e6e0d4 50%, var(--surface2) 100%); background-size: 200% 100%; animation: shimmer 1.5s linear infinite; border-radius: 4px; min-width: 60px; min-height: 1.2em; }
+    @keyframes shimmer { 0% { background-position: 100% 50%; } 100% { background-position: -100% 50%; } }
 
-      .predict-layout {
-        grid-template-columns: 1fr;
-      }
-    }
+    /* ── PAGINATION ──────────────────────────────── */
+    .pagination { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+    .pagination__info { font-size: 0.75rem; color: var(--text-dim); }
+    .pagination__actions { display: flex; gap: 8px; }
 
-    @media (max-width: 620px) {
-      .container {
-        padding: var(--space-3) var(--space-2) var(--space-4);
-      }
+    /* ── PREDICTION LAYOUT ───────────────────────── */
+    .predict-layout { display: grid; grid-template-columns: 1.5fr 1fr; gap: 24px; align-items: start; margin-top: 16px; }
+    .predict-form { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .predict-form .field--full { grid-column: 1 / -1; }
+    
+    .result-card { background: var(--navy); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-md); color: #fff; min-height: 220px; display: flex; flex-direction: column; justify-content: center; }
+    .result-title { font-family: var(--mono); font-size: 0.7rem; color: #8a93b0; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; }
+    .result-value { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; font-family: var(--display); font-size: 1.8rem; font-weight: 700; color: #fff; }
+    .result-prob { font-size: 0.8rem; color: #c8b98a; margin-bottom: 8px; }
+    
+    .progress-track { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; }
+    .progress-bar { height: 100%; width: 0; background: var(--sage); transition: width 0.5s ease; }
 
-      .topbar__inner {
-        padding: 14px var(--space-2);
-      }
+    .spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(217,79,61,0.2); border-top-color: var(--coral); border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 6px; vertical-align: middle; }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-      .status-chip {
-        display: none;
-      }
+    footer { text-align: center; padding: 40px 20px 20px; font-size: 0.68rem; color: var(--text-dim); letter-spacing: 1px; border-top: 1px solid var(--border); }
 
-      .stats-grid,
-      .filters-grid,
-      .predict-form {
-        grid-template-columns: 1fr;
-      }
-
-      .pagination {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .pagination__actions {
-        width: 100%;
-      }
-
-      .pagination__actions .button {
-        flex: 1;
-      }
+    @media (max-width: 900px) {
+      .assignment-banner { grid-template-columns: 1fr; }
+      .stat-strip { grid-template-columns: repeat(2, 1fr); }
+      .predict-layout { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
-  <header class="topbar">
-    <div class="topbar__inner">
-      <div>
-        <h1>Student Placement Analytics</h1>
-        <p>Machine Learning Insights Dashboard</p>
+
+<header class="masthead">
+  <div class="masthead-left">
+    <p class="overline">Computer Science · Data Science Track · Git Collaborative Activity</p>
+    <h1>Student <em>Placement</em><br>Analytics Dashboard</h1>
+    <p class="sub">Dataset: Live DB · API Driven · Academic Term 2025</p>
+  </div>
+  <div class="masthead-right">
+    <div class="branch-pill"><span class="dot"></span>branch: <strong id="branchName">main</strong></div>
+    <div class="branch-pill" style="color:#8a93b0;">production backend api</div>
+  </div>
+</header>
+
+<div class="rule"></div>
+
+<div class="assignment-banner">
+  <div class="assign-block s1">
+    <div class="assign-label">Student 1 · Repo Owner</div>
+    <h3>Data Engine &amp; API Integration</h3>
+    <ul class="task-list">
+      <li>Create the GitHub repo &amp; push this file</li>
+      <li>Implement <code>loadDataset()</code> — populate <code>window.DS</code></li>
+      <li>Implement <code>renderTable(data)</code> — dynamic HTML table</li>
+      <li>Implement <code>applyFilterSort()</code> — filter by name, sort by column</li>
+      <li>Implement <code>resetTable()</code> — restore original view</li>
+      <li>Implement <code>renderSummaryCards(data)</code> — 4 stat cards (mean score, top scorer, pass rate, avg study hrs)</li>
+    </ul>
+    <span class="branch-tag">branch: feature/data-engine</span>
+  </div>
+  <div class="assign-block s2">
+    <div class="assign-label">Student 2 · Collaborator</div>
+    <h3>Model Inference &amp; Prediction</h3>
+    <ul class="task-list">
+      <li>Implement <code>drawBarChart()</code> — top 10 scores horizontal bar</li>
+      <li>Implement <code>drawScatterPlot()</code> — attendance vs score</li>
+      <li>Implement <code>drawDoughnut()</code> — grade distribution</li>
+      <li>Implement <code>stdDev()</code>, <code>variance()</code>, <code>pearsonCorr()</code>, <code>linearRegression()</code></li>
+      <li>Implement <code>renderAnalysis(data)</code> — populate all stat tables</li>
+      <li>Implement <code>renderInsights(data)</code> — written narrative findings</li>
+    </ul>
+    <span class="branch-tag">branch: feature/ml-predict</span>
+  </div>
+</div>
+
+<main>
+
+  <section id="sec-data">
+    <div class="section-head">
+      <div class="section-head-left">
+        <span class="section-num">01</span>
+        <h2>Dataset Explorer</h2>
       </div>
-      <span class="status-chip">Live API</span>
+      <span class="owner-badge badge-s1">Student 1 · Repo Owner</span>
     </div>
-  </header>
 
-  <main class="container">
-    <section class="panel" aria-labelledby="overview-heading">
-      <h2 class="panel__title" id="overview-heading">Overview Metrics</h2>
-      <p class="panel__subtitle">Realtime summary from model-backed student dataset</p>
-
-      <div class="stats-grid" id="statsGrid">
-        <article class="stat-card stat-card--blue">
-          <div class="stat-card__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8">
-              <path d="M4 19h16M6 16V9m6 7V5m6 11v-4"></path>
-            </svg>
-          </div>
-          <p class="stat-card__label">Total Students</p>
-          <p class="stat-card__value skeleton" id="statTotalStudents">0000000</p>
-          <p class="stat-card__meta">All records in current dataset</p>
-        </article>
-
-        <article class="stat-card stat-card--teal">
-          <div class="stat-card__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8">
-              <path d="M4 12h5l2-5 3 10 2-5h4"></path>
-            </svg>
-          </div>
-          <p class="stat-card__label">Placement Rate</p>
-          <p class="stat-card__value skeleton" id="statPlacementRate">0000000</p>
-          <p class="stat-card__meta">Percentage of placed students</p>
-        </article>
-
-        <article class="stat-card stat-card--amber">
-          <div class="stat-card__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8">
-              <path d="M4 17l4-4 3 3 6-8 3 4"></path>
-            </svg>
-          </div>
-          <p class="stat-card__label">Average CGPA</p>
-          <p class="stat-card__value skeleton" id="statAvgCgpa">0000000</p>
-          <p class="stat-card__meta">Mean academic score</p>
-        </article>
-
-        <article class="stat-card stat-card--violet">
-          <div class="stat-card__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8">
-              <path d="M8 6h8M6 10h12M8 14h8M10 18h4"></path>
-            </svg>
-          </div>
-          <p class="stat-card__label">Average Internships</p>
-          <p class="stat-card__value skeleton" id="statAvgInternships">0000000</p>
-          <p class="stat-card__meta">Mean internship participation</p>
-        </article>
+    <div class="stat-strip">
+      <div class="stat-tile">
+        <div class="st-label">Total Students</div>
+        <div class="st-val skeleton" id="statTotalStudents">0000</div>
+        <div class="st-sub">dataset records</div>
       </div>
-
-      <div class="stats-error" id="statsError" role="alert"></div>
-    </section>
-
-    <section class="panel workspace" aria-labelledby="students-heading">
-      <div>
-        <h2 class="panel__title" id="students-heading">Student Explorer</h2>
-        <p class="panel__subtitle">Server-side pagination tuned for large-scale analytics</p>
+      <div class="stat-tile">
+        <div class="st-label">Placement Rate</div>
+        <div class="st-val skeleton" id="statPlacementRate">00%</div>
+        <div class="st-sub">% placed overall</div>
       </div>
+      <div class="stat-tile">
+        <div class="st-label">Mean CGPA</div>
+        <div class="st-val skeleton" id="statAvgCgpa">0.00</div>
+        <div class="st-sub">out of 10.0</div>
+      </div>
+      <div class="stat-tile">
+        <div class="st-label">Avg Internships</div>
+        <div class="st-val skeleton" id="statAvgInternships">0.0</div>
+        <div class="st-sub">per student</div>
+      </div>
+    </div>
+    <div class="stats-error" id="statsError"></div>
 
+    <div class="panel">
       <form id="filtersForm" novalidate>
         <fieldset id="filtersFieldset" style="border:0; margin:0; padding:0;">
-          <div class="filters-grid">
+          <div class="toolbar">
             <div class="field">
               <label for="cgpaMinInput">Min CGPA</label>
-              <input id="cgpaMinInput" name="cgpaMin" type="number" min="0" max="10" step="0.01" inputmode="decimal" placeholder="e.g. 7.5">
-              <p class="error-text" id="cgpaMinError"></p>
+              <input id="cgpaMinInput" name="cgpaMin" type="number" min="0" max="10" step="any" placeholder="e.g. 7.5">
+              <span class="error-text" id="cgpaMinError"></span>
             </div>
-
+            
             <div class="field">
               <label for="internshipsMinInput">Min Internships</label>
-              <input id="internshipsMinInput" name="internshipsMin" type="number" min="0" step="1" inputmode="numeric" placeholder="e.g. 1">
-              <p class="error-text" id="internshipsMinError"></p>
+              <input id="internshipsMinInput" name="internshipsMin" type="number" min="0" step="1" placeholder="e.g. 1">
+              <span class="error-text" id="internshipsMinError"></span>
             </div>
 
             <div class="field">
@@ -656,24 +359,22 @@
                 <option value="20">20 rows</option>
                 <option value="50">50 rows</option>
               </select>
-              <p class="error-text"></p>
+              <span class="error-text"></span>
             </div>
 
-            <div class="field">
-              <label for="resetFiltersButton">Filters</label>
-              <button type="button" id="resetFiltersButton" class="button">Reset Filters</button>
-              <p class="error-text"></p>
+            <div class="field" style="margin-top: 14px;">
+              <button type="button" id="resetFiltersButton">Reset Filters</button>
+            </div>
+            
+            <div style="margin-left: auto; display: flex; flex-direction: column; align-items: flex-end;">
+              <div id="tableStatus" style="font-size: 0.75rem; color: var(--text-dim); margin-bottom: 4px;"></div>
+              <div id="tableTotalLabel" style="font-size: 0.75rem; color: var(--navy); font-weight: 600;">Total: --</div>
             </div>
           </div>
         </fieldset>
       </form>
 
-      <div class="table-toolbar">
-        <div class="table-status" id="tableStatus" aria-live="polite"></div>
-        <div class="muted" id="tableTotalLabel">Total: --</div>
-      </div>
-
-      <div class="table-wrap" aria-live="polite">
+      <div class="table-scroll">
         <table>
           <thead>
             <tr>
@@ -684,907 +385,553 @@
               <th>Placement Status</th>
             </tr>
           </thead>
-          <tbody id="studentsBody"></tbody>
+          <tbody id="studentsBody">
+            <tr class="empty-row"><td colspan="5">⏳ Initializing engine...</td></tr>
+          </tbody>
         </table>
       </div>
 
       <div class="pagination">
         <div class="pagination__info" id="pageInfo">Page -- of --</div>
         <div class="pagination__actions">
-          <button type="button" class="button" id="prevPageButton">Prev</button>
-          <button type="button" class="button" id="nextPageButton">Next</button>
+          <button type="button" id="prevPageButton">Prev</button>
+          <button type="button" id="nextPageButton" class="primary">Next</button>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <section class="panel" aria-labelledby="predict-heading">
-      <h2 class="panel__title" id="predict-heading">Placement Prediction</h2>
-      <p class="panel__subtitle">Submit a profile to run real-time model inference</p>
+  <section id="sec-predict">
+    <div class="section-head">
+      <div class="section-head-left">
+        <span class="section-num">02</span>
+        <h2>Placement Prediction</h2>
+      </div>
+      <span class="owner-badge badge-s2">Student 1 · REPO OWNER</span>
+    </div>
 
+    <div class="panel">
       <div class="predict-layout">
-        <form id="predictForm" class="predict-form" novalidate>
-          <div class="field">
-            <label for="predictCgpa">CGPA (required)</label>
-            <input id="predictCgpa" name="cgpa" type="number" min="0" max="10" step="0.01" inputmode="decimal" required>
-          </div>
-
-          <div class="field">
-            <label for="predictInternships">Internships (required)</label>
-            <input id="predictInternships" name="internships" type="number" min="0" step="1" inputmode="numeric" required>
-          </div>
-
-          <div class="field">
-            <label for="predictCommunication">Communication Skill (0-9)</label>
-            <input id="predictCommunication" name="communication_skill" type="number" min="0" max="9" step="1" inputmode="numeric" required>
-          </div>
-
-          <div class="field">
-            <label for="predictProblemSolving">Problem Solving (0-9)</label>
-            <input id="predictProblemSolving" name="problem_solving" type="number" min="0" max="9" step="1" inputmode="numeric" required>
-          </div>
-
-          <div class="field">
-            <label for="predictBranch">Branch</label>
-            <select id="predictBranch" name="branch" required>
-              <option value="">Select branch</option>
-              <option value="CSE">CSE</option>
-              <option value="IT">IT</option>
-              <option value="ECE">ECE</option>
-              <option value="EEE">EEE</option>
-              <option value="MECH">MECH</option>
-              <option value="CIVIL">CIVIL</option>
-              <option value="CHEM">CHEM</option>
-              <option value="BIO">BIO</option>
-              <option value="OTHER">OTHER</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label for="predictGender">Gender</label>
-            <select id="predictGender" name="gender" required>
-              <option value="">Select gender</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label for="predictAge">Age (optional)</label>
-            <input id="predictAge" name="age" type="number" min="16" max="100" step="1" inputmode="numeric" placeholder="defaults to 21">
-          </div>
-
-          <div class="field">
-            <label for="predictProjects">Projects (optional)</label>
-            <input id="predictProjects" name="projects" type="number" min="0" step="1" inputmode="numeric" placeholder="defaults to 2">
-          </div>
-
-          <div class="field field--full">
-            <p class="predict-hint">Minimal form inputs are safely mapped to the model's complete schema before sending.</p>
-          </div>
-
-          <div class="field field--full">
-            <div class="predict-actions">
-              <button type="submit" class="button button--primary" id="predictSubmitButton">Run Prediction</button>
-              <div class="table-status" id="predictLoading" style="display:none;">
-                <span class="spinner" aria-hidden="true"></span>
-                <span>Running model inference...</span>
-              </div>
+        
+        <form id="predictForm" novalidate>
+          <div class="predict-form">
+            <div class="field">
+              <label for="predictCgpa">CGPA (Required)</label>
+              <input id="predictCgpa" name="cgpa" type="number" min="0" max="10" step="0.01" required>
             </div>
-            <p class="predict-error" id="predictError" role="alert"></p>
+            <div class="field">
+              <label for="predictInternships">Internships (Req)</label>
+              <input id="predictInternships" name="internships" type="number" min="0" step="1" required>
+            </div>
+            <div class="field">
+              <label for="predictCommunication">Comm. Skill (0-9)</label>
+              <input id="predictCommunication" name="communication_skill" type="number" min="0" max="9" step="1" required>
+            </div>
+            <div class="field">
+              <label for="predictProblemSolving">Prob. Solving (0-9)</label>
+              <input id="predictProblemSolving" name="problem_solving" type="number" min="0" max="9" step="1" required>
+            </div>
+            <div class="field">
+              <label for="predictBranch">Branch</label>
+              <select id="predictBranch" name="branch" required>
+                <option value="">Select branch</option>
+                <option value="CSE">CSE</option><option value="IT">IT</option>
+                <option value="ECE">ECE</option><option value="EEE">EEE</option>
+                <option value="MECH">MECH</option><option value="CIVIL">CIVIL</option>
+                <option value="CHEM">CHEM</option><option value="BIO">BIO</option>
+                <option value="OTHER">OTHER</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="predictGender">Gender</label>
+              <select id="predictGender" name="gender" required>
+                <option value="">Select gender</option>
+                <option value="Male">Male</option><option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="predictAge">Age (Opt, def: 21)</label>
+              <input id="predictAge" name="age" type="number" min="16" max="100" step="1">
+            </div>
+            <div class="field">
+              <label for="predictProjects">Projects (Opt, def: 2)</label>
+              <input id="predictProjects" name="projects" type="number" min="0" step="1">
+            </div>
+
+            <div class="field field--full" style="margin-top: 8px;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <button type="submit" class="primary" id="predictSubmitButton">Run Prediction</button>
+                <div id="predictLoading" style="display:none; font-size: 0.75rem; color: var(--text-dim);">
+                  <span class="spinner"></span> Running inference...
+                </div>
+              </div>
+              <p class="error-text" id="predictError" style="margin-top:8px;"></p>
+            </div>
           </div>
         </form>
 
-        <aside class="result-card" aria-live="polite">
-          <p class="result-title">Prediction Result</p>
-          <p class="result-value" id="predictResultValue">
-            <span class="muted">No prediction yet</span>
-          </p>
+        <aside class="result-card">
+          <p class="result-title">Prediction Engine Output</p>
+          <div class="result-value" id="predictResultValue">
+            <span style="color: #4a5270; font-size: 1.2rem; font-weight: 400;">Awaiting Input...</span>
+          </div>
           <p class="result-prob" id="predictProbabilityText">Probability: --</p>
-          <div class="progress-track" aria-hidden="true">
+          <div class="progress-track">
             <div class="progress-bar" id="predictProbabilityBar"></div>
           </div>
-          <p class="muted" style="margin-top: 12px; font-size: 0.84rem;">
-            Output is produced by the deployed backend model at runtime.
-          </p>
         </aside>
+
       </div>
-    </section>
-  </main>
+    </div>
+  </section>
 
-  <script>
-    (function () {
-      "use strict";
+</main>
 
-      const API_ENV = {
-        USE_LOCAL_API: false,
-        LOCAL_BASE_URL: "http://127.0.0.1:8000",
-        PROD_BASE_URL: "https://daalab-ay225-garcia-a.onrender.com"
-      };
-      const API_BASE_URL = API_ENV.USE_LOCAL_API ? API_ENV.LOCAL_BASE_URL : API_ENV.PROD_BASE_URL;
-      const REQUEST_TIMEOUT_MS = 10000;
-      const STORAGE_KEY = "placement-dashboard-state-v1";
-      const PAGE_SIZE_OPTIONS = [10, 20, 50];
+<footer>
+  DATA SCIENCE COLLABORATIVE ACTIVITY &nbsp;·&nbsp; 2-STUDENT GIT WORKFLOW
+  <br>Contribution tracked via commits, branches &amp; pull requests on GitHub.
+</footer>
 
-      const defaultState = {
-        currentPage: 1,
-        totalPages: 0,
-        totalRecords: 0,
-        pageSize: 20,
-        filters: {
-          cgpaMin: "",
-          internshipsMin: ""
-        }
-      };
+<script>
+  (function () {
+    "use strict";
 
-      const state = loadPersistedState();
+    const API_ENV = {
+      USE_LOCAL_API: false,
+      LOCAL_BASE_URL: "http://127.0.0.1:8000",
+      PROD_BASE_URL: "https://daalab-ay225-garcia-a.onrender.com"
+    };
+    const API_BASE_URL = API_ENV.USE_LOCAL_API ? API_ENV.LOCAL_BASE_URL : API_ENV.PROD_BASE_URL;
+    const REQUEST_TIMEOUT_MS = 10000;
+    const STORAGE_KEY = "placement-dashboard-state-v1";
+    const PAGE_SIZE_OPTIONS = [10, 20, 50];
 
-      const elements = {
-        statTotalStudents: document.getElementById("statTotalStudents"),
-        statPlacementRate: document.getElementById("statPlacementRate"),
-        statAvgCgpa: document.getElementById("statAvgCgpa"),
-        statAvgInternships: document.getElementById("statAvgInternships"),
-        statsError: document.getElementById("statsError"),
+    const defaultState = {
+      currentPage: 1,
+      totalPages: 0,
+      totalRecords: 0,
+      pageSize: 10,
+      filters: { cgpaMin: "", internshipsMin: "" }
+    };
 
-        filtersFieldset: document.getElementById("filtersFieldset"),
-        cgpaMinInput: document.getElementById("cgpaMinInput"),
-        internshipsMinInput: document.getElementById("internshipsMinInput"),
-        pageSizeSelect: document.getElementById("pageSizeSelect"),
-        resetFiltersButton: document.getElementById("resetFiltersButton"),
-        cgpaMinError: document.getElementById("cgpaMinError"),
-        internshipsMinError: document.getElementById("internshipsMinError"),
+    const state = loadPersistedState();
 
-        tableStatus: document.getElementById("tableStatus"),
-        tableTotalLabel: document.getElementById("tableTotalLabel"),
-        studentsBody: document.getElementById("studentsBody"),
-        pageInfo: document.getElementById("pageInfo"),
-        prevPageButton: document.getElementById("prevPageButton"),
-        nextPageButton: document.getElementById("nextPageButton"),
+    const elements = {
+      statTotalStudents: document.getElementById("statTotalStudents"),
+      statPlacementRate: document.getElementById("statPlacementRate"),
+      statAvgCgpa: document.getElementById("statAvgCgpa"),
+      statAvgInternships: document.getElementById("statAvgInternships"),
+      statsError: document.getElementById("statsError"),
 
-        predictForm: document.getElementById("predictForm"),
-        predictSubmitButton: document.getElementById("predictSubmitButton"),
-        predictLoading: document.getElementById("predictLoading"),
-        predictError: document.getElementById("predictError"),
-        predictResultValue: document.getElementById("predictResultValue"),
-        predictProbabilityText: document.getElementById("predictProbabilityText"),
-        predictProbabilityBar: document.getElementById("predictProbabilityBar")
-      };
+      filtersFieldset: document.getElementById("filtersFieldset"),
+      cgpaMinInput: document.getElementById("cgpaMinInput"),
+      internshipsMinInput: document.getElementById("internshipsMinInput"),
+      pageSizeSelect: document.getElementById("pageSizeSelect"),
+      resetFiltersButton: document.getElementById("resetFiltersButton"),
+      cgpaMinError: document.getElementById("cgpaMinError"),
+      internshipsMinError: document.getElementById("internshipsMinError"),
 
-      let statsController = null;
-      let studentsController = null;
-      let predictionController = null;
-      let debounceHandle = null;
-      let studentsLoading = false;
+      tableStatus: document.getElementById("tableStatus"),
+      tableTotalLabel: document.getElementById("tableTotalLabel"),
+      studentsBody: document.getElementById("studentsBody"),
+      pageInfo: document.getElementById("pageInfo"),
+      prevPageButton: document.getElementById("prevPageButton"),
+      nextPageButton: document.getElementById("nextPageButton"),
 
-      initializeUI();
-      wireEvents();
-      fetchOverviewStats();
-      fetchStudents();
+      predictForm: document.getElementById("predictForm"),
+      predictSubmitButton: document.getElementById("predictSubmitButton"),
+      predictLoading: document.getElementById("predictLoading"),
+      predictError: document.getElementById("predictError"),
+      predictResultValue: document.getElementById("predictResultValue"),
+      predictProbabilityText: document.getElementById("predictProbabilityText"),
+      predictProbabilityBar: document.getElementById("predictProbabilityBar")
+    };
 
-      function initializeUI() {
-        elements.cgpaMinInput.value = state.filters.cgpaMin;
-        elements.internshipsMinInput.value = state.filters.internshipsMin;
+    let statsController = null;
+    let studentsController = null;
+    let predictionController = null;
+    let debounceHandle = null;
+    let studentsLoading = false;
+
+    initializeUI();
+    wireEvents();
+    fetchOverviewStats();
+    fetchStudents();
+
+    function initializeUI() {
+      elements.cgpaMinInput.value = state.filters.cgpaMin;
+      elements.internshipsMinInput.value = state.filters.internshipsMin;
+      elements.pageSizeSelect.value = String(state.pageSize);
+      updatePaginationUI();
+    }
+
+    function wireEvents() {
+      elements.cgpaMinInput.addEventListener("input", function (event) {
+        state.filters.cgpaMin = event.target.value.trim();
+        state.currentPage = 1;
+        persistState();
+        runDebouncedStudentsFetch();
+      });
+      elements.internshipsMinInput.addEventListener("input", function (event) {
+        state.filters.internshipsMin = event.target.value.trim();
+        state.currentPage = 1;
+        persistState();
+        runDebouncedStudentsFetch();
+      });
+      elements.pageSizeSelect.addEventListener("change", function (event) {
+        const value = Number(event.target.value);
+        state.pageSize = PAGE_SIZE_OPTIONS.includes(value) ? value : defaultState.pageSize;
+        state.currentPage = 1;
+        persistState();
+        fetchStudents();
+      });
+      elements.resetFiltersButton.addEventListener("click", function () {
+        state.filters.cgpaMin = "";
+        state.filters.internshipsMin = "";
+        state.pageSize = defaultState.pageSize;
+        state.currentPage = 1;
+        persistState();
+
+        elements.cgpaMinInput.value = "";
+        elements.internshipsMinInput.value = "";
         elements.pageSizeSelect.value = String(state.pageSize);
-        updatePaginationUI();
+        clearFilterErrors();
+        fetchStudents();
+      });
+      elements.prevPageButton.addEventListener("click", function () {
+        if (studentsLoading || state.currentPage <= 1) return;
+        state.currentPage -= 1;
+        persistState();
+        fetchStudents();
+      });
+      elements.nextPageButton.addEventListener("click", function () {
+        if (studentsLoading || state.currentPage >= state.totalPages) return;
+        state.currentPage += 1;
+        persistState();
+        fetchStudents();
+      });
+      elements.predictForm.addEventListener("submit", handlePredictionSubmit);
+    }
+
+    function runDebouncedStudentsFetch() {
+      if (debounceHandle !== null) window.clearTimeout(debounceHandle);
+      debounceHandle = window.setTimeout(function () { fetchStudents(); }, 300);
+    }
+
+    async function fetchOverviewStats() {
+      if (statsController) statsController.abort();
+      statsController = new AbortController();
+
+      setStatsLoading(true);
+      setStatsError("");
+      try {
+        const data = await requestJson("/stats/overview", { method: "GET", signal: statsController.signal });
+        if (!isValidStatsResponse(data)) throw new Error("Stats response returned unexpected data.");
+
+        elements.statTotalStudents.textContent = formatInteger(data.total_students);
+        elements.statPlacementRate.textContent = formatPercent(data.placement_rate);
+        elements.statAvgCgpa.textContent = formatDecimal(data.avg_cgpa, 2);
+        elements.statAvgInternships.textContent = formatDecimal(data.avg_internships, 2);
+      } catch (error) {
+        if (error.name === "CanceledError") return;
+        elements.statTotalStudents.textContent = "--";
+        elements.statPlacementRate.textContent = "--";
+        elements.statAvgCgpa.textContent = "--";
+        elements.statAvgInternships.textContent = "--";
+        setStatsError(getFriendlyError(error, "Unable to load overview metrics right now."));
+      } finally {
+        setStatsLoading(false);
+      }
+    }
+
+    async function fetchStudents() {
+      const validation = validateFilters(state.filters);
+      renderFilterErrors(validation.errors);
+
+      if (!validation.isValid) {
+        setStudentsStatus("error", "Please fix filter values to continue.");
+        renderEmptyTable("Invalid filter input");
+        state.totalPages = 0; state.totalRecords = 0;
+        updatePaginationUI(); updateTotalLabel();
+        return;
       }
 
-      function wireEvents() {
-        elements.cgpaMinInput.addEventListener("input", function (event) {
-          state.filters.cgpaMin = event.target.value.trim();
-          state.currentPage = 1;
-          persistState();
-          runDebouncedStudentsFetch();
-        });
+      if (studentsController) studentsController.abort();
+      studentsController = new AbortController();
 
-        elements.internshipsMinInput.addEventListener("input", function (event) {
-          state.filters.internshipsMin = event.target.value.trim();
-          state.currentPage = 1;
-          persistState();
-          runDebouncedStudentsFetch();
-        });
-
-        elements.pageSizeSelect.addEventListener("change", function (event) {
-          const value = Number(event.target.value);
-          state.pageSize = PAGE_SIZE_OPTIONS.includes(value) ? value : defaultState.pageSize;
-          state.currentPage = 1;
-          persistState();
-          fetchStudents();
-        });
-
-        elements.resetFiltersButton.addEventListener("click", function () {
-          state.filters.cgpaMin = "";
-          state.filters.internshipsMin = "";
-          state.pageSize = defaultState.pageSize;
-          state.currentPage = 1;
-          persistState();
-
-          elements.cgpaMinInput.value = "";
-          elements.internshipsMinInput.value = "";
-          elements.pageSizeSelect.value = String(state.pageSize);
-          clearFilterErrors();
-
-          fetchStudents();
-        });
-
-        elements.prevPageButton.addEventListener("click", function () {
-          if (studentsLoading || state.currentPage <= 1) {
-            return;
+      setStudentsLoading(true);
+      setStudentsStatus("loading", "Loading students...");
+      try {
+        const data = await requestJson("/students", {
+          method: "GET",
+          signal: studentsController.signal,
+          params: {
+            page: state.currentPage, limit: state.pageSize,
+            cgpa_min: validation.values.cgpaMin, internships_min: validation.values.internshipsMin
           }
-          state.currentPage -= 1;
-          persistState();
-          fetchStudents();
         });
+        if (!isValidStudentsResponse(data)) throw new Error("Students response returned unexpected data.");
 
-        elements.nextPageButton.addEventListener("click", function () {
-          if (studentsLoading || state.currentPage >= state.totalPages) {
-            return;
-          }
-          state.currentPage += 1;
-          persistState();
-          fetchStudents();
-        });
+        state.totalPages = Math.max(0, Number(data.total_pages));
+        state.totalRecords = Math.max(0, Number(data.total));
+        if (state.totalPages > 0 && state.currentPage > state.totalPages) {
+          state.currentPage = state.totalPages; persistState(); fetchStudents(); return;
+        }
 
-        elements.predictForm.addEventListener("submit", handlePredictionSubmit);
+        renderStudentsTable(data.data);
+        if (data.data.length === 0) setStudentsStatus("empty", "No results found");
+        else setStudentsStatus("ready", "");
+
+        updateTotalLabel(); updatePaginationUI(); persistState();
+      } catch (error) {
+        if (error.name === "CanceledError") return;
+        state.totalPages = 0; state.totalRecords = 0;
+        updatePaginationUI(); updateTotalLabel();
+        renderEmptyTable("No results found");
+        setStudentsStatus("error", getFriendlyError(error, "Students data is temporarily unavailable."));
+      } finally {
+        setStudentsLoading(false);
       }
+    }
 
-      function runDebouncedStudentsFetch() {
-        if (debounceHandle !== null) {
-          window.clearTimeout(debounceHandle);
-        }
+    async function handlePredictionSubmit(event) {
+      event.preventDefault();
+      const payloadResult = createPredictionPayload(new FormData(elements.predictForm));
+      elements.predictError.textContent = "";
 
-        debounceHandle = window.setTimeout(function () {
-          fetchStudents();
-        }, 300);
-      }
+      if (!payloadResult.isValid) { elements.predictError.textContent = payloadResult.error; return; }
 
-      async function fetchOverviewStats() {
-        if (statsController) {
-          statsController.abort();
-        }
-        statsController = new AbortController();
-
-        setStatsLoading(true);
-        setStatsError("");
-
-        try {
-          const data = await requestJson("/stats/overview", {
-            method: "GET",
-            signal: statsController.signal
-          });
-
-          if (!isValidStatsResponse(data)) {
-            throw new Error("Stats response returned unexpected data.");
-          }
-
-          elements.statTotalStudents.textContent = formatInteger(data.total_students);
-          elements.statPlacementRate.textContent = formatPercent(data.placement_rate);
-          elements.statAvgCgpa.textContent = formatDecimal(data.avg_cgpa, 2);
-          elements.statAvgInternships.textContent = formatDecimal(data.avg_internships, 2);
-        } catch (error) {
-          if (error.name === "CanceledError") {
-            return;
-          }
-          elements.statTotalStudents.textContent = "--";
-          elements.statPlacementRate.textContent = "--";
-          elements.statAvgCgpa.textContent = "--";
-          elements.statAvgInternships.textContent = "--";
-          setStatsError(getFriendlyError(error, "Unable to load overview metrics right now."));
-        } finally {
-          setStatsLoading(false);
-        }
-      }
-
-      async function fetchStudents() {
-        const validation = validateFilters(state.filters);
-        renderFilterErrors(validation.errors);
-
-        if (!validation.isValid) {
-          setStudentsStatus("error", "Please fix filter values to continue.");
-          renderEmptyTable("Invalid filter input");
-          state.totalPages = 0;
-          state.totalRecords = 0;
-          updatePaginationUI();
-          updateTotalLabel();
-          return;
-        }
-
-        if (studentsController) {
-          studentsController.abort();
-        }
-        studentsController = new AbortController();
-
-        setStudentsLoading(true);
-        setStudentsStatus("loading", "Loading students...");
-
-        try {
-          const data = await requestJson("/students", {
-            method: "GET",
-            signal: studentsController.signal,
-            params: {
-              page: state.currentPage,
-              limit: state.pageSize,
-              cgpa_min: validation.values.cgpaMin,
-              internships_min: validation.values.internshipsMin
-            }
-          });
-
-          if (!isValidStudentsResponse(data)) {
-            throw new Error("Students response returned unexpected data.");
-          }
-
-          state.totalPages = Math.max(0, Number(data.total_pages));
-          state.totalRecords = Math.max(0, Number(data.total));
-
-          if (state.totalPages > 0 && state.currentPage > state.totalPages) {
-            state.currentPage = state.totalPages;
-            persistState();
-            fetchStudents();
-            return;
-          }
-
-          renderStudentsTable(data.data);
-          if (data.data.length === 0) {
-            setStudentsStatus("empty", "No results found");
-          } else {
-            setStudentsStatus("ready", "Showing paginated student records");
-          }
-
-          updateTotalLabel();
-          updatePaginationUI();
-          persistState();
-        } catch (error) {
-          if (error.name === "CanceledError") {
-            return;
-          }
-
-          state.totalPages = 0;
-          state.totalRecords = 0;
-          updatePaginationUI();
-          updateTotalLabel();
-          renderEmptyTable("No results found");
-          setStudentsStatus("error", getFriendlyError(error, "Students data is temporarily unavailable."));
-        } finally {
-          setStudentsLoading(false);
-        }
-      }
-
-      async function handlePredictionSubmit(event) {
-        event.preventDefault();
-
-        const payloadResult = createPredictionPayload(new FormData(elements.predictForm));
-        elements.predictError.textContent = "";
-
-        if (!payloadResult.isValid) {
-          elements.predictError.textContent = payloadResult.error;
-          return;
-        }
-
-        if (predictionController) {
-          predictionController.abort();
-        }
-        predictionController = new AbortController();
-        setPredictionLoading(true);
-
-        try {
-          const data = await requestJson("/predict", {
-            method: "POST",
-            signal: predictionController.signal,
-            body: payloadResult.payload
-          });
-
-          if (!isValidPredictResponse(data)) {
-            throw new Error("Prediction response returned unexpected data.");
-          }
-
-          const placed = Number(data.prediction) === 1;
-          const probability = Math.max(0, Math.min(1, Number(data.probability)));
-          const percentText = formatPercent(probability);
-
-          elements.predictResultValue.innerHTML = "";
-          const resultLabel = document.createElement("span");
-          resultLabel.textContent = placed ? "Placed" : "Not Placed";
-          const badge = document.createElement("span");
-          badge.className = "badge " + (placed ? "badge--success" : "badge--danger");
-          badge.textContent = placed ? "High Match" : "Low Match";
-          elements.predictResultValue.appendChild(resultLabel);
-          elements.predictResultValue.appendChild(badge);
-
-          elements.predictProbabilityText.textContent = "Probability: " + percentText;
-          elements.predictProbabilityBar.style.width = "0";
-          window.requestAnimationFrame(function () {
-            elements.predictProbabilityBar.style.width = String((probability * 100).toFixed(2)) + "%";
-          });
-        } catch (error) {
-          if (error.name === "CanceledError") {
-            return;
-          }
-          elements.predictError.textContent = getFriendlyError(
-            error,
-            "Prediction request failed. Please review inputs and try again."
-          );
-        } finally {
-          setPredictionLoading(false);
-        }
-      }
-
-      function renderStudentsTable(rows) {
-        if (!Array.isArray(rows) || rows.length === 0) {
-          renderEmptyTable("No results found");
-          return;
-        }
-
-        const fragment = document.createDocumentFragment();
-
-        rows.forEach(function (row) {
-          const tr = document.createElement("tr");
-          tr.appendChild(makeCell(safeInteger(row.age)));
-          tr.appendChild(makeCell(safeDecimal(row.cgpa, 2)));
-          tr.appendChild(makeCell(safeInteger(row.internships)));
-          tr.appendChild(makeCell(safeText(row.branch)));
-
-          const badgeCell = document.createElement("td");
-          const placed = Number(row.placed) === 1;
-          const badge = document.createElement("span");
-          badge.className = "badge " + (placed ? "badge--success" : "badge--danger");
-          badge.textContent = placed ? "Placed" : "Not placed";
-          badgeCell.appendChild(badge);
-          tr.appendChild(badgeCell);
-
-          fragment.appendChild(tr);
+      if (predictionController) predictionController.abort();
+      predictionController = new AbortController();
+      setPredictionLoading(true);
+      
+      try {
+        const data = await requestJson("/predict", {
+          method: "POST", signal: predictionController.signal, body: payloadResult.payload
         });
+        if (!isValidPredictResponse(data)) throw new Error("Prediction response returned unexpected data.");
 
-        elements.studentsBody.replaceChildren(fragment);
+        const placed = Number(data.prediction) === 1;
+        const probability = Math.max(0, Math.min(1, Number(data.probability)));
+        const percentText = formatPercent(probability);
+
+        elements.predictResultValue.innerHTML = "";
+        const resultLabel = document.createElement("span");
+        resultLabel.textContent = placed ? "Placed" : "Not Placed";
+        const badge = document.createElement("span");
+        badge.className = "badge " + (placed ? "badge--success" : "badge--danger");
+        badge.textContent = placed ? "High Match" : "Low Match";
+        elements.predictResultValue.appendChild(resultLabel);
+        elements.predictResultValue.appendChild(badge);
+
+        elements.predictProbabilityText.textContent = "Probability: " + percentText;
+        elements.predictProbabilityBar.style.width = "0";
+        window.requestAnimationFrame(function () {
+          elements.predictProbabilityBar.style.width = String((probability * 100).toFixed(2)) + "%";
+          if(!placed) elements.predictProbabilityBar.style.background = 'var(--coral)';
+          else elements.predictProbabilityBar.style.background = 'var(--sage)';
+        });
+      } catch (error) {
+        if (error.name === "CanceledError") return;
+        elements.predictError.textContent = getFriendlyError(error, "Prediction request failed. Please review inputs and try again.");
+      } finally {
+        setPredictionLoading(false);
       }
+    }
 
-      function renderEmptyTable(message) {
+    function renderStudentsTable(rows) {
+      if (!Array.isArray(rows) || rows.length === 0) { renderEmptyTable("No results found"); return; }
+      const fragment = document.createDocumentFragment();
+      rows.forEach(function (row) {
         const tr = document.createElement("tr");
-        tr.className = "empty-row";
-        const td = document.createElement("td");
-        td.colSpan = 5;
-        td.textContent = message;
-        tr.appendChild(td);
-        elements.studentsBody.replaceChildren(tr);
-      }
+        tr.appendChild(makeCell(safeInteger(row.age), true));
+        tr.appendChild(makeCell(safeDecimal(row.cgpa, 2), true));
+        tr.appendChild(makeCell(safeInteger(row.internships), true));
+        tr.appendChild(makeCell(safeText(row.branch)));
 
-      function makeCell(value) {
-        const td = document.createElement("td");
-        td.textContent = value;
-        return td;
-      }
+        const badgeCell = document.createElement("td");
+        const placed = Number(row.placed) === 1;
+        const badge = document.createElement("span");
+        badge.className = "badge " + (placed ? "badge--success" : "badge--danger");
+        badge.textContent = placed ? "Placed" : "Not placed";
+        badgeCell.appendChild(badge);
+        tr.appendChild(badgeCell);
+        fragment.appendChild(tr);
+      });
+      elements.studentsBody.replaceChildren(fragment);
+    }
 
-      function setStatsLoading(isLoading) {
-        const statsValues = [
-          elements.statTotalStudents,
-          elements.statPlacementRate,
-          elements.statAvgCgpa,
-          elements.statAvgInternships
-        ];
-        statsValues.forEach(function (node) {
-          if (isLoading) {
-            node.classList.add("skeleton");
-          } else {
-            node.classList.remove("skeleton");
-          }
-        });
-      }
+    function renderEmptyTable(message) {
+      const tr = document.createElement("tr"); tr.className = "empty-row";
+      const td = document.createElement("td"); td.colSpan = 5; td.textContent = message;
+      tr.appendChild(td); elements.studentsBody.replaceChildren(tr);
+    }
 
-      function setStatsError(message) {
-        if (!message) {
-          elements.statsError.style.display = "none";
-          elements.statsError.textContent = "";
-          return;
+    function makeCell(value, isNum = false) {
+      const td = document.createElement("td");
+      if(isNum) td.className = "num";
+      td.textContent = value; return td;
+    }
+
+    function setStatsLoading(isLoading) {
+      [elements.statTotalStudents, elements.statPlacementRate, elements.statAvgCgpa, elements.statAvgInternships].forEach(function (node) {
+        if (isLoading) node.classList.add("skeleton"); else node.classList.remove("skeleton");
+      });
+    }
+
+    function setStatsError(message) {
+      if (!message) { elements.statsError.style.display = "none"; elements.statsError.textContent = ""; return; }
+      elements.statsError.style.display = "block"; elements.statsError.textContent = message;
+    }
+
+    function setStudentsLoading(isLoading) {
+      studentsLoading = isLoading; elements.filtersFieldset.disabled = isLoading;
+      elements.prevPageButton.disabled = isLoading || state.currentPage <= 1 || state.totalPages === 0;
+      elements.nextPageButton.disabled = isLoading || state.currentPage >= state.totalPages || state.totalPages === 0;
+    }
+
+    function setPredictionLoading(isLoading) {
+      elements.predictSubmitButton.disabled = isLoading;
+      elements.predictLoading.style.display = isLoading ? "inline-flex" : "none";
+    }
+
+    function setStudentsStatus(mode, message) {
+      if (mode === "loading") { elements.tableStatus.innerHTML = "<span class=\"spinner\"></span><span>" + escapeHtml(message) + "</span>"; return; }
+      elements.tableStatus.textContent = message || "";
+      if (mode === "error") elements.tableStatus.style.color = "var(--coral)";
+      else if (mode === "empty") elements.tableStatus.style.color = "var(--gold)";
+      else elements.tableStatus.style.color = "var(--text-dim)";
+    }
+
+    function updatePaginationUI() {
+      elements.pageInfo.textContent = state.totalPages === 0 ? "Page 0 of 0" : "Page " + state.currentPage + " of " + state.totalPages;
+      elements.prevPageButton.disabled = studentsLoading || state.currentPage <= 1 || state.totalPages === 0;
+      elements.nextPageButton.disabled = studentsLoading || state.currentPage >= state.totalPages || state.totalPages === 0;
+    }
+
+    function updateTotalLabel() { elements.tableTotalLabel.textContent = "Total: " + formatInteger(state.totalRecords); }
+    function clearFilterErrors() { elements.cgpaMinError.textContent = ""; elements.internshipsMinError.textContent = ""; }
+    function renderFilterErrors(errors) { elements.cgpaMinError.textContent = errors.cgpaMin || ""; elements.internshipsMinError.textContent = errors.internshipsMin || ""; }
+
+    function validateFilters(filters) {
+      const errors = {}; const values = { cgpaMin: undefined, internshipsMin: undefined };
+      if (filters.cgpaMin !== "") {
+        const cgpaValue = Number(filters.cgpaMin);
+        if (!Number.isFinite(cgpaValue) || cgpaValue < 0 || cgpaValue > 10) errors.cgpaMin = "CGPA must be between 0 and 10.";
+        else values.cgpaMin = cgpaValue;
+      }
+      if (filters.internshipsMin !== "") {
+        const internshipValue = Number(filters.internshipsMin);
+        if (!Number.isInteger(internshipValue) || internshipValue < 0) errors.internshipsMin = "Whole number >= 0 required.";
+        else values.internshipsMin = internshipValue;
+      }
+      return { isValid: Object.keys(errors).length === 0, errors: errors, values: values };
+    }
+
+    function createPredictionPayload(formData) {
+      const required = {
+        cgpa: toNumber(formData.get("cgpa")), internships: toInteger(formData.get("internships")),
+        communication_skill: toInteger(formData.get("communication_skill")), problem_solving: toInteger(formData.get("problem_solving")),
+        branch: String(formData.get("branch") || "").trim(), gender: String(formData.get("gender") || "").trim()
+      };
+      const optAgeRaw = String(formData.get("age") || "").trim();
+      const optProjRaw = String(formData.get("projects") || "").trim();
+
+      if (!Number.isFinite(required.cgpa) || required.cgpa < 0 || required.cgpa > 10) return { isValid: false, error: "CGPA must be 0-10." };
+      if (!Number.isInteger(required.internships) || required.internships < 0) return { isValid: false, error: "Internships must be integer >= 0." };
+      if (!Number.isInteger(required.communication_skill) || required.communication_skill < 0 || required.communication_skill > 9) return { isValid: false, error: "Comm skill must be 0-9." };
+      if (!Number.isInteger(required.problem_solving) || required.problem_solving < 0 || required.problem_solving > 9) return { isValid: false, error: "Problem solving must be 0-9." };
+      if (!required.branch) return { isValid: false, error: "Please select a branch." };
+      if (!required.gender) return { isValid: false, error: "Please select a gender." };
+
+      let age = 21, projects = 2;
+      if (optAgeRaw !== "") { age = toInteger(optAgeRaw); if (!Number.isInteger(age) || age < 16 || age > 100) return { isValid: false, error: "Age must be 16-100." }; }
+      if (optProjRaw !== "") { projects = toInteger(optProjRaw); if (!Number.isInteger(projects) || projects < 0) return { isValid: false, error: "Projects must be integer >= 0." }; }
+
+      return {
+        isValid: true,
+        payload: {
+          age: age, cgpa: required.cgpa, backlogs: 0, attendance: 85, tenth_percentage: 80, twelfth_percentage: 78,
+          branch: required.branch, college_tier: 2, python_skill: 6, "c++_skill": 6, java_skill: 6, ml_skill: 5, web_dev_skill: 6,
+          communication_skill: required.communication_skill, aptitude_score: 74, logical_reasoning: 72, internships: required.internships,
+          projects: projects, github_projects: Math.max(0, projects), hackathons: 1, certifications: 1, coding_contest_rating: 1200,
+          teamwork: 6, leadership: 5, problem_solving: required.problem_solving, time_management: 6, gender: required.gender,
+          city_tier: 2, family_income: 8, include_explanation: false
         }
-        elements.statsError.style.display = "block";
-        elements.statsError.textContent = message;
-      }
+      };
+    }
 
-      function setStudentsLoading(isLoading) {
-        studentsLoading = isLoading;
-        elements.filtersFieldset.disabled = isLoading;
-        elements.prevPageButton.disabled = isLoading || state.currentPage <= 1 || state.totalPages === 0;
-        elements.nextPageButton.disabled = isLoading || state.currentPage >= state.totalPages || state.totalPages === 0;
-      }
+    async function requestJson(path, options) {
+      const method = options.method || "GET";
+      const params = options.params || null;
+      const body = options.body || null;
+      const signal = options.signal || null;
+      const url = new URL(path, API_BASE_URL);
+      if (params) { Object.keys(params).forEach(k => { if (params[k] !== undefined && params[k] !== null && params[k] !== "") url.searchParams.set(k, String(params[k])); }); }
 
-      function setPredictionLoading(isLoading) {
-        elements.predictSubmitButton.disabled = isLoading;
-        elements.predictLoading.style.display = isLoading ? "inline-flex" : "none";
-      }
+      const timeoutController = new AbortController();
+      const timeoutId = window.setTimeout(function () { timeoutController.abort(); }, REQUEST_TIMEOUT_MS);
+      const combinedController = new AbortController();
+      const abortCombined = function () { if (!combinedController.signal.aborted) combinedController.abort(); };
 
-      function setStudentsStatus(mode, message) {
-        if (mode === "loading") {
-          elements.tableStatus.innerHTML =
-            "<span class=\"spinner\" aria-hidden=\"true\"></span><span>" + escapeHtml(message) + "</span>";
-          return;
-        }
+      timeoutController.signal.addEventListener("abort", abortCombined, { once: true });
+      if (signal) { if (signal.aborted) abortCombined(); else signal.addEventListener("abort", abortCombined, { once: true }); }
 
-        elements.tableStatus.textContent = message || "";
-        if (mode === "error") {
-          elements.tableStatus.style.color = "var(--danger)";
-        } else if (mode === "empty") {
-          elements.tableStatus.style.color = "var(--warning)";
-        } else {
-          elements.tableStatus.style.color = "var(--text-muted)";
-        }
-      }
+      const headers = { "Accept": "application/json" };
+      if (body !== null) headers["Content-Type"] = "application/json";
 
-      function updatePaginationUI() {
-        const pageDisplay = state.totalPages === 0 ? "Page 0 of 0" : "Page " + state.currentPage + " of " + state.totalPages;
-        elements.pageInfo.textContent = pageDisplay;
-        elements.prevPageButton.disabled = studentsLoading || state.currentPage <= 1 || state.totalPages === 0;
-        elements.nextPageButton.disabled = studentsLoading || state.currentPage >= state.totalPages || state.totalPages === 0;
-      }
+      try {
+        const response = await fetch(url.toString(), { method: method, headers: headers, body: body !== null ? JSON.stringify(body) : undefined, signal: combinedController.signal });
+        const contentType = response.headers.get("content-type") || "";
+        let data = null;
+        if (contentType.includes("application/json")) data = await response.json();
+        else throw new Error(await response.text() || "Unexpected response format.");
 
-      function updateTotalLabel() {
-        elements.tableTotalLabel.textContent = "Total: " + formatInteger(state.totalRecords);
-      }
+        if (!response.ok) throw new Error((data && data.detail) ? data.detail : "Request failed with status " + response.status);
+        return data;
+      } catch (error) {
+        if (error.name === "AbortError" && timeoutController.signal.aborted && !(signal && signal.aborted)) throw new Error("Request timed out after 10 seconds.");
+        if (error.name === "AbortError") { const e = new Error("Request canceled"); e.name = "CanceledError"; throw e; }
+        throw error;
+      } finally { window.clearTimeout(timeoutId); }
+    }
 
-      function clearFilterErrors() {
-        elements.cgpaMinError.textContent = "";
-        elements.internshipsMinError.textContent = "";
-      }
+    function loadPersistedState() {
+      try {
+        const raw = window.localStorage.getItem(STORAGE_KEY);
+        if (!raw) return cloneDefaultState();
+        const parsed = JSON.parse(raw); const nextState = cloneDefaultState();
+        const cp = Number(parsed.currentPage), ps = Number(parsed.pageSize);
+        nextState.currentPage = Number.isInteger(cp) && cp > 0 ? cp : defaultState.currentPage;
+        nextState.pageSize = PAGE_SIZE_OPTIONS.includes(ps) ? ps : defaultState.pageSize;
+        nextState.filters.cgpaMin = (parsed.filters && typeof parsed.filters.cgpaMin === "string") ? parsed.filters.cgpaMin : "";
+        nextState.filters.internshipsMin = (parsed.filters && typeof parsed.filters.internshipsMin === "string") ? parsed.filters.internshipsMin : "";
+        return nextState;
+      } catch (_) { return cloneDefaultState(); }
+    }
 
-      function renderFilterErrors(errors) {
-        elements.cgpaMinError.textContent = errors.cgpaMin || "";
-        elements.internshipsMinError.textContent = errors.internshipsMin || "";
-      }
+    function persistState() {
+      try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ currentPage: state.currentPage, pageSize: state.pageSize, filters: { cgpaMin: state.filters.cgpaMin, internshipsMin: state.filters.internshipsMin } })); } catch (_) {}
+    }
 
-      function validateFilters(filters) {
-        const errors = {};
-        const values = {
-          cgpaMin: undefined,
-          internshipsMin: undefined
-        };
+    function cloneDefaultState() { return { currentPage: defaultState.currentPage, totalPages: defaultState.totalPages, totalRecords: defaultState.totalRecords, pageSize: defaultState.pageSize, filters: { cgpaMin: defaultState.filters.cgpaMin, internshipsMin: defaultState.filters.internshipsMin } }; }
+    function isValidStatsResponse(data) { return data && isFiniteNumber(data.total_students) && isFiniteNumber(data.placement_rate) && isFiniteNumber(data.avg_cgpa) && isFiniteNumber(data.avg_internships); }
+    function isValidStudentsResponse(data) { return data && Array.isArray(data.data) && isFiniteNumber(data.total) && isFiniteNumber(data.page) && isFiniteNumber(data.limit) && isFiniteNumber(data.total_pages); }
+    function isValidPredictResponse(data) { return data && isFiniteNumber(data.probability) && isFiniteNumber(data.prediction); }
+    function formatInteger(value) { return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(Number(value) || 0); }
+    function formatDecimal(value, precision) { const n = Number(value); return Number.isFinite(n) ? n.toFixed(precision) : "--"; }
+    function formatPercent(value) { const n = Number(value); if (!Number.isFinite(n)) return "--"; return (n <= 1 ? n * 100 : n).toFixed(2) + "%"; }
+    function safeText(value) { return (value === null || value === undefined || value === "") ? "--" : String(value); }
+    function safeInteger(value) { const num = Number(value); return Number.isFinite(num) ? String(Math.round(num)) : "--"; }
+    function safeDecimal(value, precision) { const num = Number(value); return Number.isFinite(num) ? num.toFixed(precision) : "--"; }
+    function isFiniteNumber(value) { return Number.isFinite(Number(value)); }
+    function toNumber(value) { return Number(String(value || "").trim()); }
+    function toInteger(value) { return Number.parseInt(String(value || "").trim(), 10); }
+    function getFriendlyError(error, fallback) { return (error && typeof error.message === "string" && error.message.trim()) ? error.message : fallback; }
+    function escapeHtml(value) { return String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
 
-        if (filters.cgpaMin !== "") {
-          const cgpaValue = Number(filters.cgpaMin);
-          if (!Number.isFinite(cgpaValue) || cgpaValue < 0 || cgpaValue > 10) {
-            errors.cgpaMin = "CGPA must be between 0 and 10.";
-          } else {
-            values.cgpaMin = cgpaValue;
-          }
-        }
-
-        if (filters.internshipsMin !== "") {
-          const internshipValue = Number(filters.internshipsMin);
-          if (!Number.isInteger(internshipValue) || internshipValue < 0) {
-            errors.internshipsMin = "Internships must be a whole number >= 0.";
-          } else {
-            values.internshipsMin = internshipValue;
-          }
-        }
-
-        return {
-          isValid: Object.keys(errors).length === 0,
-          errors: errors,
-          values: values
-        };
-      }
-
-      function createPredictionPayload(formData) {
-        const required = {
-          cgpa: toNumber(formData.get("cgpa")),
-          internships: toInteger(formData.get("internships")),
-          communication_skill: toInteger(formData.get("communication_skill")),
-          problem_solving: toInteger(formData.get("problem_solving")),
-          branch: String(formData.get("branch") || "").trim(),
-          gender: String(formData.get("gender") || "").trim()
-        };
-
-        const optionalAgeRaw = String(formData.get("age") || "").trim();
-        const optionalProjectsRaw = String(formData.get("projects") || "").trim();
-
-        if (!Number.isFinite(required.cgpa) || required.cgpa < 0 || required.cgpa > 10) {
-          return { isValid: false, error: "CGPA must be a number between 0 and 10." };
-        }
-
-        if (!Number.isInteger(required.internships) || required.internships < 0) {
-          return { isValid: false, error: "Internships must be a whole number >= 0." };
-        }
-
-        if (!Number.isInteger(required.communication_skill) || required.communication_skill < 0 || required.communication_skill > 9) {
-          return { isValid: false, error: "Communication skill must be an integer from 0 to 9." };
-        }
-
-        if (!Number.isInteger(required.problem_solving) || required.problem_solving < 0 || required.problem_solving > 9) {
-          return { isValid: false, error: "Problem solving must be an integer from 0 to 9." };
-        }
-
-        if (!required.branch) {
-          return { isValid: false, error: "Please select a branch." };
-        }
-
-        if (!required.gender) {
-          return { isValid: false, error: "Please select a gender." };
-        }
-
-        let age = 21;
-        if (optionalAgeRaw !== "") {
-          age = toInteger(optionalAgeRaw);
-          if (!Number.isInteger(age) || age < 16 || age > 100) {
-            return { isValid: false, error: "Age must be an integer between 16 and 100." };
-          }
-        }
-
-        let projects = 2;
-        if (optionalProjectsRaw !== "") {
-          projects = toInteger(optionalProjectsRaw);
-          if (!Number.isInteger(projects) || projects < 0) {
-            return { isValid: false, error: "Projects must be a whole number >= 0." };
-          }
-        }
-
-        const payload = {
-          age: age,
-          cgpa: required.cgpa,
-          backlogs: 0,
-          attendance: 85,
-          tenth_percentage: 80,
-          twelfth_percentage: 78,
-          branch: required.branch,
-          college_tier: 2,
-          python_skill: 6,
-          "c++_skill": 6,
-          java_skill: 6,
-          ml_skill: 5,
-          web_dev_skill: 6,
-          communication_skill: required.communication_skill,
-          aptitude_score: 74,
-          logical_reasoning: 72,
-          internships: required.internships,
-          projects: projects,
-          github_projects: Math.max(0, projects),
-          hackathons: 1,
-          certifications: 1,
-          coding_contest_rating: 1200,
-          teamwork: 6,
-          leadership: 5,
-          problem_solving: required.problem_solving,
-          time_management: 6,
-          gender: required.gender,
-          city_tier: 2,
-          family_income: 8,
-          include_explanation: false
-        };
-
-        return {
-          isValid: true,
-          payload: payload
-        };
-      }
-
-      async function requestJson(path, options) {
-        const method = options.method || "GET";
-        const params = options.params || null;
-        const body = options.body || null;
-        const signal = options.signal || null;
-
-        const url = new URL(path, API_BASE_URL);
-        if (params && typeof params === "object") {
-          Object.keys(params).forEach(function (key) {
-            const value = params[key];
-            if (value !== undefined && value !== null && value !== "") {
-              url.searchParams.set(key, String(value));
-            }
-          });
-        }
-
-        const timeoutController = new AbortController();
-        const timeoutId = window.setTimeout(function () {
-          timeoutController.abort();
-        }, REQUEST_TIMEOUT_MS);
-
-        const combinedController = new AbortController();
-        const abortCombined = function () {
-          if (!combinedController.signal.aborted) {
-            combinedController.abort();
-          }
-        };
-
-        timeoutController.signal.addEventListener("abort", abortCombined, { once: true });
-        if (signal) {
-          if (signal.aborted) {
-            abortCombined();
-          } else {
-            signal.addEventListener("abort", abortCombined, { once: true });
-          }
-        }
-
-        const headers = { "Accept": "application/json" };
-        if (body !== null) {
-          headers["Content-Type"] = "application/json";
-        }
-
-        try {
-          const response = await fetch(url.toString(), {
-            method: method,
-            headers: headers,
-            body: body !== null ? JSON.stringify(body) : undefined,
-            signal: combinedController.signal
-          });
-
-          const contentType = response.headers.get("content-type") || "";
-          let data = null;
-
-          if (contentType.includes("application/json")) {
-            data = await response.json();
-          } else {
-            const text = await response.text();
-            throw new Error(text || "Unexpected response format.");
-          }
-
-          if (!response.ok) {
-            const detail = data && typeof data.detail === "string"
-              ? data.detail
-              : "Request failed with status " + response.status + ".";
-            throw new Error(detail);
-          }
-
-          return data;
-        } catch (error) {
-          const timedOut = timeoutController.signal.aborted && !(signal && signal.aborted);
-          if (error.name === "AbortError" && timedOut) {
-            throw new Error("Request timed out after 10 seconds.");
-          }
-          if (error.name === "AbortError") {
-            const canceledError = new Error("Request canceled");
-            canceledError.name = "CanceledError";
-            throw canceledError;
-          }
-          throw error;
-        } finally {
-          window.clearTimeout(timeoutId);
-        }
-      }
-
-      function loadPersistedState() {
-        try {
-          const raw = window.localStorage.getItem(STORAGE_KEY);
-          if (!raw) {
-            return cloneDefaultState();
-          }
-
-          const parsed = JSON.parse(raw);
-          const nextState = cloneDefaultState();
-
-          const currentPage = Number(parsed.currentPage);
-          const pageSize = Number(parsed.pageSize);
-          const cgpaMin = parsed.filters && typeof parsed.filters.cgpaMin === "string" ? parsed.filters.cgpaMin : "";
-          const internshipsMin = parsed.filters && typeof parsed.filters.internshipsMin === "string"
-            ? parsed.filters.internshipsMin
-            : "";
-
-          nextState.currentPage = Number.isInteger(currentPage) && currentPage > 0 ? currentPage : defaultState.currentPage;
-          nextState.pageSize = PAGE_SIZE_OPTIONS.includes(pageSize) ? pageSize : defaultState.pageSize;
-          nextState.filters.cgpaMin = cgpaMin;
-          nextState.filters.internshipsMin = internshipsMin;
-
-          return nextState;
-        } catch (_) {
-          return cloneDefaultState();
-        }
-      }
-
-      function persistState() {
-        const snapshot = {
-          currentPage: state.currentPage,
-          pageSize: state.pageSize,
-          filters: {
-            cgpaMin: state.filters.cgpaMin,
-            internshipsMin: state.filters.internshipsMin
-          }
-        };
-
-        try {
-          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
-        } catch (_) {
-          // Ignore persistence errors silently in constrained environments.
-        }
-      }
-
-      function cloneDefaultState() {
-        return {
-          currentPage: defaultState.currentPage,
-          totalPages: defaultState.totalPages,
-          totalRecords: defaultState.totalRecords,
-          pageSize: defaultState.pageSize,
-          filters: {
-            cgpaMin: defaultState.filters.cgpaMin,
-            internshipsMin: defaultState.filters.internshipsMin
-          }
-        };
-      }
-
-      function isValidStatsResponse(data) {
-        return (
-          data &&
-          isFiniteNumber(data.total_students) &&
-          isFiniteNumber(data.placement_rate) &&
-          isFiniteNumber(data.avg_cgpa) &&
-          isFiniteNumber(data.avg_internships)
-        );
-      }
-
-      function isValidStudentsResponse(data) {
-        return (
-          data &&
-          Array.isArray(data.data) &&
-          isFiniteNumber(data.total) &&
-          isFiniteNumber(data.page) &&
-          isFiniteNumber(data.limit) &&
-          isFiniteNumber(data.total_pages)
-        );
-      }
-
-      function isValidPredictResponse(data) {
-        return data && isFiniteNumber(data.probability) && isFiniteNumber(data.prediction);
-      }
-
-      function formatInteger(value) {
-        return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(Number(value) || 0);
-      }
-
-      function formatDecimal(value, precision) {
-        const number = Number(value);
-        if (!Number.isFinite(number)) {
-          return "--";
-        }
-        return number.toFixed(precision);
-      }
-
-      function formatPercent(value) {
-        const numeric = Number(value);
-        if (!Number.isFinite(numeric)) {
-          return "--";
-        }
-        const percent = numeric <= 1 ? numeric * 100 : numeric;
-        return percent.toFixed(2) + "%";
-      }
-
-      function safeText(value) {
-        if (value === null || value === undefined || value === "") {
-          return "--";
-        }
-        return String(value);
-      }
-
-      function safeInteger(value) {
-        const num = Number(value);
-        return Number.isFinite(num) ? String(Math.round(num)) : "--";
-      }
-
-      function safeDecimal(value, precision) {
-        const num = Number(value);
-        return Number.isFinite(num) ? num.toFixed(precision) : "--";
-      }
-
-      function isFiniteNumber(value) {
-        return Number.isFinite(Number(value));
-      }
-
-      function toNumber(value) {
-        return Number(String(value || "").trim());
-      }
-
-      function toInteger(value) {
-        return Number.parseInt(String(value || "").trim(), 10);
-      }
-
-      function getFriendlyError(error, fallbackMessage) {
-        if (error && typeof error.message === "string" && error.message.trim()) {
-          return error.message;
-        }
-        return fallbackMessage;
-      }
-
-      function escapeHtml(value) {
-        return String(value)
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&#039;");
-      }
-    })();
-  </script>
+  })();
+</script>
 </body>
 </html>
