@@ -15,16 +15,16 @@
        DESIGN TOKENS (Academic Editorial)
     ────────────────────────────────────────────── */
     :root {
-      --bg:        #f5f1eb;       /* warm parchment */
-      --surface:   #faf8f4;       /* elevated card */
-      --surface2:  #ede9e1;       /* slightly deeper */
-      --border:    #d8d1c4;       /* soft rule */
-      --navy:      #1a2035;       /* primary text / headings */
-      --coral:     #d94f3d;       /* Student 1 accent */
-      --sage:      #3a7d5c;       /* Student 2 accent */
-      --gold:      #b5820d;       /* shared stat accent */
-      --text:      #2e3348;       /* body text */
-      --text-dim:  #8a8577;       /* muted text */
+      --bg:        #f5f1eb; /* warm parchment */
+      --surface:   #faf8f4; /* elevated card */
+      --surface2:  #ede9e1; /* slightly deeper */
+      --border:    #d8d1c4; /* soft rule */
+      --navy:      #1a2035; /* primary text / headings */
+      --coral:     #d94f3d; /* Student 1 accent */
+      --sage:      #3a7d5c; /* Student 2 accent */
+      --gold:      #b5820d; /* shared stat accent */
+      --text:      #2e3348; /* body text */
+      --text-dim:  #8a8577; /* muted text */
       --display:   'Playfair Display', Georgia, serif;
       --mono:      'IBM Plex Mono', 'Courier New', monospace;
       --radius:    4px;
@@ -471,16 +471,44 @@
           </div>
         </form>
 
-        <aside class="result-card">
-          <p class="result-title">Prediction Engine Output</p>
-          <div class="result-value" id="predictResultValue">
-            <span style="color: #4a5270; font-size: 1.2rem; font-weight: 400;">Awaiting Input...</span>
-          </div>
-          <p class="result-prob" id="predictProbabilityText">Probability: --</p>
-          <div class="progress-track">
-            <div class="progress-bar" id="predictProbabilityBar"></div>
-          </div>
-        </aside>
+        <div style="display: flex; flex-direction: column; gap: 16px; min-width: 0;">
+          <aside class="result-card">
+            <p class="result-title">Prediction Engine Output</p>
+            <div class="result-value" id="predictResultValue">
+              <span style="color: #4a5270; font-size: 1.2rem; font-weight: 400;">Awaiting Input...</span>
+            </div>
+            <p class="result-prob" id="predictProbabilityText">Probability: --</p>
+            <div class="progress-track">
+              <div class="progress-bar" id="predictProbabilityBar"></div>
+            </div>
+          </aside>
+
+          <aside class="panel" id="shapCard" style="display: none; padding: 20px; min-height: 200px;">
+            <p class="result-title" style="color: var(--navy); margin-bottom: 16px;">SHAP Explanation</p>
+            <div id="shapEmptyState" style="display: none; font-size: 0.75rem; color: var(--text-dim); font-style: italic;">
+              No explanation available.
+            </div>
+            
+            <div style="position: relative; height: 320px; width: 100%;">
+              <canvas id="shapChart"></canvas>
+            </div>
+            
+            <div id="shapTopFactors" style="margin-top: 14px; font-size: 0.72rem; line-height: 1.6; color: var(--text);"></div>
+            
+            <div id="waterfallSection" style="display: none;">
+              <div style="border-top: 1px solid var(--border); margin: 16px 0;"></div>
+              
+              <div id="waterfallContainer" style="position: relative; height: 340px; width: 100%; margin-top: 10px;">
+                <p class="result-title" style="color: var(--navy); margin-bottom: 12px; text-align: center;">Cumulative Impact (Waterfall)</p>
+                <canvas id="waterfallChart"></canvas>
+              </div>
+              
+              <div id="waterfallHelperText" style="margin-top: 16px; font-size: 0.7rem; color: var(--text-dim); text-align: center; font-style: italic;">
+                Starting from a neutral baseline (0), each factor shifts the prediction step-by-step, showing how the model arrived at the final decision.
+              </div>
+            </div>
+          </aside>
+        </div>
 
       </div>
     </div>
@@ -514,7 +542,6 @@
       pageSize: 10,
       filters: { cgpaMin: "", internshipsMin: "" }
     };
-
     const state = loadPersistedState();
 
     const elements = {
@@ -545,14 +572,22 @@
       predictError: document.getElementById("predictError"),
       predictResultValue: document.getElementById("predictResultValue"),
       predictProbabilityText: document.getElementById("predictProbabilityText"),
-      predictProbabilityBar: document.getElementById("predictProbabilityBar")
+      predictProbabilityBar: document.getElementById("predictProbabilityBar"),
+      
+      shapCard: document.getElementById("shapCard"),
+      shapEmptyState: document.getElementById("shapEmptyState"),
+      shapChartCanvas: document.getElementById("shapChart"),
+      shapTopFactors: document.getElementById("shapTopFactors"),
+      waterfallSection: document.getElementById("waterfallSection"),
+      waterfallChartCanvas: document.getElementById("waterfallChart")
     };
-
     let statsController = null;
     let studentsController = null;
     let predictionController = null;
     let debounceHandle = null;
     let studentsLoading = false;
+    let shapChartInstance = null;
+    let waterfallChartInstance = null;
 
     initializeUI();
     wireEvents();
@@ -676,7 +711,8 @@
         state.totalPages = Math.max(0, Number(data.total_pages));
         state.totalRecords = Math.max(0, Number(data.total));
         if (state.totalPages > 0 && state.currentPage > state.totalPages) {
-          state.currentPage = state.totalPages; persistState(); fetchStudents(); return;
+          state.currentPage = state.totalPages;
+          persistState(); fetchStudents(); return;
         }
 
         renderStudentsTable(data.data);
@@ -705,7 +741,6 @@
       if (predictionController) predictionController.abort();
       predictionController = new AbortController();
       setPredictionLoading(true);
-      
       try {
         const data = await requestJson("/predict", {
           method: "POST", signal: predictionController.signal, body: payloadResult.payload
@@ -732,6 +767,34 @@
           if(!placed) elements.predictProbabilityBar.style.background = 'var(--coral)';
           else elements.predictProbabilityBar.style.background = 'var(--sage)';
         });
+        
+        // --- NEW SHAP HANDLING LOGIC ---
+        elements.shapCard.style.display = "block";
+        if (data.shap_explanation && Object.keys(data.shap_explanation).length > 0) {
+          elements.shapEmptyState.style.display = "none";
+          elements.shapChartCanvas.style.display = "block";
+          elements.waterfallSection.style.display = "block";
+          
+          renderShapChart(data.shap_explanation);
+          renderWaterfallChart(data.shap_explanation);
+
+        } else {
+          elements.shapEmptyState.style.display = "block";
+          elements.shapChartCanvas.style.display = "none";
+          elements.waterfallSection.style.display = "none";
+          elements.shapTopFactors.innerHTML = "";
+          
+          if (shapChartInstance) {
+            shapChartInstance.destroy();
+            shapChartInstance = null;
+          }
+          if (waterfallChartInstance) {
+            waterfallChartInstance.destroy();
+            waterfallChartInstance = null;
+          }
+        }
+        // -------------------------------
+
       } catch (error) {
         if (error.name === "CanceledError") return;
         elements.predictError.textContent = getFriendlyError(error, "Prediction request failed. Please review inputs and try again.");
@@ -815,7 +878,8 @@
     function renderFilterErrors(errors) { elements.cgpaMinError.textContent = errors.cgpaMin || ""; elements.internshipsMinError.textContent = errors.internshipsMin || ""; }
 
     function validateFilters(filters) {
-      const errors = {}; const values = { cgpaMin: undefined, internshipsMin: undefined };
+      const errors = {};
+      const values = { cgpaMin: undefined, internshipsMin: undefined };
       if (filters.cgpaMin !== "") {
         const cgpaValue = Number(filters.cgpaMin);
         if (!Number.isFinite(cgpaValue) || cgpaValue < 0 || cgpaValue > 10) errors.cgpaMin = "CGPA must be between 0 and 10.";
@@ -837,7 +901,7 @@
       };
       const optAgeRaw = String(formData.get("age") || "").trim();
       const optProjRaw = String(formData.get("projects") || "").trim();
-
+      
       if (!Number.isFinite(required.cgpa) || required.cgpa < 0 || required.cgpa > 10) return { isValid: false, error: "CGPA must be 0-10." };
       if (!Number.isInteger(required.internships) || required.internships < 0) return { isValid: false, error: "Internships must be integer >= 0." };
       if (!Number.isInteger(required.communication_skill) || required.communication_skill < 0 || required.communication_skill > 9) return { isValid: false, error: "Comm skill must be 0-9." };
@@ -847,11 +911,14 @@
 
       let age = 21, projects = 2;
       if (optAgeRaw !== "") { age = toInteger(optAgeRaw); if (!Number.isInteger(age) || age < 16 || age > 100) return { isValid: false, error: "Age must be 16-100." }; }
-      if (optProjRaw !== "") { projects = toInteger(optProjRaw); if (!Number.isInteger(projects) || projects < 0) return { isValid: false, error: "Projects must be integer >= 0." }; }
+      if (optProjRaw !== "") { projects = toInteger(optProjRaw);
+      if (!Number.isInteger(projects) || projects < 0) return { isValid: false, error: "Projects must be integer >= 0." };
+      }
 
       return {
         isValid: true,
         payload: {
+          include_explanation: true,
           age: age, cgpa: required.cgpa, backlogs: 0, attendance: 85, tenth_percentage: 80, twelfth_percentage: 78,
           branch: required.branch, college_tier: 2, python_skill: 6, "c++_skill": 6, java_skill: 6, ml_skill: 5, web_dev_skill: 6,
           communication_skill: required.communication_skill, aptitude_score: 74, logical_reasoning: 72, internships: required.internships,
@@ -868,19 +935,19 @@
       const body = options.body || null;
       const signal = options.signal || null;
       const url = new URL(path, API_BASE_URL);
-      if (params) { Object.keys(params).forEach(k => { if (params[k] !== undefined && params[k] !== null && params[k] !== "") url.searchParams.set(k, String(params[k])); }); }
+      if (params) { Object.keys(params).forEach(k => { if (params[k] !== undefined && params[k] !== null && params[k] !== "") url.searchParams.set(k, String(params[k])); });
+      }
 
       const timeoutController = new AbortController();
       const timeoutId = window.setTimeout(function () { timeoutController.abort(); }, REQUEST_TIMEOUT_MS);
       const combinedController = new AbortController();
       const abortCombined = function () { if (!combinedController.signal.aborted) combinedController.abort(); };
-
       timeoutController.signal.addEventListener("abort", abortCombined, { once: true });
-      if (signal) { if (signal.aborted) abortCombined(); else signal.addEventListener("abort", abortCombined, { once: true }); }
+      if (signal) { if (signal.aborted) abortCombined(); else signal.addEventListener("abort", abortCombined, { once: true });
+      }
 
       const headers = { "Accept": "application/json" };
       if (body !== null) headers["Content-Type"] = "application/json";
-
       try {
         const response = await fetch(url.toString(), { method: method, headers: headers, body: body !== null ? JSON.stringify(body) : undefined, signal: combinedController.signal });
         const contentType = response.headers.get("content-type") || "";
@@ -912,13 +979,23 @@
     }
 
     function persistState() {
-      try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ currentPage: state.currentPage, pageSize: state.pageSize, filters: { cgpaMin: state.filters.cgpaMin, internshipsMin: state.filters.internshipsMin } })); } catch (_) {}
+      try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ currentPage: state.currentPage, pageSize: state.pageSize, filters: { cgpaMin: state.filters.cgpaMin, internshipsMin: state.filters.internshipsMin } }));
+      } catch (_) {}
     }
 
     function cloneDefaultState() { return { currentPage: defaultState.currentPage, totalPages: defaultState.totalPages, totalRecords: defaultState.totalRecords, pageSize: defaultState.pageSize, filters: { cgpaMin: defaultState.filters.cgpaMin, internshipsMin: defaultState.filters.internshipsMin } }; }
     function isValidStatsResponse(data) { return data && isFiniteNumber(data.total_students) && isFiniteNumber(data.placement_rate) && isFiniteNumber(data.avg_cgpa) && isFiniteNumber(data.avg_internships); }
     function isValidStudentsResponse(data) { return data && Array.isArray(data.data) && isFiniteNumber(data.total) && isFiniteNumber(data.page) && isFiniteNumber(data.limit) && isFiniteNumber(data.total_pages); }
-    function isValidPredictResponse(data) { return data && isFiniteNumber(data.probability) && isFiniteNumber(data.prediction); }
+    
+    function isValidPredictResponse(data) { 
+      return (
+        data && 
+        isFiniteNumber(data.probability) && 
+        isFiniteNumber(data.prediction) &&
+        (data.shap_explanation === undefined || typeof data.shap_explanation === "object")
+      );
+    }
+    
     function formatInteger(value) { return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(Number(value) || 0); }
     function formatDecimal(value, precision) { const n = Number(value); return Number.isFinite(n) ? n.toFixed(precision) : "--"; }
     function formatPercent(value) { const n = Number(value); if (!Number.isFinite(n)) return "--"; return (n <= 1 ? n * 100 : n).toFixed(2) + "%"; }
@@ -930,6 +1007,245 @@
     function toInteger(value) { return Number.parseInt(String(value || "").trim(), 10); }
     function getFriendlyError(error, fallback) { return (error && typeof error.message === "string" && error.message.trim()) ? error.message : fallback; }
     function escapeHtml(value) { return String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
+
+    function renderShapChart(shapData) {
+      if (shapChartInstance) {
+        shapChartInstance.destroy();
+      }
+
+      const sortedFeatures = Object.entries(shapData)
+        .map(([feature, value]) => ({ feature, value: Number(value) }))
+        .sort((a, b) => Math.abs(b.value) - Math.abs(a.value))
+        .slice(0, 10);
+
+      const formatLabel = (key) => key.replaceAll("_", " ").replace(/\b\w/g, c => c.toUpperCase());
+      const renameMap = {
+        avg_problem_solving: "Avg Problem Solving",
+        problem_solving: "Problem Solving (User Input)"
+      };
+
+      const labels = sortedFeatures.map(item => renameMap[item.feature] || formatLabel(item.feature));
+      const data = sortedFeatures.map(item => item.value);
+
+      const rootStyles = getComputedStyle(document.documentElement);
+      const colorPos = rootStyles.getPropertyValue('--sage').trim() || '#3a7d5c';
+      const colorNeg = rootStyles.getPropertyValue('--coral').trim() || '#d94f3d';
+      const backgroundColors = data.map(val => val > 0 ? colorPos : colorNeg);
+
+      const ctx = elements.shapChartCanvas.getContext("2d");
+      shapChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'SHAP Impact',
+            data: data,
+            backgroundColor: backgroundColors,
+            borderWidth: 0,
+            borderRadius: 3,
+            barPercentage: 0.7,
+            categoryPercentage: 0.8
+          }]
+        },
+        options: {
+          indexAxis: 'y', 
+          responsive: true,
+          maintainAspectRatio: false,
+          layout: {
+            padding: { left: 20, right: 20, top: 10, bottom: 10 }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const val = context.parsed.x.toFixed(4);
+                  return `Impact: ${val > 0 ? '+' : ''}${val}`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: 'Impact on Prediction',
+                font: { family: "'IBM Plex Mono', monospace", size: 11 },
+                color: '#8a8577'
+              },
+              grid: { 
+                color: (ctx) => ctx.tick.value === 0 ? '#1a2035' : 'rgba(216, 209, 196, 0.5)',
+                lineWidth: (ctx) => ctx.tick.value === 0 ? 2 : 1,
+                drawBorder: false 
+              },
+              ticks: { 
+                autoSkip: false,
+                font: { family: "'IBM Plex Mono', monospace", size: 10 } 
+              }
+            },
+            y: {
+              grid: { display: false },
+              ticks: { 
+                autoSkip: false,
+                font: { family: "'IBM Plex Mono', monospace", size: 10 } 
+              }
+            }
+          }
+        }
+      });
+      
+      const top3 = sortedFeatures.slice(0, 3);
+      
+      function formatFeatureName(name) {
+        return renameMap[name] || name.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      }
+      
+      function generateTopFactorsText(top3) {
+        return top3.map(item => {
+          const isPositive = item.value > 0;
+          const directionText = isPositive ? "contributed positively" : "contributed negatively";
+          const directionColor = isPositive ? "var(--sage)" : "var(--coral)"; 
+          const styledDirection = `<span style="color: ${directionColor}; font-weight: 600;">${directionText}</span>`;
+          
+          const sign = isPositive ? '+' : '';
+          const impact = sign + item.value.toFixed(3);
+          const featureName = formatFeatureName(item.feature);
+
+          return `• <strong>${featureName}</strong> ${styledDirection} to the prediction (impact: ${impact})`;
+        }).join("<br>");
+      }
+
+      const explanationHTML = `
+        <div style="font-weight:600; margin-bottom:6px;">
+          Factors that most influenced the model’s decision:
+        </div>
+        ${generateTopFactorsText(top3)}
+      `;
+      elements.shapTopFactors.innerHTML = explanationHTML;
+    }
+
+    function renderWaterfallChart(shapData) {
+      if (waterfallChartInstance) {
+        waterfallChartInstance.destroy();
+      }
+
+      const sortedFeatures = Object.entries(shapData)
+        .map(([feature, value]) => ({ feature, value: Number(value) }))
+        .sort((a, b) => Math.abs(b.value) - Math.abs(a.value))
+        .slice(0, 8);
+
+      const renameMap = {
+        avg_problem_solving: "Avg Problem Solving",
+        problem_solving: "Problem Solving (User Input)"
+      };
+
+      function formatFeatureName(name) {
+        return renameMap[name] || name.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      }
+
+      const labels = [];
+      const baseData = [];
+      const contributionData = [];
+      
+      let sum = 0;
+      let minY = 0;
+      let maxY = 0;
+
+      for (let i = 0; i < sortedFeatures.length; i++) {
+        labels.push(formatFeatureName(sortedFeatures[i].feature));
+        
+        baseData.push(sum);
+        if (sum < minY) minY = sum;
+        if (sum > maxY) maxY = sum;
+
+        sum += sortedFeatures[i].value;
+        contributionData.push(sortedFeatures[i].value);
+        
+        if (sum < minY) minY = sum;
+        if (sum > maxY) maxY = sum;
+      }
+
+      const range = Math.abs(maxY - minY) || 1;
+      const padding = range * 0.15;
+      minY -= padding;
+      maxY += padding;
+
+      const rootStyles = getComputedStyle(document.documentElement);
+      const colorPos = rootStyles.getPropertyValue('--sage').trim() || '#3a7d5c';
+      const colorNeg = rootStyles.getPropertyValue('--coral').trim() || '#d94f3d';
+      const colors = sortedFeatures.map(item => item.value >= 0 ? colorPos : colorNeg);
+
+      const ctx = elements.waterfallChartCanvas.getContext("2d");
+      waterfallChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: contributionData,
+            base: baseData,
+            backgroundColor: colors,
+            borderWidth: 0,
+            borderRadius: 4,
+            barPercentage: 0.6,
+            categoryPercentage: 0.7
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          layout: {
+            padding: { left: 20, right: 20, top: 10, bottom: 10 }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const i = context.dataIndex;
+                  const start = baseData[i];
+                  const end = start + contributionData[i];
+                  const contribution = end - start;
+                  const sign = contribution >= 0 ? '+' : '';
+                  return [
+                    `Start: ${start.toFixed(3)}`,
+                    `Contribution: ${sign}${contribution.toFixed(3)}`,
+                    `End: ${end.toFixed(3)}`
+                  ];
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: {
+                font: { family: "'IBM Plex Mono', monospace", size: 10 },
+                maxRotation: 45,
+                minRotation: 45
+              }
+            },
+            y: {
+              min: minY,
+              max: maxY,
+              beginAtZero: false,
+              title: {
+                display: true,
+                text: 'Running Impact',
+                font: { family: "'IBM Plex Mono', monospace", size: 10 },
+                color: '#8a8577'
+              },
+              grid: {
+                color: (ctx) => ctx.tick.value === 0 ? '#1a2035' : 'rgba(216, 209, 196, 0.5)',
+                lineWidth: (ctx) => ctx.tick.value === 0 ? 2 : 1
+              },
+              ticks: {
+                font: { family: "'IBM Plex Mono', monospace", size: 10 }
+              }
+            }
+          }
+        }
+      });
+    }
 
   })();
 </script>
