@@ -249,10 +249,58 @@
 
     footer { text-align: center; padding: 40px 20px 20px; font-size: 0.68rem; color: var(--text-dim); letter-spacing: 1px; border-top: 1px solid var(--border); }
 
+    /* ══════════════════════════════════════════════
+       VIZ ANALYTICS SECTION — NEW
+    ══════════════════════════════════════════════ */
+    .viz-row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .viz-panel-title {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--navy);
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      font-weight: 600;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 0;
+    }
+
+    .viz-panel-sub {
+      font-size: 0.63rem;
+      color: var(--text-dim);
+      font-style: italic;
+      margin-top: 7px;
+      margin-bottom: 14px;
+      line-height: 1.55;
+    }
+
+    .viz-status-msg {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      text-align: center;
+      padding: 36px 0;
+      font-style: italic;
+      letter-spacing: 0.3px;
+    }
+
+    .viz-heatmap-wrap {
+      overflow-x: auto;
+      display: flex;
+      justify-content: center;
+    }
+
     @media (max-width: 900px) {
       .assignment-banner { grid-template-columns: 1fr; }
       .stat-strip { grid-template-columns: repeat(2, 1fr); }
       .predict-layout { grid-template-columns: 1fr; }
+      .viz-row-2 { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -303,6 +351,7 @@
 
 <main>
 
+  <!-- ─────────────────── SECTION 01 ─────────────────── -->
   <section id="sec-data">
     <div class="section-head">
       <div class="section-head-left">
@@ -401,6 +450,7 @@
     </div>
   </section>
 
+  <!-- ─────────────────── SECTION 02 ─────────────────── -->
   <section id="sec-predict">
     <div class="section-head">
       <div class="section-head-left">
@@ -514,6 +564,63 @@
     </div>
   </section>
 
+  <!-- ─────────────────── SECTION 03 · NEW ─────────────── -->
+  <section id="sec-viz">
+    <div class="section-head">
+      <div class="section-head-left">
+        <span class="section-num">03</span>
+        <h2>Visual Analytics</h2>
+      </div>
+      <span class="owner-badge badge-s2">Student 2 · Collaborator</span>
+    </div>
+
+    <!-- Row 1: Doughnut + Scatter -->
+    <div class="viz-row-2">
+
+      <!-- Placement Distribution Doughnut -->
+      <div class="panel">
+        <p class="viz-panel-title">Placement Distribution</p>
+        <p class="viz-panel-sub">Placed vs Not Placed across the full student dataset</p>
+        <div id="vizDoughnutStatus" class="viz-status-msg">⏳ Fetching data...</div>
+        <div style="position: relative; height: 270px;">
+          <canvas id="doughnutChart" style="display: none;"></canvas>
+        </div>
+      </div>
+
+      <!-- CGPA vs Placement Scatter -->
+      <div class="panel">
+        <p class="viz-panel-title">CGPA vs Placement</p>
+        <p class="viz-panel-sub">CGPA distribution by placement outcome — vertical jitter applied for clarity</p>
+        <div id="vizScatterStatus" class="viz-status-msg">⏳ Fetching data...</div>
+        <div style="position: relative; height: 270px;">
+          <canvas id="scatterChart" style="display: none;"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Row 2: Correlation Heatmap (full width) -->
+    <div class="panel" style="margin-bottom: 20px;">
+      <p class="viz-panel-title">Correlation Heatmap</p>
+      <p class="viz-panel-sub">Pearson r between numeric dataset features: Age, CGPA, Internships, Placement — computed from live API data</p>
+      <div id="vizHeatmapStatus" class="viz-status-msg">⏳ Fetching data...</div>
+      <div class="viz-heatmap-wrap">
+        <canvas id="heatmapChart" style="display: none; max-width: 100%;"></canvas>
+      </div>
+    </div>
+
+    <!-- Row 3: Top Predictive Features Bar Chart -->
+    <div class="panel">
+      <p class="viz-panel-title">Top Predictive Features</p>
+      <p class="viz-panel-sub">SHAP-based feature importance ranked by absolute contribution magnitude — derived from a representative student profile via live /predict API</p>
+      <div id="vizFeaturesStatus" class="viz-status-msg">⏳ Fetching data...</div>
+      <div style="position: relative; height: 360px;">
+        <canvas id="featuresChart" style="display: none;"></canvas>
+      </div>
+    </div>
+
+  </section>
+
 </main>
 
 <footer>
@@ -525,6 +632,9 @@
   (function () {
     "use strict";
 
+    /* ═══════════════════════════════════════════════
+       CONFIG & STATE
+    ═══════════════════════════════════════════════ */
     const API_ENV = {
       USE_LOCAL_API: false,
       LOCAL_BASE_URL: "http://127.0.0.1:8000",
@@ -544,6 +654,7 @@
     };
     const state = loadPersistedState();
 
+    /* ── Element references ────────────────────── */
     const elements = {
       statTotalStudents: document.getElementById("statTotalStudents"),
       statPlacementRate: document.getElementById("statPlacementRate"),
@@ -579,21 +690,49 @@
       shapChartCanvas: document.getElementById("shapChart"),
       shapTopFactors: document.getElementById("shapTopFactors"),
       waterfallSection: document.getElementById("waterfallSection"),
-      waterfallChartCanvas: document.getElementById("waterfallChart")
+      waterfallChartCanvas: document.getElementById("waterfallChart"),
+
+      /* ── New viz canvas elements ── */
+      doughnutChartCanvas: document.getElementById("doughnutChart"),
+      scatterChartCanvas:  document.getElementById("scatterChart"),
+      heatmapChartCanvas:  document.getElementById("heatmapChart"),
+      featuresChartCanvas: document.getElementById("featuresChart"),
+
+      /* ── New viz status labels ── */
+      vizDoughnutStatus: document.getElementById("vizDoughnutStatus"),
+      vizScatterStatus:  document.getElementById("vizScatterStatus"),
+      vizHeatmapStatus:  document.getElementById("vizHeatmapStatus"),
+      vizFeaturesStatus: document.getElementById("vizFeaturesStatus")
     };
-    let statsController = null;
-    let studentsController = null;
+
+    /* ── Controller & loading flags ────────────── */
+    let statsController      = null;
+    let studentsController   = null;
     let predictionController = null;
-    let debounceHandle = null;
-    let studentsLoading = false;
-    let shapChartInstance = null;
+    let debounceHandle       = null;
+    let studentsLoading      = false;
+
+    /* ── Existing chart instances ───────────────── */
+    let shapChartInstance      = null;
     let waterfallChartInstance = null;
 
+    /* ── New viz chart instances ────────────────── */
+    let doughnutChartInstance  = null;
+    let scatterChartInstance   = null;
+    let featuresChartInstance  = null;
+
+    /* ═══════════════════════════════════════════════
+       BOOTSTRAP
+    ═══════════════════════════════════════════════ */
     initializeUI();
     wireEvents();
     fetchOverviewStats();
     fetchStudents();
+    fetchVizData();   /* ← NEW: kick off all 4 viz charts */
 
+    /* ═══════════════════════════════════════════════
+       INIT & EVENTS (unchanged)
+    ═══════════════════════════════════════════════ */
     function initializeUI() {
       elements.cgpaMinInput.value = state.filters.cgpaMin;
       elements.internshipsMinInput.value = state.filters.internshipsMin;
@@ -654,6 +793,9 @@
       debounceHandle = window.setTimeout(function () { fetchStudents(); }, 300);
     }
 
+    /* ═══════════════════════════════════════════════
+       DATA FETCHING — OVERVIEW STATS (unchanged)
+    ═══════════════════════════════════════════════ */
     async function fetchOverviewStats() {
       if (statsController) statsController.abort();
       statsController = new AbortController();
@@ -680,6 +822,9 @@
       }
     }
 
+    /* ═══════════════════════════════════════════════
+       DATA FETCHING — STUDENTS TABLE (unchanged)
+    ═══════════════════════════════════════════════ */
     async function fetchStudents() {
       const validation = validateFilters(state.filters);
       renderFilterErrors(validation.errors);
@@ -731,6 +876,9 @@
       }
     }
 
+    /* ═══════════════════════════════════════════════
+       PREDICTION HANDLER (unchanged)
+    ═══════════════════════════════════════════════ */
     async function handlePredictionSubmit(event) {
       event.preventDefault();
       const payloadResult = createPredictionPayload(new FormData(elements.predictForm));
@@ -768,7 +916,7 @@
           else elements.predictProbabilityBar.style.background = 'var(--sage)';
         });
         
-        // --- NEW SHAP HANDLING LOGIC ---
+        // --- SHAP HANDLING LOGIC ---
         elements.shapCard.style.display = "block";
         if (data.shap_explanation && Object.keys(data.shap_explanation).length > 0) {
           elements.shapEmptyState.style.display = "none";
@@ -793,7 +941,6 @@
             waterfallChartInstance = null;
           }
         }
-        // -------------------------------
 
       } catch (error) {
         if (error.name === "CanceledError") return;
@@ -803,6 +950,9 @@
       }
     }
 
+    /* ═══════════════════════════════════════════════
+       TABLE RENDERING (unchanged)
+    ═══════════════════════════════════════════════ */
     function renderStudentsTable(rows) {
       if (!Array.isArray(rows) || rows.length === 0) { renderEmptyTable("No results found"); return; }
       const fragment = document.createDocumentFragment();
@@ -837,6 +987,9 @@
       td.textContent = value; return td;
     }
 
+    /* ═══════════════════════════════════════════════
+       UI STATE HELPERS (unchanged)
+    ═══════════════════════════════════════════════ */
     function setStatsLoading(isLoading) {
       [elements.statTotalStudents, elements.statPlacementRate, elements.statAvgCgpa, elements.statAvgInternships].forEach(function (node) {
         if (isLoading) node.classList.add("skeleton"); else node.classList.remove("skeleton");
@@ -877,6 +1030,9 @@
     function clearFilterErrors() { elements.cgpaMinError.textContent = ""; elements.internshipsMinError.textContent = ""; }
     function renderFilterErrors(errors) { elements.cgpaMinError.textContent = errors.cgpaMin || ""; elements.internshipsMinError.textContent = errors.internshipsMin || ""; }
 
+    /* ═══════════════════════════════════════════════
+       VALIDATION & PAYLOAD (unchanged)
+    ═══════════════════════════════════════════════ */
     function validateFilters(filters) {
       const errors = {};
       const values = { cgpaMin: undefined, internshipsMin: undefined };
@@ -929,6 +1085,9 @@
       };
     }
 
+    /* ═══════════════════════════════════════════════
+       HTTP UTILITY (unchanged)
+    ═══════════════════════════════════════════════ */
     async function requestJson(path, options) {
       const method = options.method || "GET";
       const params = options.params || null;
@@ -964,6 +1123,9 @@
       } finally { window.clearTimeout(timeoutId); }
     }
 
+    /* ═══════════════════════════════════════════════
+       PERSISTENCE (unchanged)
+    ═══════════════════════════════════════════════ */
     function loadPersistedState() {
       try {
         const raw = window.localStorage.getItem(STORAGE_KEY);
@@ -983,6 +1145,9 @@
       } catch (_) {}
     }
 
+    /* ═══════════════════════════════════════════════
+       VALIDATORS & FORMATTERS (unchanged)
+    ═══════════════════════════════════════════════ */
     function cloneDefaultState() { return { currentPage: defaultState.currentPage, totalPages: defaultState.totalPages, totalRecords: defaultState.totalRecords, pageSize: defaultState.pageSize, filters: { cgpaMin: defaultState.filters.cgpaMin, internshipsMin: defaultState.filters.internshipsMin } }; }
     function isValidStatsResponse(data) { return data && isFiniteNumber(data.total_students) && isFiniteNumber(data.placement_rate) && isFiniteNumber(data.avg_cgpa) && isFiniteNumber(data.avg_internships); }
     function isValidStudentsResponse(data) { return data && Array.isArray(data.data) && isFiniteNumber(data.total) && isFiniteNumber(data.page) && isFiniteNumber(data.limit) && isFiniteNumber(data.total_pages); }
@@ -1008,6 +1173,9 @@
     function getFriendlyError(error, fallback) { return (error && typeof error.message === "string" && error.message.trim()) ? error.message : fallback; }
     function escapeHtml(value) { return String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
 
+    /* ═══════════════════════════════════════════════
+       SHAP BAR CHART (unchanged)
+    ═══════════════════════════════════════════════ */
     function renderShapChart(shapData) {
       if (shapChartInstance) {
         shapChartInstance.destroy();
@@ -1117,13 +1285,16 @@
 
       const explanationHTML = `
         <div style="font-weight:600; margin-bottom:6px;">
-          Factors that most influenced the model’s decision:
+          Factors that most influenced the model's decision:
         </div>
         ${generateTopFactorsText(top3)}
       `;
       elements.shapTopFactors.innerHTML = explanationHTML;
     }
 
+    /* ═══════════════════════════════════════════════
+       WATERFALL CHART (unchanged)
+    ═══════════════════════════════════════════════ */
     function renderWaterfallChart(shapData) {
       if (waterfallChartInstance) {
         waterfallChartInstance.destroy();
@@ -1246,6 +1417,561 @@
         }
       });
     }
+
+    /* ══════════════════════════════════════════════════════
+       ▼▼▼  NEW: VIZ ANALYTICS — Section 03  ▼▼▼
+    ══════════════════════════════════════════════════════ */
+
+    /**
+     * Pearson correlation coefficient for two numeric arrays.
+     * Skips non-finite pairs so NaN/undefined values are handled safely.
+     */
+    function pearsonCorr(xs, ys) {
+      var pairs = [];
+      var len = Math.min(xs.length, ys.length);
+      for (var i = 0; i < len; i++) {
+        if (Number.isFinite(xs[i]) && Number.isFinite(ys[i])) {
+          pairs.push([xs[i], ys[i]]);
+        }
+      }
+      var n = pairs.length;
+      if (n < 2) return 0;
+      var sumX = 0, sumY = 0;
+      for (var k = 0; k < n; k++) { sumX += pairs[k][0]; sumY += pairs[k][1]; }
+      var mx = sumX / n, my = sumY / n;
+      var num = 0, dx2 = 0, dy2 = 0;
+      for (var j = 0; j < n; j++) {
+        var dx = pairs[j][0] - mx, dy = pairs[j][1] - my;
+        num += dx * dy; dx2 += dx * dx; dy2 += dy * dy;
+      }
+      return (dx2 === 0 || dy2 === 0) ? 0 : num / Math.sqrt(dx2 * dy2);
+    }
+
+    /**
+     * Fetch a large student sample for visualization purposes.
+     * Uses limit=500 — API may cap this; we use whatever is returned.
+     */
+    async function fetchAllForViz() {
+      try {
+        const data = await requestJson("/students", {
+          method: "GET",
+          params: { page: 1, limit: state.pageSize }
+        });
+        return isValidStudentsResponse(data) ? data.data : [];
+      } catch (_) {
+        return [];
+      }
+    }
+
+    /**
+     * Orchestrates all four visualization charts.
+     * Students data and stats fetched in parallel; top features fetched independently.
+     */
+    async function fetchVizData() {
+      let students = [];
+      let stats = null;
+      
+
+      try {
+        const results = await Promise.all([
+          fetchAllForViz(),
+          requestJson("/stats/overview", { method: "GET" }).catch(function () { return null; })
+        ]);
+        students = results[0];
+        stats    = results[1];
+      } catch (_) {
+        /* errors handled per-chart below */
+      }
+
+      /* Doughnut — needs stats */
+      if (stats) {
+        drawDoughnut(stats);
+      } else {
+        elements.vizDoughnutStatus.textContent = "⚠ Overview data unavailable.";
+      }
+
+      /* Scatter + Heatmap — need student records */
+      if (students.length > 0) {
+        drawScatter(students);
+        drawHeatmap(students);
+      } else {
+        elements.vizScatterStatus.textContent = "⚠ No student records returned.";
+        elements.vizHeatmapStatus.textContent = "⚠ No student records returned.";
+      }
+
+      /* Top features — independent prediction call */
+      drawTopFeatures();
+    }
+
+    /* ─────────────────────────────────────────────
+       CHART 1: Placement Distribution Doughnut
+    ───────────────────────────────────────────── */
+    function drawDoughnut(stats) {
+      var canvas    = elements.doughnutChartCanvas;
+      var statusEl  = elements.vizDoughnutStatus;
+      if (!canvas) return;
+
+      var total    = Number(stats.total_students) || 0;
+      var rate     = Number(stats.placement_rate);
+      var rateFrac = rate > 1 ? rate / 100 : rate;   /* normalise to 0-1 */
+      var placed   = Math.round(total * rateFrac);
+      var notPlaced = total - placed;
+
+      if (total === 0) { statusEl.textContent = "⚠ No records found."; return; }
+
+      statusEl.style.display = "none";
+      canvas.style.display   = "block";
+
+      if (doughnutChartInstance) { doughnutChartInstance.destroy(); doughnutChartInstance = null; }
+
+      doughnutChartInstance = new Chart(canvas.getContext("2d"), {
+        type: "doughnut",
+        data: {
+          labels: ["Placed", "Not Placed"],
+          datasets: [{
+            data: [placed, notPlaced],
+            backgroundColor: ["#3a7d5c", "#d94f3d"],
+            borderColor:     ["#faf8f4",  "#faf8f4"],
+            borderWidth: 4,
+            hoverOffset: 12
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: "64%",
+          animation: { animateRotate: true, duration: 900 },
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: {
+                font: { family: "'IBM Plex Mono', monospace", size: 11 },
+                color: "#2e3348",
+                padding: 20,
+                usePointStyle: true,
+                pointStyleWidth: 10
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function (ctx) {
+                  var pct = total > 0 ? ((ctx.parsed / total) * 100).toFixed(1) : "0.0";
+                  return "  " + ctx.label + ": " + ctx.parsed.toLocaleString() + "  (" + pct + "%)";
+                }
+              },
+              bodyFont: { family: "'IBM Plex Mono', monospace", size: 12 }
+            }
+          }
+        }
+      });
+    }
+
+    /* ─────────────────────────────────────────────
+       CHART 2: CGPA vs Placement Scatter Plot
+    ───────────────────────────────────────────── */
+    function drawScatter(students) {
+      var canvas   = elements.scatterChartCanvas;
+      var statusEl = elements.vizScatterStatus;
+      if (!canvas) return;
+
+      var placedPts = [], notPlacedPts = [];
+
+      students.forEach(function (s) {
+        var cgpa     = Number(s.cgpa);
+        if (!Number.isFinite(cgpa)) return;
+        var isPlaced = Number(s.placed) === 1;
+        var jitter   = (Math.random() - 0.5) * 0.24;   /* vertical spread for legibility */
+        var pt       = { x: cgpa, y: (isPlaced ? 1 : 0) + jitter };
+        if (isPlaced) placedPts.push(pt);
+        else          notPlacedPts.push(pt);
+      });
+
+      if (placedPts.length === 0 && notPlacedPts.length === 0) {
+        statusEl.textContent = "⚠ No valid CGPA values found."; return;
+      }
+
+      statusEl.style.display = "none";
+      canvas.style.display   = "block";
+
+      if (scatterChartInstance) { scatterChartInstance.destroy(); scatterChartInstance = null; }
+
+      scatterChartInstance = new Chart(canvas.getContext("2d"), {
+        type: "scatter",
+        data: {
+          datasets: [
+            {
+              label: "Placed",
+              data: placedPts,
+              backgroundColor: "rgba(58,125,92,0.48)",
+              borderColor: "transparent",
+              pointRadius: 4,
+              pointHoverRadius: 6
+            },
+            {
+              label: "Not Placed",
+              data: notPlacedPts,
+              backgroundColor: "rgba(217,79,61,0.48)",
+              borderColor: "transparent",
+              pointRadius: 4,
+              pointHoverRadius: 6
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 700 },
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: {
+                font: { family: "'IBM Plex Mono', monospace", size: 11 },
+                color: "#2e3348",
+                padding: 18,
+                usePointStyle: true,
+                pointStyleWidth: 10
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function (ctx) {
+                  return "  " + ctx.dataset.label + "  —  CGPA: " + ctx.parsed.x.toFixed(2);
+                }
+              },
+              bodyFont: { family: "'IBM Plex Mono', monospace", size: 11 }
+            }
+          },
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: "CGPA",
+                font: { family: "'IBM Plex Mono', monospace", size: 11 },
+                color: "#8a8577"
+              },
+              grid: { color: "rgba(216,209,196,0.5)" },
+              ticks: { font: { family: "'IBM Plex Mono', monospace", size: 10 } }
+            },
+            y: {
+              min: -0.4, max: 1.4,
+              title: {
+                display: true,
+                text: "Placement Status",
+                font: { family: "'IBM Plex Mono', monospace", size: 11 },
+                color: "#8a8577"
+              },
+              grid: {
+                color: function (ctx) {
+                  var v = ctx.tick.value;
+                  if (Math.abs(v) < 0.02 || Math.abs(v - 1) < 0.02) return "rgba(26,32,53,0.25)";
+                  return "rgba(216,209,196,0.25)";
+                }
+              },
+              ticks: {
+                font: { family: "'IBM Plex Mono', monospace", size: 10 },
+                callback: function (val) {
+                  if (Math.abs(val) < 0.02)       return "Not Placed";
+                  if (Math.abs(val - 1) < 0.02)   return "Placed";
+                  return "";
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    /* ─────────────────────────────────────────────
+       CHART 3: Correlation Heatmap (custom canvas)
+       Chart.js has no native heatmap type — drawn
+       directly with the 2D Canvas API for full
+       control over layout, colour scale, and DPR.
+    ───────────────────────────────────────────── */
+    function drawHeatmap(students) {
+      var canvas   = elements.heatmapChartCanvas;
+      var statusEl = elements.vizHeatmapStatus;
+      if (!canvas) return;
+
+      /* ── 1. Extract numeric columns ── */
+      var colKeys    = ["age", "cgpa", "internships", "placed"];
+      var colLabels  = ["Age", "CGPA", "Internships", "Placed"];
+      var numCols    = colKeys.length;
+
+      var arrays = colKeys.map(function (col) {
+        return students.map(function (s) { return Number(s[col]); });
+      });
+
+      /* ── 2. Compute Pearson matrix ── */
+      var matrix = [];
+      for (var i = 0; i < numCols; i++) {
+        matrix[i] = [];
+        for (var j = 0; j < numCols; j++) {
+          matrix[i][j] = (i === j) ? 1.0 : pearsonCorr(arrays[i], arrays[j]);
+        }
+      }
+
+      statusEl.style.display = "none";
+      canvas.style.display   = "block";
+
+      /* ── 3. Sizing with DPR support ── */
+      var dpr        = window.devicePixelRatio || 1;
+      var containerW = canvas.parentElement.offsetWidth || 640;
+      var margin     = { top: 64, right: 50, bottom: 60, left: 100 };
+      var availW     = containerW - margin.left - margin.right;
+      var cellSize   = Math.min(Math.floor(availW / numCols), 130);
+      var gridPx     = cellSize * numCols;
+      var totalW     = margin.left + gridPx + margin.right;
+      var totalH     = margin.top  + gridPx + margin.bottom;
+
+      canvas.width        = totalW * dpr;
+      canvas.height       = totalH * dpr;
+      canvas.style.width  = totalW + "px";
+      canvas.style.height = totalH + "px";
+
+      var ctx = canvas.getContext("2d");
+      ctx.scale(dpr, dpr);
+      ctx.clearRect(0, 0, totalW, totalH);
+
+      /* ── 4. Colour scale: coral(-1) ↔ parchment(0) ↔ sage(+1) ── */
+      function corrToRgb(r) {
+        var sage  = [58,  125, 92];
+        var coral = [217, 79,  61];
+        var bg    = [245, 241, 235];  /* --bg parchment */
+        var t    = Math.min(1, Math.abs(r));
+        var base = r >= 0 ? sage : coral;
+        return [
+          Math.round(bg[0] * (1 - t) + base[0] * t),
+          Math.round(bg[1] * (1 - t) + base[1] * t),
+          Math.round(bg[2] * (1 - t) + base[2] * t)
+        ];
+      }
+      function corrToColor(r)        { var c = corrToRgb(r); return "rgb("  + c[0]+","+c[1]+","+c[2]+")"; }
+      function corrToColorA(r, a)    { var c = corrToRgb(r); return "rgba(" + c[0]+","+c[1]+","+c[2]+","+a+")"; }
+
+      /* ── 5. Draw cells ── */
+      for (var row = 0; row < numCols; row++) {
+        for (var col = 0; col < numCols; col++) {
+          var x  = margin.left + col * cellSize;
+          var y  = margin.top  + row * cellSize;
+          var r  = matrix[row][col];
+          var cx = x + cellSize / 2;
+          var cy = y + cellSize / 2;
+          var pad = 3;
+
+          /* Cell fill */
+          ctx.fillStyle = corrToColor(r);
+          ctx.fillRect(x + pad, y + pad, cellSize - pad * 2, cellSize - pad * 2);
+
+          /* Subtle inner border for diagonal */
+          if (row === col) {
+            ctx.strokeStyle = "rgba(26,32,53,0.18)";
+            ctx.lineWidth   = 1;
+            ctx.strokeRect(x + pad, y + pad, cellSize - pad * 2, cellSize - pad * 2);
+          }
+
+          /* Value text — dark on light cells, light on saturated cells */
+          var absR      = Math.abs(r);
+          var textColor = absR > 0.45 ? (r >= 0 ? "#16402e" : "#5c1a13") : "#2e3348";
+          var fontSize  = Math.max(11, Math.min(15, Math.floor(cellSize / 7)));
+          ctx.fillStyle    = textColor;
+          ctx.font         = "600 " + fontSize + "px 'IBM Plex Mono', monospace";
+          ctx.textAlign    = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(r.toFixed(2), cx, cy);
+        }
+      }
+
+      /* ── 6. Column labels (top) ── */
+      var labelSize = Math.max(10, Math.min(13, Math.floor(cellSize / 8)));
+      ctx.fillStyle    = "#1a2035";
+      ctx.font         = "600 " + labelSize + "px 'IBM Plex Mono', monospace";
+      ctx.textAlign    = "center";
+      ctx.textBaseline = "middle";
+      for (var c = 0; c < numCols; c++) {
+        ctx.fillText(colLabels[c], margin.left + c * cellSize + cellSize / 2, margin.top / 2 + 4);
+      }
+
+      /* ── 7. Row labels (left) ── */
+      ctx.textAlign = "right";
+      for (var rr = 0; rr < numCols; rr++) {
+        ctx.fillText(colLabels[rr], margin.left - 14, margin.top + rr * cellSize + cellSize / 2);
+      }
+
+      /* ── 8. Colour-scale legend bar ── */
+      var lgX = margin.left;
+      var lgY = margin.top + gridPx + 18;
+      var lgW = Math.min(gridPx, 280);
+      var lgH = 10;
+
+      var grad = ctx.createLinearGradient(lgX, 0, lgX + lgW, 0);
+      grad.addColorStop(0,   corrToColor(-1));
+      grad.addColorStop(0.5, corrToColor(0));
+      grad.addColorStop(1,   corrToColor(1));
+      ctx.fillStyle = grad;
+      ctx.fillRect(lgX, lgY, lgW, lgH);
+
+      ctx.strokeStyle = "rgba(216,209,196,0.9)";
+      ctx.lineWidth   = 0.5;
+      ctx.strokeRect(lgX, lgY, lgW, lgH);
+
+      ctx.font         = "400 9px 'IBM Plex Mono', monospace";
+      ctx.fillStyle    = "#8a8577";
+      ctx.textBaseline = "top";
+      ctx.textAlign    = "left";  ctx.fillText("Pearson r:", lgX, lgY - 12);
+      ctx.textAlign    = "left";  ctx.fillText("−1.00", lgX, lgY + lgH + 5);
+      ctx.textAlign    = "center";ctx.fillText("0.00",  lgX + lgW / 2, lgY + lgH + 5);
+      ctx.textAlign    = "right"; ctx.fillText("+1.00", lgX + lgW,     lgY + lgH + 5);
+
+      /* n= label */
+      ctx.textAlign    = "right";
+      ctx.fillStyle    = "#8a8577";
+      ctx.textBaseline = "middle";
+      ctx.fillText("n = " + students.length + " records", margin.left + gridPx + margin.right - 4, lgY + lgH / 2);
+    }
+
+    /* ─────────────────────────────────────────────
+       CHART 4: Top Predictive Features Bar Chart
+       Issues a representative /predict call so we
+       can read real SHAP values from the live model.
+    ───────────────────────────────────────────── */
+    async function drawTopFeatures() {
+      var canvas   = elements.featuresChartCanvas;
+      var statusEl = elements.vizFeaturesStatus;
+      if (!canvas) return;
+
+      /* Representative "average" student profile */
+      var repPayload = {
+        include_explanation: true,
+        age: 21,   cgpa: 7.5,  backlogs: 0,  attendance: 80,
+        tenth_percentage: 78,  twelfth_percentage: 76,
+        branch: "CSE",         college_tier: 2,
+        python_skill: 6,       "c++_skill": 6,  java_skill: 5,
+        ml_skill: 5,           web_dev_skill: 5,
+        communication_skill: 6, aptitude_score: 72, logical_reasoning: 70,
+        internships: 1,        projects: 2,         github_projects: 2,
+        hackathons: 1,         certifications: 1,   coding_contest_rating: 1200,
+        teamwork: 6,           leadership: 5,        problem_solving: 6,
+        time_management: 6,    gender: "Male",       city_tier: 2,
+        family_income: 8
+      };
+
+      try {
+        var data = await requestJson("/predict", { method: "POST", body: repPayload });
+
+        if (!data.shap_explanation || Object.keys(data.shap_explanation).length === 0) {
+          statusEl.textContent = "⚠ SHAP explanation not returned by API."; return;
+        }
+
+        /* Human-readable feature names */
+        var renameMap = {
+          avg_problem_solving: "Avg Problem Solving", problem_solving: "Problem Solving",
+          communication_skill: "Communication Skill", cgpa: "CGPA",
+          internships: "Internships",                 family_income: "Family Income",
+          college_tier: "College Tier",               aptitude_score: "Aptitude Score",
+          logical_reasoning: "Logical Reasoning",     coding_contest_rating: "Contest Rating",
+          python_skill: "Python Skill",               ml_skill: "ML Skill",
+          web_dev_skill: "Web Dev Skill",             "c++_skill": "C++ Skill",
+          java_skill: "Java Skill",                   teamwork: "Teamwork",
+          leadership: "Leadership",                   time_management: "Time Mgmt",
+          hackathons: "Hackathons",                   certifications: "Certifications",
+          projects: "Projects",                       github_projects: "GitHub Projects",
+          tenth_percentage: "10th %",                twelfth_percentage: "12th %",
+          attendance: "Attendance",                   backlogs: "Backlogs",
+          city_tier: "City Tier",                     age: "Age",
+          gender: "Gender",                           avg_cgpa: "Avg CGPA"
+        };
+
+        function fmtKey(k) {
+          return renameMap[k] || k.replace(/_/g, " ").replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+        }
+
+        var sorted = Object.entries(data.shap_explanation)
+          .map(function (pair) { return { key: pair[0], abs: Math.abs(Number(pair[1])), raw: Number(pair[1]) }; })
+          .filter(function (f) { return Number.isFinite(f.abs); })
+          .sort(function (a, b) { return b.abs - a.abs; })
+          .slice(0, 10);
+
+        if (sorted.length === 0) { statusEl.textContent = "⚠ No feature data returned."; return; }
+
+        var chartLabels  = sorted.map(function (f) { return fmtKey(f.key); });
+        var chartValues  = sorted.map(function (f) { return f.abs; });
+        var barColors    = sorted.map(function (f) { return f.raw >= 0 ? "rgba(58,125,92,0.82)"  : "rgba(217,79,61,0.82)";  });
+        var borderColors = sorted.map(function (f) { return f.raw >= 0 ? "#244d32"                : "#8c2318";               });
+
+        statusEl.style.display = "none";
+        canvas.style.display   = "block";
+
+        if (featuresChartInstance) { featuresChartInstance.destroy(); featuresChartInstance = null; }
+
+        featuresChartInstance = new Chart(canvas.getContext("2d"), {
+          type: "bar",
+          data: {
+            labels: chartLabels,
+            datasets: [{
+              label: "|SHAP| Importance",
+              data: chartValues,
+              backgroundColor: barColors,
+              borderColor: borderColors,
+              borderWidth: 1,
+              borderRadius: 4,
+              barPercentage: 0.65,
+              categoryPercentage: 0.8
+            }]
+          },
+          options: {
+            indexAxis: "y",
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 800 },
+            layout: { padding: { left: 8, right: 24, top: 6, bottom: 6 } },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  title: function (items) { return items[0].label; },
+                  label: function (ctx) {
+                    var raw  = sorted[ctx.dataIndex].raw;
+                    var dir  = raw >= 0 ? "↑ Positive (boosts placement)" : "↓ Negative (lowers placement)";
+                    return [
+                      "  |SHAP|: " + ctx.parsed.x.toFixed(5),
+                      "  Direction: " + dir
+                    ];
+                  }
+                },
+                bodyFont:  { family: "'IBM Plex Mono', monospace", size: 11 },
+                titleFont: { family: "'IBM Plex Mono', monospace", size: 11, weight: "600" }
+              }
+            },
+            scales: {
+              x: {
+                title: {
+                  display: true,
+                  text: "Feature Importance  |SHAP Value| →",
+                  font: { family: "'IBM Plex Mono', monospace", size: 10 },
+                  color: "#8a8577"
+                },
+                grid: { color: "rgba(216,209,196,0.5)" },
+                ticks: { font: { family: "'IBM Plex Mono', monospace", size: 10 } }
+              },
+              y: {
+                grid: { display: false },
+                ticks: {
+                  font: { family: "'IBM Plex Mono', monospace", size: 10 },
+                  autoSkip: false
+                }
+              }
+            }
+          }
+        });
+
+      } catch (e) {
+        statusEl.textContent = "⚠ Feature importance temporarily unavailable.";
+      }
+    }
+
+    /* ══════════════════════════════════════════════════════
+       ▲▲▲  END: VIZ ANALYTICS  ▲▲▲
+    ══════════════════════════════════════════════════════ */
 
   })();
 </script>
