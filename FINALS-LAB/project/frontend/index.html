@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Design, Analysis, & Algorithm Collab · 2-Student Git Activity</title>
+  <title>DataSci Collab · 2-Student Git Activity</title>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 
@@ -41,8 +41,7 @@
       color: var(--text);
       min-height: 100vh;
       padding-bottom: 80px;
-      line-height: 1.6;
-      font-size: 1.25rem; /* 20px base font size */
+      line-height: 1.45;
     }
 
     /* ── MASTHEAD ─────────────────────────────── */
@@ -58,16 +57,16 @@
 
     .masthead-left .overline {
       font-family: var(--mono);
-      font-size: 1.1rem;
+      font-size: 0.65rem;
       letter-spacing: 3px;
       text-transform: uppercase;
       color: #7a8499;
-      margin-bottom: 18px;
+      margin-bottom: 10px;
     }
 
     .masthead-left h1 {
       font-family: var(--display);
-      font-size: 3.2rem;
+      font-size: 2.2rem;
       font-weight: 900;
       color: #fff;
       line-height: 1.15;
@@ -77,9 +76,9 @@
 
     .masthead-left .sub {
       font-family: var(--mono);
-      font-size: 1.1rem;
+      font-size: 0.75rem;
       color: #7a8499;
-      margin-top: 12px;
+      margin-top: 8px;
       letter-spacing: 0.5px;
     }
 
@@ -87,11 +86,11 @@
 
     .branch-pill {
       font-family: var(--mono);
-      font-size: 1.1rem;
+      font-size: 0.7rem;
       background: rgba(255,255,255,0.07);
       border: 1px solid rgba(255,255,255,0.15);
       border-radius: 20px;
-      padding: 8px 18px;
+      padding: 5px 12px;
       color: #c8b98a;
       letter-spacing: 0.5px;
     }
@@ -121,32 +120,32 @@
 
     .assign-label {
       font-family: var(--mono);
-      font-size: 1.1rem;
+      font-size: 0.62rem;
       letter-spacing: 3px;
       text-transform: uppercase;
-      margin-bottom: 10px;
+      margin-bottom: 6px;
     }
     .s1 .assign-label { color: var(--coral); }
     .s2 .assign-label { color: var(--sage); }
 
     .assign-block h3 {
       font-family: var(--display);
-      font-size: 2rem;
+      font-size: 1.05rem;
       font-weight: 700;
       color: var(--navy);
-      margin-bottom: 18px;
+      margin-bottom: 12px;
     }
 
-    .task-list { list-style: none; font-size: 1.1rem; color: var(--text-dim); line-height: 2.1; }
+    .task-list { list-style: none; font-size: 0.74rem; color: var(--text-dim); line-height: 1.9; }
     .task-list li::before { content: '▸  '; }
     .branch-tag {
       display: inline-block;
-      margin-top: 16px;
-      font-size: 1rem;
+      margin-top: 12px;
+      font-size: 0.66rem;
       background: var(--surface2);
       border: 1px solid var(--border);
       border-radius: 3px;
-      padding: 6px 16px;
+      padding: 3px 9px;
       color: var(--text-dim);
     }
 
@@ -158,28 +157,28 @@
       margin-bottom: 22px; padding-bottom: 14px; border-bottom: 2px solid var(--navy);
     }
     .section-head-left { display: flex; align-items: baseline; gap: 16px; }
-    .section-num { font-family: var(--display); font-size: 4.2rem; font-weight: 900; color: var(--border); line-height: 1; margin-right: 8px; }
-    .section-head h2 { font-family: var(--display); font-size: 2.2rem; font-weight: 700; color: var(--navy); }
+    .section-num { font-family: var(--display); font-size: 3rem; font-weight: 900; color: var(--border); line-height: 1; margin-right: 4px; }
+    .section-head h2 { font-family: var(--display); font-size: 1.35rem; font-weight: 700; color: var(--navy); }
 
     .owner-badge {
-      font-family: var(--mono); font-size: 1.1rem; letter-spacing: 2px;
-      text-transform: uppercase; padding: 8px 18px; border-radius: 20px; font-weight: 600;
+      font-family: var(--mono); font-size: 0.62rem; letter-spacing: 2px;
+      text-transform: uppercase; padding: 4px 12px; border-radius: 20px; font-weight: 600;
     }
     .badge-s1 { background: #fde8e6; color: var(--coral); border: 1px solid #f5bdb9; }
     .badge-s2 { background: #ddf2e9; color: var(--sage);  border: 1px solid #a8dcc3; }
 
-    .todo-box { border-radius: var(--radius); padding: 22px 28px; font-size: 1.1rem; line-height: 2.1; margin-bottom: 32px; }
+    .todo-box { border-radius: var(--radius); padding: 14px 18px; font-size: 0.75rem; line-height: 1.75; margin-bottom: 24px; }
     .todo-box.s1 { background: #fff3f2; border: 1px solid #f5bdb9; border-left: 4px solid var(--coral); color: #9b2c2c; }
     .todo-box strong { display: block; font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; }
 
-    .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 38px; box-shadow: var(--shadow); }
+    .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 26px; box-shadow: var(--shadow); }
 
     /* ── FORMS & TOOLBARS ────────────────────────── */
     .toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; align-items: center; }
     
     input[type="text"], input[type="number"], select {
       background: var(--surface2); border: 1px solid var(--border); color: var(--text);
-      font-family: var(--mono); font-size: 1.1rem; padding: 14px 18px;
+      font-family: var(--mono); font-size: 0.76rem; padding: 8px 12px;
       border-radius: var(--radius); outline: none; transition: all 0.2s; width: 100%;
     }
     .toolbar input[type="number"] { width: 160px; }
@@ -189,10 +188,10 @@
     input:disabled, select:disabled, button:disabled { opacity: 0.6; cursor: not-allowed; }
 
     .field { display: flex; flex-direction: column; gap: 4px; }
-    .field label { font-size: 1.1rem; font-weight: 600; color: var(--navy); text-transform: uppercase; letter-spacing: 1px; }
+    .field label { font-size: 0.7rem; font-weight: 600; color: var(--navy); text-transform: uppercase; letter-spacing: 1px; }
 
     button {
-      font-family: var(--mono); font-size: 1.1rem; padding: 14px 24px;
+      font-family: var(--mono); font-size: 0.74rem; padding: 8px 16px;
       border-radius: var(--radius); cursor: pointer; transition: all 0.18s;
       border: 1px solid var(--border); background: var(--surface2); color: var(--text); letter-spacing: 0.3px;
     }
@@ -200,37 +199,37 @@
     button.primary { background: var(--navy); color: #fff; border-color: var(--navy); }
     button.primary:hover:not(:disabled) { background: #2e3a56; border-color: #2e3a56; }
 
-    .error-text { color: var(--coral); font-size: 1rem; min-height: 18px; margin-top: 4px; }
-    .stats-error { background: #fff3f2; border: 1px solid #f5bdb9; color: var(--coral); padding: 18px; border-radius: var(--radius); font-size: 1.1rem; margin-top: 22px; display: none; }
+    .error-text { color: var(--coral); font-size: 0.65rem; min-height: 14px; margin-top: 2px; }
+    .stats-error { background: #fff3f2; border: 1px solid #f5bdb9; color: var(--coral); padding: 10px; border-radius: var(--radius); font-size: 0.75rem; margin-top: 16px; display: none; }
 
     /* ── TABLE ────────────────────────────────────── */
     .table-scroll { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); }
-    table { width: 100%; border-collapse: collapse; font-size: 1.1rem; background: #fff; }
-    thead th { background: var(--navy); color: #c8b98a; text-align: left; padding: 18px 22px; font-size: 1.1rem; letter-spacing: 1.5px; text-transform: uppercase; white-space: nowrap; position: sticky; top: 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.78rem; background: #fff; }
+    thead th { background: var(--navy); color: #c8b98a; text-align: left; padding: 10px 14px; font-size: 0.65rem; letter-spacing: 1.5px; text-transform: uppercase; white-space: nowrap; position: sticky; top: 0; }
     tbody tr { border-bottom: 1px solid var(--border); transition: background 0.12s; }
     tbody tr:hover { background: var(--surface2); }
-    tbody td { padding: 16px 22px; color: var(--text); }
+    tbody td { padding: 9px 14px; color: var(--text); }
     tbody td.num { color: var(--gold); }
-    .empty-row td { text-align: center; color: var(--text-dim); padding: 40px; font-style: italic; }
+    .empty-row td { text-align: center; color: var(--text-dim); padding: 30px; font-style: italic; }
 
-    .badge { display: inline-flex; padding: 8px 16px; border-radius: 4px; font-size: 1rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .badge { display: inline-flex; padding: 4px 9px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
     .badge--success { color: #2a7a50; background: #ddf2e9; border: 1px solid #a8dcc3; }
     .badge--danger { color: #d94f3d; background: #fde8e6; border: 1px solid #f5bdb9; }
 
     /* ── SUMMARY STAT CARDS ──────────────────────── */
-    .stat-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 36px; }
-    .stat-tile { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 32px 24px; box-shadow: var(--shadow); text-align: center; position: relative; overflow: hidden; }
-    .stat-tile .st-label { font-size: 1.1rem; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 18px; }
-    .stat-tile .st-val { font-family: var(--display); font-size: 3.2rem; font-weight: 700; color: var(--coral); line-height: 1; }
-    .stat-tile .st-sub { font-size: 1rem; color: var(--text-dim); margin-top: 12px; }
+    .stat-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+    .stat-tile { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 16px; box-shadow: var(--shadow); text-align: center; position: relative; overflow: hidden; }
+    .stat-tile .st-label { font-size: 0.6rem; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 10px; }
+    .stat-tile .st-val { font-family: var(--display); font-size: 1.9rem; font-weight: 700; color: var(--coral); line-height: 1; }
+    .stat-tile .st-sub { font-size: 0.65rem; color: var(--text-dim); margin-top: 6px; }
 
     .skeleton { display: inline-block; color: transparent !important; background: linear-gradient(90deg, var(--surface2) 0%, #e6e0d4 50%, var(--surface2) 100%); background-size: 200% 100%; animation: shimmer 1.5s linear infinite; border-radius: 4px; min-width: 60px; min-height: 1.2em; }
     @keyframes shimmer { 0% { background-position: 100% 50%; } 100% { background-position: -100% 50%; } }
 
     /* ── PAGINATION ──────────────────────────────── */
     .pagination { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
-    .pagination__info { font-size: 1.1rem; color: var(--text-dim); }
-    .pagination__actions { display: flex; gap: 16px; }
+    .pagination__info { font-size: 0.75rem; color: var(--text-dim); }
+    .pagination__actions { display: flex; gap: 8px; }
 
     /* ── PREDICTION LAYOUT ───────────────────────── */
     .predict-layout { display: grid; grid-template-columns: 1.5fr 1fr; gap: 24px; align-items: start; margin-top: 16px; }
@@ -238,9 +237,9 @@
     .predict-form .field--full { grid-column: 1 / -1; }
     
     .result-card { background: var(--navy); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-md); color: #fff; min-height: 220px; display: flex; flex-direction: column; justify-content: center; }
-    .result-title { font-family: var(--mono); font-size: 1.1rem; color: #8a93b0; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 18px; }
-    .result-value { display: flex; align-items: center; gap: 18px; margin-bottom: 24px; font-family: var(--display); font-size: 3rem; font-weight: 700; color: #fff; }
-    .result-prob { font-size: 1.1rem; color: #c8b98a; margin-bottom: 12px; }
+    .result-title { font-family: var(--mono); font-size: 0.7rem; color: #8a93b0; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; }
+    .result-value { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; font-family: var(--display); font-size: 1.8rem; font-weight: 700; color: #fff; }
+    .result-prob { font-size: 0.8rem; color: #c8b98a; margin-bottom: 8px; }
     
     .progress-track { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; }
     .progress-bar { height: 100%; width: 0; background: var(--sage); transition: width 0.5s ease; }
@@ -248,7 +247,7 @@
     .spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(217,79,61,0.2); border-top-color: var(--coral); border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 6px; vertical-align: middle; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    footer { text-align: center; padding: 40px 20px 20px; font-size: 1.1rem; color: var(--text-dim); letter-spacing: 1px; border-top: 1px solid var(--border); }
+    footer { text-align: center; padding: 40px 20px 20px; font-size: 0.68rem; color: var(--text-dim); letter-spacing: 1px; border-top: 1px solid var(--border); }
 
     /* ══════════════════════════════════════════════
        VIZ ANALYTICS SECTION — NEW
@@ -262,31 +261,31 @@
 
     .viz-panel-title {
       font-family: var(--mono);
-      font-size: 1.1rem;
+      font-size: 0.68rem;
       color: var(--navy);
       letter-spacing: 2.5px;
       text-transform: uppercase;
       font-weight: 600;
-      padding-bottom: 16px;
+      padding-bottom: 10px;
       border-bottom: 1px solid var(--border);
       margin-bottom: 0;
     }
 
     .viz-panel-sub {
-      font-size: 1rem;
+      font-size: 0.63rem;
       color: var(--text-dim);
       font-style: italic;
-      margin-top: 12px;
-      margin-bottom: 22px;
-      line-height: 1.7;
+      margin-top: 7px;
+      margin-bottom: 14px;
+      line-height: 1.55;
     }
 
     .viz-status-msg {
       font-family: var(--mono);
-      font-size: 1.1rem;
+      font-size: 0.72rem;
       color: var(--text-dim);
       text-align: center;
-      padding: 48px 0;
+      padding: 36px 0;
       font-style: italic;
       letter-spacing: 0.3px;
     }
@@ -309,7 +308,7 @@
 
 <header class="masthead">
   <div class="masthead-left">
-    <p class="overline">Computer Science · Design, Analysis, & Algorithm Track · Git Collaborative Activity</p>
+    <p class="overline">Computer Science · Data Science Track · Git Collaborative Activity</p>
     <h1>Student <em>Placement</em><br>Analytics Dashboard</h1>
     <p class="sub">Dataset: Live DB · API Driven · Academic Term 2025</p>
   </div>
@@ -625,7 +624,7 @@
 </main>
 
 <footer>
-  Design, Analysis, & Algorithm COLLABORATIVE ACTIVITY &nbsp;·&nbsp; 2-STUDENT GIT WORKFLOW
+  DATA SCIENCE COLLABORATIVE ACTIVITY &nbsp;·&nbsp; 2-STUDENT GIT WORKFLOW
   <br>Contribution tracked via commits, branches &amp; pull requests on GitHub.
 </footer>
 
