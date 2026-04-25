@@ -720,14 +720,33 @@
     let doughnutChartInstance  = null;
     let scatterChartInstance   = null;
     let featuresChartInstance  = null;
+    let scoreBarChartInstance = null;
+    let gradeDoughnutChartInstance = null;
+    let attendanceScoreChartInstance = null;
+    const DATASET_SAMPLE_LIMIT = 1000;
+    const DEFAULT_SORT_VALUE = "__score:desc";
+    const analyticsState = {
+      loaded: false,
+      loading: false,
+      rows: [],
+      viewRows: [],
+      stats: null,
+      featureChartReady: false,
+      renderKeys: Object.create(null),
+      loadGate: null,
+      heatmapModel: null,
+      heatmapHoverCell: null,
+      resizeBound: false
+    };
 
     /* ═══════════════════════════════════════════════
        BOOTSTRAP
     ═══════════════════════════════════════════════ */
+    injectDashboardEnhancements();
     initializeUI();
     wireEvents();
-    fetchOverviewStats();
-    fetchStudents();
+    exposeStudentFunctions();
+    showDatasetLoadGate();
     fetchVizData();   /* ← NEW: kick off all 4 viz charts */
 
     /* ═══════════════════════════════════════════════
@@ -758,39 +777,45 @@
         state.pageSize = PAGE_SIZE_OPTIONS.includes(value) ? value : defaultState.pageSize;
         state.currentPage = 1;
         persistState();
-        fetchStudents();
+        if (analyticsState.loaded) applyFilterSort();
       });
       elements.resetFiltersButton.addEventListener("click", function () {
-        state.filters.cgpaMin = "";
-        state.filters.internshipsMin = "";
-        state.pageSize = defaultState.pageSize;
-        state.currentPage = 1;
-        persistState();
-
-        elements.cgpaMinInput.value = "";
-        elements.internshipsMinInput.value = "";
-        elements.pageSizeSelect.value = String(state.pageSize);
-        clearFilterErrors();
-        fetchStudents();
+        resetTable();
       });
       elements.prevPageButton.addEventListener("click", function () {
-        if (studentsLoading || state.currentPage <= 1) return;
+        if (!analyticsState.loaded || studentsLoading || state.currentPage <= 1) return;
         state.currentPage -= 1;
         persistState();
-        fetchStudents();
+        renderTable(analyticsState.viewRows);
+        updatePaginationUI();
       });
       elements.nextPageButton.addEventListener("click", function () {
-        if (studentsLoading || state.currentPage >= state.totalPages) return;
+        if (!analyticsState.loaded || studentsLoading || state.currentPage >= state.totalPages) return;
         state.currentPage += 1;
         persistState();
-        fetchStudents();
+        renderTable(analyticsState.viewRows);
+        updatePaginationUI();
       });
       elements.predictForm.addEventListener("submit", handlePredictionSubmit);
+      if (elements.nameFilterInput) {
+        elements.nameFilterInput.addEventListener("input", function () {
+          state.currentPage = 1;
+          runDebouncedStudentsFetch();
+        });
+      }
+      if (elements.sortSelect) {
+        elements.sortSelect.addEventListener("change", function () {
+          state.currentPage = 1;
+          applyFilterSort();
+        });
+      }
     }
 
     function runDebouncedStudentsFetch() {
       if (debounceHandle !== null) window.clearTimeout(debounceHandle);
-      debounceHandle = window.setTimeout(function () { fetchStudents(); }, 300);
+      debounceHandle = window.setTimeout(function () {
+        if (analyticsState.loaded) applyFilterSort();
+      }, 180);
     }
 
     /* ═══════════════════════════════════════════════
@@ -987,6 +1012,620 @@
       td.textContent = value; return td;
     }
 
+    function injectDashboardEnhancements() {
+      injectDashboardStyles();
+      injectDataExplorerControls();
+      injectAdvancedAnalyticsPanels();
+      cacheDynamicElements();
+      window.DS = [];
+      window.DS_VIEW = [];
+      window.DS_META = { total_rows: 0, sampled_rows: 0 };
+    }
+
+    function injectDashboardStyles() {
+      if (document.getElementById("dashboardEnhancementStyles")) return;
+      const style = document.createElement("style");
+      style.id = "dashboardEnhancementStyles";
+      style.textContent = [
+        ".load-gate { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 24px; background: rgba(250, 248, 244, 0.92); backdrop-filter: blur(18px); }",
+        ".load-gate__card { width: min(560px, 100%); padding: 32px; border: 1px solid rgba(26,32,53,0.12); border-radius: 28px; background: linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(248,245,239,0.96) 100%); box-shadow: 0 24px 80px rgba(26,32,53,0.14); }",
+        ".load-gate__eyebrow { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; background: rgba(26,32,53,0.06); color: var(--navy); font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }",
+        ".load-gate__title { margin: 18px 0 10px; color: var(--navy); font-size: clamp(1.8rem, 4vw, 2.45rem); line-height: 1.05; }",
+        ".load-gate__desc { margin: 0 0 20px; color: var(--text); font-size: 0.96rem; line-height: 1.7; }",
+        ".load-gate__actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }",
+        ".load-gate__hint { color: var(--text-dim); font-size: 0.78rem; }",
+        ".toolbar .field--wide { min-width: 220px; }",
+        ".analysis-table { width: 100%; border-collapse: collapse; margin-top: 8px; }",
+        ".analysis-table tr + tr { border-top: 1px solid rgba(26,32,53,0.08); }",
+        ".analysis-table td { padding: 10px 0; vertical-align: top; font-size: 0.78rem; }",
+        ".analysis-table td:last-child { text-align: right; font-weight: 700; color: var(--navy); }",
+        ".insight-list { display: grid; gap: 12px; margin-top: 10px; }",
+        ".insight-item { padding: 14px 16px; border-radius: 16px; background: rgba(26,32,53,0.04); border: 1px solid rgba(26,32,53,0.08); color: var(--text); line-height: 1.65; font-size: 0.8rem; }",
+        ".heatmap-tooltip { position: absolute; pointer-events: none; transform: translate(-50%, calc(-100% - 14px)); min-width: 180px; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(26,32,53,0.08); background: rgba(255,255,255,0.96); box-shadow: 0 20px 44px rgba(26,32,53,0.16); color: var(--navy); font-size: 0.72rem; line-height: 1.45; opacity: 0; transition: opacity 120ms ease; }",
+        ".heatmap-tooltip strong { display: block; margin-bottom: 2px; }"
+      ].join("");
+      document.head.appendChild(style);
+    }
+
+    function injectDataExplorerControls() {
+      const toolbar = document.querySelector("#sec-data .toolbar");
+      if (!toolbar || document.getElementById("nameFilterInput")) return;
+
+      const nameField = document.createElement("div");
+      nameField.className = "field field--wide";
+      nameField.innerHTML = [
+        '<label for="nameFilterInput">Search Name</label>',
+        '<input id="nameFilterInput" type="text" placeholder="Student 0001 or API name">',
+        '<span class="error-text"></span>'
+      ].join("");
+
+      const sortField = document.createElement("div");
+      sortField.className = "field field--wide";
+      sortField.innerHTML = [
+        '<label for="sortSelect">Sort View</label>',
+        '<select id="sortSelect">',
+        '  <option value="__score:desc">Score: High to Low</option>',
+        '  <option value="__score:asc">Score: Low to High</option>',
+        '  <option value="__attendance:desc">Attendance: High to Low</option>',
+        '  <option value="cgpa:desc">CGPA: High to Low</option>',
+        '  <option value="internships:desc">Internships: High to Low</option>',
+        '  <option value="__name:asc">Name: A to Z</option>',
+        '</select>',
+        '<span class="error-text"></span>'
+      ].join("");
+
+      const resetParent = elements.resetFiltersButton ? elements.resetFiltersButton.parentElement : null;
+      if (elements.resetFiltersButton) elements.resetFiltersButton.textContent = "Reset View";
+      if (resetParent) {
+        toolbar.insertBefore(nameField, resetParent);
+        toolbar.insertBefore(sortField, resetParent);
+      }
+    }
+
+    function injectAdvancedAnalyticsPanels() {
+      const vizSection = document.getElementById("sec-viz");
+      if (!vizSection || document.getElementById("student2ChartsRow")) return;
+
+      const wrapper = document.createElement("div");
+      wrapper.innerHTML = [
+        '<div class="viz-row-2" id="student2ChartsRow">',
+        '  <div class="panel">',
+        '    <p class="viz-panel-title">Top 10 Scores</p>',
+        '    <p class="viz-panel-sub">Student 2 leaderboard driven by the strongest score-like metric available from the API sample</p>',
+        '    <div id="vizScoreBarStatus" class="viz-status-msg">Dataset not loaded yet.</div>',
+        '    <div style="position: relative; height: 360px;"><canvas id="scoreBarChart" style="display:none;"></canvas></div>',
+        '  </div>',
+        '  <div class="panel">',
+        '    <p class="viz-panel-title">Grade Distribution</p>',
+        '    <p class="viz-panel-sub">Derived grade bands from the loaded score metric</p>',
+        '    <div id="vizGradeDoughnutStatus" class="viz-status-msg">Dataset not loaded yet.</div>',
+        '    <div style="position: relative; height: 320px;"><canvas id="gradeDoughnutChart" style="display:none;"></canvas></div>',
+        '  </div>',
+        '</div>',
+        '<div class="panel" style="margin-bottom: 20px;">',
+        '  <p class="viz-panel-title">Attendance vs Score</p>',
+        '  <p class="viz-panel-sub">Student 2 scatter plot with a regression line for clearer trend reading</p>',
+        '  <div id="vizAttendanceScatterStatus" class="viz-status-msg">Dataset not loaded yet.</div>',
+        '  <div style="position: relative; height: 320px;"><canvas id="attendanceScoreChart" style="display:none;"></canvas></div>',
+        '</div>',
+        '<div class="viz-row-2" id="student2NarrativesRow">',
+        '  <div class="panel">',
+        '    <p class="viz-panel-title">Quantitative Analysis</p>',
+        '    <p class="viz-panel-sub">Variance, spread, correlation, and regression summaries for the current dataset view</p>',
+        '    <table class="analysis-table"><tbody id="analysisOverviewBody"></tbody></table>',
+        '    <table class="analysis-table"><tbody id="analysisRelationshipBody"></tbody></table>',
+        '  </div>',
+        '  <div class="panel">',
+        '    <p class="viz-panel-title">Narrative Insights</p>',
+        '    <p class="viz-panel-sub">Presentation-ready findings generated from the same live metrics as the charts</p>',
+        '    <div id="insightsBody" class="insight-list"></div>',
+        '  </div>',
+        '</div>'
+      ].join("");
+      vizSection.appendChild(wrapper);
+    }
+
+    function cacheDynamicElements() {
+      elements.nameFilterInput = document.getElementById("nameFilterInput");
+      elements.sortSelect = document.getElementById("sortSelect");
+      elements.tableHeadRow = document.querySelector("#sec-data table thead tr");
+      elements.statsTiles = Array.prototype.slice.call(document.querySelectorAll("#sec-data .stat-strip .stat-tile"));
+      elements.scoreBarChartCanvas = document.getElementById("scoreBarChart");
+      elements.vizScoreBarStatus = document.getElementById("vizScoreBarStatus");
+      elements.gradeDoughnutChartCanvas = document.getElementById("gradeDoughnutChart");
+      elements.vizGradeDoughnutStatus = document.getElementById("vizGradeDoughnutStatus");
+      elements.attendanceScoreChartCanvas = document.getElementById("attendanceScoreChart");
+      elements.vizAttendanceScatterStatus = document.getElementById("vizAttendanceScatterStatus");
+      elements.analysisOverviewBody = document.getElementById("analysisOverviewBody");
+      elements.analysisRelationshipBody = document.getElementById("analysisRelationshipBody");
+      elements.insightsBody = document.getElementById("insightsBody");
+    }
+
+    function exposeStudentFunctions() {
+      window.loadDataset = loadDataset;
+      window.renderTable = renderTable;
+      window.applyFilterSort = applyFilterSort;
+      window.resetTable = resetTable;
+      window.renderSummaryCards = renderSummaryCards;
+      window.drawBarChart = drawBarChart;
+      window.drawScatterPlot = drawScatterPlot;
+      window.drawDoughnut = drawDoughnut;
+      window.variance = variance;
+      window.stdDev = stdDev;
+      window.pearsonCorr = pearsonCorr;
+      window.linearRegression = linearRegression;
+      window.renderAnalysis = renderAnalysis;
+      window.renderInsights = renderInsights;
+    }
+
+    function showDatasetLoadGate(errorMessage) {
+      if (!analyticsState.loadGate) {
+        const gate = document.createElement("div");
+        gate.className = "load-gate";
+        gate.innerHTML = [
+          '<div class="load-gate__card">',
+          '  <span class="load-gate__eyebrow">Live API Dataset</span>',
+          '  <h1 class="load-gate__title">Load the analytics workspace</h1>',
+          '  <p class="load-gate__desc">This dashboard waits for an explicit dataset load so the table, summaries, and visual analytics all initialize together from the live API.</p>',
+          '  <div class="load-gate__actions">',
+          '    <button type="button" class="primary" id="loadDatasetButton">Load Dataset from API</button>',
+          '    <span class="load-gate__hint" id="loadDatasetHint">Loads overview metrics plus a performant analytics sample.</span>',
+          '  </div>',
+          '  <p class="error-text" id="loadDatasetError" style="margin-top: 16px; min-height: 1.25em;"></p>',
+          '</div>'
+        ].join("");
+        document.body.appendChild(gate);
+        analyticsState.loadGate = gate;
+        const button = gate.querySelector("#loadDatasetButton");
+        button.addEventListener("click", async function () {
+          button.disabled = true;
+          gate.querySelector("#loadDatasetHint").textContent = "Loading dataset...";
+          gate.querySelector("#loadDatasetError").textContent = "";
+          try {
+            await loadDataset();
+            gate.style.display = "none";
+          } catch (error) {
+            gate.querySelector("#loadDatasetHint").textContent = "Live API request failed.";
+            gate.querySelector("#loadDatasetError").textContent = getFriendlyError(error, "Unable to load the dataset right now.");
+          } finally {
+            button.disabled = false;
+          }
+        });
+      }
+      analyticsState.loadGate.style.display = "flex";
+      if (errorMessage) {
+        const errorNode = analyticsState.loadGate.querySelector("#loadDatasetError");
+        if (errorNode) errorNode.textContent = errorMessage;
+      }
+    }
+
+    async function loadDataset() {
+      analyticsState.loading = true;
+      setStudentsLoading(true);
+      setStudentsStatus("loading", "Loading dataset from API...");
+      setStatsError("");
+      try {
+        const results = await Promise.all([
+          requestJson("/stats/overview", { method: "GET" }).catch(function () { return null; }),
+          fetchStudentSample(DATASET_SAMPLE_LIMIT)
+        ]);
+
+        analyticsState.stats = results[0] && isValidStatsResponse(results[0]) ? results[0] : null;
+        analyticsState.rows = normalizeDatasetRows(results[1]);
+        analyticsState.viewRows = analyticsState.rows.slice();
+        analyticsState.loaded = true;
+        analyticsState.featureChartReady = false;
+        analyticsState.renderKeys = Object.create(null);
+
+        window.DS = analyticsState.rows.slice();
+        window.DS_VIEW = analyticsState.viewRows.slice();
+        window.DS_META = {
+          total_rows: analyticsState.stats ? Number(analyticsState.stats.total_students) || analyticsState.rows.length : analyticsState.rows.length,
+          sampled_rows: analyticsState.rows.length
+        };
+
+        resetTable(false);
+        maybeRenderFeatureChart();
+        bindHeatmapInteractions();
+        bindResponsiveHeatmap();
+        return analyticsState.rows;
+      } finally {
+        analyticsState.loading = false;
+        setStudentsLoading(false);
+      }
+    }
+
+    async function fetchStudentSample(sampleLimit) {
+      const firstPage = await requestJson("/students", { method: "GET", params: { page: 1, limit: 50 } });
+      if (!isValidStudentsResponse(firstPage)) throw new Error("Students response returned unexpected data.");
+
+      const rows = firstPage.data.slice();
+      const pageLimit = Number(firstPage.limit) || 50;
+      const pagesNeeded = Math.min(firstPage.total_pages, Math.ceil(sampleLimit / pageLimit));
+
+      if (pagesNeeded > 1) {
+        const requests = [];
+        for (let page = 2; page <= pagesNeeded; page += 1) {
+          requests.push(requestJson("/students", { method: "GET", params: { page: page, limit: pageLimit } }).catch(function () { return null; }));
+        }
+        const remainingPages = await Promise.all(requests);
+        remainingPages.forEach(function (pageData) {
+          if (pageData && isValidStudentsResponse(pageData)) Array.prototype.push.apply(rows, pageData.data);
+        });
+      }
+      if (!rows.length) throw new Error("The API returned an empty dataset.");
+      return rows.slice(0, sampleLimit);
+    }
+
+    function normalizeDatasetRows(rows) {
+      return rows.map(function (row, index) {
+        const normalized = Object.assign({}, row);
+        normalized.__index = index + 1;
+        normalized.__name = resolveDisplayName(row, index + 1);
+        normalized.__score = resolveScoreValue(row);
+        normalized.__attendance = resolveAttendanceValue(row);
+        normalized.__studyHours = resolveStudyHoursValue(row);
+        normalized.__grade = resolveGradeBucket(normalized.__score);
+        normalized.__pass = resolvePassFlag(row, normalized.__score);
+        return normalized;
+      });
+    }
+
+    function applyFilterSort() {
+      if (!analyticsState.loaded) return [];
+
+      const validation = validateFilters(state.filters);
+      renderFilterErrors(validation.errors);
+      if (!validation.isValid) {
+        state.totalPages = 0;
+        state.totalRecords = 0;
+        renderTable([]);
+        renderSummaryCards([]);
+        renderAnalysis([]);
+        renderInsights([]);
+        updatePaginationUI();
+        updateTotalLabel();
+        setStudentsStatus("error", "Please fix the current filters.");
+        return [];
+      }
+
+      const nameFilter = elements.nameFilterInput ? elements.nameFilterInput.value.trim().toLowerCase() : "";
+      const sortSpec = parseSortSpec(elements.sortSelect ? elements.sortSelect.value : DEFAULT_SORT_VALUE);
+      let rows = analyticsState.rows.slice();
+
+      if (nameFilter) {
+        rows = rows.filter(function (row) {
+          return String(row.__name || "").toLowerCase().includes(nameFilter);
+        });
+      }
+      if (validation.values.cgpaMin !== undefined) {
+        rows = rows.filter(function (row) { return Number(row.cgpa) >= validation.values.cgpaMin; });
+      }
+      if (validation.values.internshipsMin !== undefined) {
+        rows = rows.filter(function (row) { return Number(row.internships) >= validation.values.internshipsMin; });
+      }
+
+      rows.sort(function (left, right) {
+        const a = getSortValue(left, sortSpec.field);
+        const b = getSortValue(right, sortSpec.field);
+        let result = 0;
+        if (typeof a === "string" || typeof b === "string") result = String(a || "").localeCompare(String(b || ""), undefined, { numeric: true, sensitivity: "base" });
+        else result = Number(a || 0) - Number(b || 0);
+        if (result === 0) result = Number(left.__index) - Number(right.__index);
+        return sortSpec.direction === "asc" ? result : -result;
+      });
+
+      analyticsState.viewRows = rows;
+      window.DS_VIEW = rows.slice();
+      state.totalRecords = rows.length;
+      state.totalPages = rows.length ? Math.ceil(rows.length / state.pageSize) : 0;
+      if (state.totalPages === 0) state.currentPage = 1;
+      else if (state.currentPage > state.totalPages) state.currentPage = state.totalPages;
+
+      renderTable(rows);
+      renderSummaryCards(rows);
+      drawPlacementDoughnut(rows);
+      drawScatter(rows);
+      drawHeatmap(rows);
+      drawBarChart(rows);
+      drawScatterPlot(rows);
+      drawDoughnut(rows);
+      renderAnalysis(rows);
+      renderInsights(rows);
+      updatePaginationUI();
+      updateTotalLabel();
+      setStudentsStatus(rows.length ? "ready" : "empty", rows.length ? "Showing " + formatInteger(rows.length) + " loaded records." : "No records match the current view.");
+      setStudentsLoading(false);
+      return rows;
+    }
+
+    function resetTable(announce = true) {
+      state.filters.cgpaMin = "";
+      state.filters.internshipsMin = "";
+      state.pageSize = defaultState.pageSize;
+      state.currentPage = 1;
+      persistState();
+      clearFilterErrors();
+      elements.cgpaMinInput.value = "";
+      elements.internshipsMinInput.value = "";
+      elements.pageSizeSelect.value = String(state.pageSize);
+      if (elements.nameFilterInput) elements.nameFilterInput.value = "";
+      if (elements.sortSelect) elements.sortSelect.value = DEFAULT_SORT_VALUE;
+      const rows = analyticsState.loaded ? applyFilterSort() : [];
+      if (announce && analyticsState.loaded) setStudentsStatus(rows.length ? "ready" : "empty", "Table reset to the original dataset view.");
+    }
+
+    function renderSummaryCards(data) {
+      const rows = Array.isArray(data) ? data : [];
+      const scores = rows.map(function (row) { return row.__score; }).filter(Number.isFinite);
+      const studyHours = rows.map(function (row) { return row.__studyHours; }).filter(Number.isFinite);
+      const passCount = rows.filter(function (row) { return row.__pass; }).length;
+      const topScorer = rows.slice().sort(function (a, b) { return (b.__score || 0) - (a.__score || 0); })[0] || null;
+      const cards = [
+        { label: "Mean Score", value: scores.length ? formatDecimal(average(scores), 1) : "--", sub: "Composite score from the live student sample" },
+        { label: "Top Scorer", value: topScorer ? topScorer.__name : "--", sub: topScorer && Number.isFinite(topScorer.__score) ? "Score " + formatDecimal(topScorer.__score, 1) : "No valid score available" },
+        { label: "Pass Rate", value: rows.length ? formatPercent(passCount / rows.length) : "--", sub: "Uses placement as the pass outcome when available" },
+        { label: "Avg Study Hrs", value: studyHours.length ? formatDecimal(average(studyHours), 1) + " hrs" : "--", sub: "Falls back to time-management signals when study hours are missing" }
+      ];
+
+      cards.forEach(function (card, index) {
+        const tile = elements.statsTiles[index];
+        if (!tile) return;
+        const label = tile.querySelector(".st-label");
+        const value = tile.querySelector(".st-val");
+        const sub = tile.querySelector(".st-sub");
+        if (label) label.textContent = card.label;
+        if (value) {
+          value.textContent = card.value;
+          value.classList.remove("skeleton");
+        }
+        if (sub) sub.textContent = card.sub;
+      });
+      setStatsError(rows.length ? "" : (analyticsState.loaded ? "No rows match the current filters." : "Load the dataset to populate the summary cards."));
+    }
+
+    function renderTable(data) {
+      ensureTableHeaders();
+      const rows = Array.isArray(data) ? data : [];
+      if (!rows.length) {
+        renderEmptyTable("No records available for the current filters.");
+        return;
+      }
+      const start = Math.max(0, (state.currentPage - 1) * state.pageSize);
+      const pageRows = rows.slice(start, start + state.pageSize);
+      const fragment = document.createDocumentFragment();
+
+      pageRows.forEach(function (row) {
+        const tr = document.createElement("tr");
+        tr.appendChild(makeCell(row.__name));
+        tr.appendChild(makeCell(Number.isFinite(row.__score) ? formatDecimal(row.__score, 1) : "--", true));
+        tr.appendChild(makeCell(Number.isFinite(row.__attendance) ? formatDecimal(row.__attendance, 1) + "%" : "--", true));
+        tr.appendChild(makeCell(safeDecimal(row.cgpa, 2), true));
+        const badgeCell = document.createElement("td");
+        const badge = document.createElement("span");
+        badge.className = "badge " + (row.__pass ? "badge--success" : "badge--danger");
+        badge.textContent = row.__pass ? "Pass / Placed" : "Risk / Not Placed";
+        badgeCell.appendChild(badge);
+        tr.appendChild(badgeCell);
+        fragment.appendChild(tr);
+      });
+
+      elements.studentsBody.replaceChildren(fragment);
+    }
+
+    function ensureTableHeaders() {
+      if (!elements.tableHeadRow) return;
+      elements.tableHeadRow.innerHTML = "<th>Student</th><th>Score</th><th>Attendance</th><th>CGPA</th><th>Status</th>";
+    }
+
+    function maybeRenderFeatureChart() {
+      if (!analyticsState.loaded || analyticsState.featureChartReady) return;
+      analyticsState.featureChartReady = true;
+      drawTopFeatures();
+    }
+
+    function bindHeatmapInteractions() {
+      if (!elements.heatmapChartCanvas || elements.heatmapChartCanvas.dataset.boundHover === "true") return;
+      const wrapper = elements.heatmapChartCanvas.parentElement;
+      if (wrapper && !wrapper.querySelector(".heatmap-tooltip")) {
+        const tip = document.createElement("div");
+        tip.className = "heatmap-tooltip";
+        wrapper.appendChild(tip);
+      }
+      const tooltip = wrapper ? wrapper.querySelector(".heatmap-tooltip") : null;
+      elements.heatmapChartCanvas.addEventListener("mousemove", function (event) {
+        if (!analyticsState.heatmapModel) return;
+        const info = getHeatmapCellFromEvent(event, analyticsState.heatmapModel);
+        if (!info) {
+          analyticsState.heatmapHoverCell = null;
+          if (tooltip) tooltip.style.opacity = "0";
+          return;
+        }
+        analyticsState.heatmapHoverCell = info;
+        if (tooltip) {
+          tooltip.style.left = info.centerX + "px";
+          tooltip.style.top = info.centerY + "px";
+          tooltip.style.opacity = "1";
+          tooltip.innerHTML = "<strong>" + escapeHtml(info.xLabel) + " vs " + escapeHtml(info.yLabel) + "</strong>Correlation: " + formatDecimal(info.value, 3);
+        }
+        drawHeatmap(analyticsState.viewRows);
+      });
+      elements.heatmapChartCanvas.addEventListener("mouseleave", function () {
+        analyticsState.heatmapHoverCell = null;
+        if (tooltip) tooltip.style.opacity = "0";
+        drawHeatmap(analyticsState.viewRows);
+      });
+      elements.heatmapChartCanvas.dataset.boundHover = "true";
+    }
+
+    function bindResponsiveHeatmap() {
+      if (analyticsState.resizeBound) return;
+      analyticsState.resizeBound = true;
+      window.addEventListener("resize", function () {
+        if (!analyticsState.loaded) return;
+        if (debounceHandle !== null) window.clearTimeout(debounceHandle);
+        debounceHandle = window.setTimeout(function () { drawHeatmap(analyticsState.viewRows); }, 120);
+      });
+    }
+
+    function parseSortSpec(value) {
+      const parts = String(value || DEFAULT_SORT_VALUE).split(":");
+      return { field: parts[0] || "__score", direction: parts[1] === "asc" ? "asc" : "desc" };
+    }
+
+    function getSortValue(row, field) {
+      return row ? row[field] : "";
+    }
+
+    function pickNumber(row, keys) {
+      for (let index = 0; index < keys.length; index += 1) {
+        const raw = Number(row[keys[index]]);
+        if (Number.isFinite(raw)) return raw;
+      }
+      return null;
+    }
+
+    function pickText(row, keys) {
+      for (let index = 0; index < keys.length; index += 1) {
+        const value = row[keys[index]];
+        if (typeof value === "string" && value.trim()) return value.trim();
+      }
+      return "";
+    }
+
+    function resolveDisplayName(row, index) {
+      return pickText(row, ["name", "student_name", "full_name", "candidate_name"]) || ("Student " + String(index).padStart(4, "0"));
+    }
+
+    function resolveScoreValue(row) {
+      const direct = pickNumber(row, ["score", "final_score", "exam_score", "aptitude_score"]);
+      if (direct !== null) return direct;
+      const parts = [];
+      const tenth = pickNumber(row, ["tenth_percentage"]);
+      const twelfth = pickNumber(row, ["twelfth_percentage"]);
+      const cgpa = pickNumber(row, ["cgpa"]);
+      if (tenth !== null) parts.push(tenth);
+      if (twelfth !== null) parts.push(twelfth);
+      if (cgpa !== null) parts.push(cgpa * 10);
+      return parts.length ? average(parts) : null;
+    }
+
+    function resolveAttendanceValue(row) {
+      return pickNumber(row, ["attendance"]);
+    }
+
+    function resolveStudyHoursValue(row) {
+      const direct = pickNumber(row, ["study_hours", "studyHours", "hours_studied"]);
+      if (direct !== null) return direct;
+      const timeManagement = pickNumber(row, ["time_management"]);
+      const projects = pickNumber(row, ["projects"]);
+      const internships = pickNumber(row, ["internships"]);
+      const derived = (timeManagement || 0) * 0.9 + (projects || 0) * 0.35 + (internships || 0) * 0.8;
+      return derived > 0 ? derived : null;
+    }
+
+    function resolveGradeBucket(score) {
+      if (!Number.isFinite(score)) return "Unknown";
+      if (score >= 85) return "A";
+      if (score >= 75) return "B";
+      if (score >= 65) return "C";
+      if (score >= 50) return "D";
+      return "F";
+    }
+
+    function resolvePassFlag(row, score) {
+      if (isFiniteNumber(row.passed)) return Number(row.passed) === 1;
+      if (isFiniteNumber(row.pass)) return Number(row.pass) === 1;
+      if (isFiniteNumber(row.placed)) return Number(row.placed) === 1;
+      return Number.isFinite(score) ? score >= 60 : false;
+    }
+
+    function average(values) {
+      const valid = (Array.isArray(values) ? values : []).filter(Number.isFinite);
+      if (!valid.length) return 0;
+      return valid.reduce(function (sum, value) { return sum + value; }, 0) / valid.length;
+    }
+
+    function sampleEvenly(rows, maxPoints) {
+      if (!Array.isArray(rows) || rows.length <= maxPoints) return rows.slice();
+      const sampled = [];
+      const step = rows.length / maxPoints;
+      for (let index = 0; index < maxPoints; index += 1) sampled.push(rows[Math.floor(index * step)]);
+      return sampled;
+    }
+
+    function getThemeColors() {
+      const root = getComputedStyle(document.documentElement);
+      return {
+        sage: root.getPropertyValue("--sage").trim() || "#3a7d5c",
+        coral: root.getPropertyValue("--coral").trim() || "#d94f3d",
+        navy: root.getPropertyValue("--navy").trim() || "#1a2035",
+        text: root.getPropertyValue("--text").trim() || "#2e3348",
+        dim: root.getPropertyValue("--text-dim").trim() || "#8a8577",
+        border: root.getPropertyValue("--border").trim() || "#d8d1c4",
+        surface: "#ffffff"
+      };
+    }
+
+    function hexToRgba(hex, alpha) {
+      const safeHex = (hex || "").replace("#", "");
+      if (safeHex.length !== 6) return "rgba(26,32,53," + alpha + ")";
+      const value = parseInt(safeHex, 16);
+      const r = (value >> 16) & 255;
+      const g = (value >> 8) & 255;
+      const b = value & 255;
+      return "rgba(" + r + "," + g + "," + b + "," + alpha + ")";
+    }
+
+    function setVizState(statusEl, canvas, message, isError) {
+      if (statusEl) {
+        statusEl.style.display = "block";
+        statusEl.textContent = message;
+        statusEl.style.color = isError ? "var(--coral)" : "var(--text-dim)";
+      }
+      if (canvas) canvas.style.display = "none";
+    }
+
+    function showVizCanvas(statusEl, canvas) {
+      if (statusEl) statusEl.style.display = "none";
+      if (canvas) canvas.style.display = "block";
+    }
+
+    function renderStatTable(body, rows) {
+      if (!body) return;
+      const fragment = document.createDocumentFragment();
+      rows.forEach(function (item) {
+        const tr = document.createElement("tr");
+        const label = document.createElement("td");
+        const value = document.createElement("td");
+        label.textContent = item.label;
+        value.textContent = item.value;
+        tr.appendChild(label);
+        tr.appendChild(value);
+        fragment.appendChild(tr);
+      });
+      body.replaceChildren(fragment);
+    }
+
+    function getHeatmapCellFromEvent(event, model) {
+      if (!model || !model.cellSize) return null;
+      const rect = event.target.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      const col = Math.floor((x - model.margin.left) / model.cellSize);
+      const row = Math.floor((y - model.margin.top) / model.cellSize);
+      if (row < 0 || col < 0 || row >= model.labels.length || col >= model.labels.length) return null;
+      return {
+        row: row,
+        col: col,
+        value: model.matrix[row][col],
+        xLabel: model.labels[col],
+        yLabel: model.labels[row],
+        centerX: model.margin.left + col * model.cellSize + model.cellSize / 2,
+        centerY: model.margin.top + row * model.cellSize + model.cellSize / 2
+      };
+    }
+
     /* ═══════════════════════════════════════════════
        UI STATE HELPERS (unchanged)
     ═══════════════════════════════════════════════ */
@@ -1005,6 +1644,8 @@
       studentsLoading = isLoading; elements.filtersFieldset.disabled = isLoading;
       elements.prevPageButton.disabled = isLoading || state.currentPage <= 1 || state.totalPages === 0;
       elements.nextPageButton.disabled = isLoading || state.currentPage >= state.totalPages || state.totalPages === 0;
+      if (elements.nameFilterInput) elements.nameFilterInput.disabled = isLoading;
+      if (elements.sortSelect) elements.sortSelect.disabled = isLoading;
     }
 
     function setPredictionLoading(isLoading) {
@@ -1973,6 +2614,963 @@
        ▲▲▲  END: VIZ ANALYTICS  ▲▲▲
     ══════════════════════════════════════════════════════ */
 
+    function variance(values) {
+      const valid = (Array.isArray(values) ? values : []).filter(Number.isFinite);
+      if (valid.length < 2) return 0;
+      const mean = average(valid);
+      return valid.reduce(function (sum, value) {
+        const delta = value - mean;
+        return sum + delta * delta;
+      }, 0) / valid.length;
+    }
+
+    function stdDev(values) {
+      return Math.sqrt(variance(values));
+    }
+
+    function pearsonCorr(xs, ys) {
+      const pairedX = [];
+      const pairedY = [];
+      const size = Math.min(xs.length, ys.length);
+      for (let index = 0; index < size; index += 1) {
+        if (Number.isFinite(xs[index]) && Number.isFinite(ys[index])) {
+          pairedX.push(xs[index]);
+          pairedY.push(ys[index]);
+        }
+      }
+      if (pairedX.length < 2) return 0;
+      const meanX = average(pairedX);
+      const meanY = average(pairedY);
+      let numerator = 0;
+      let deltaX = 0;
+      let deltaY = 0;
+      for (let index = 0; index < pairedX.length; index += 1) {
+        const dx = pairedX[index] - meanX;
+        const dy = pairedY[index] - meanY;
+        numerator += dx * dy;
+        deltaX += dx * dx;
+        deltaY += dy * dy;
+      }
+      if (!deltaX || !deltaY) return 0;
+      return numerator / Math.sqrt(deltaX * deltaY);
+    }
+
+    function linearRegression(xs, ys) {
+      const cleanX = [];
+      const cleanY = [];
+      const size = Math.min(xs.length, ys.length);
+      for (let index = 0; index < size; index += 1) {
+        if (Number.isFinite(xs[index]) && Number.isFinite(ys[index])) {
+          cleanX.push(xs[index]);
+          cleanY.push(ys[index]);
+        }
+      }
+      if (cleanX.length < 2) return { slope: 0, intercept: 0, r2: 0, count: cleanX.length };
+      const meanX = average(cleanX);
+      const meanY = average(cleanY);
+      let numerator = 0;
+      let denominator = 0;
+      for (let index = 0; index < cleanX.length; index += 1) {
+        const dx = cleanX[index] - meanX;
+        numerator += dx * (cleanY[index] - meanY);
+        denominator += dx * dx;
+      }
+      const slope = denominator ? numerator / denominator : 0;
+      const intercept = meanY - slope * meanX;
+      const corr = pearsonCorr(cleanX, cleanY);
+      return { slope: slope, intercept: intercept, r2: corr * corr, count: cleanX.length };
+    }
+
+    function fetchVizData() {
+      if (analyticsState.loaded) applyFilterSort();
+    }
+
+    function drawPlacementDoughnut(rows) {
+      const canvas = elements.doughnutChartCanvas;
+      const statusEl = elements.vizDoughnutStatus;
+      const palette = getThemeColors();
+      if (!canvas) return;
+
+      const placed = rows.filter(function (row) { return row.__pass; }).length;
+const notPlaced = rows.length - placed;
+      if (!rows.length) {
+        setVizState(statusEl, canvas, "Load or filter the dataset to see placement distribution.", false);
+        if (doughnutChartInstance) { doughnutChartInstance.destroy(); doughnutChartInstance = null; }
+        return;
+      }
+
+      const percentPlaced = rows.length ? (placed / rows.length) * 100 : 0;
+      const signature = [rows.length, placed, notPlaced].join("|");
+      if (analyticsState.renderKeys.placementDoughnut === signature && doughnutChartInstance) return;
+      analyticsState.renderKeys.placementDoughnut = signature;
+
+      showVizCanvas(statusEl, canvas);
+      if (doughnutChartInstance) doughnutChartInstance.destroy();
+
+      const centerTextPlugin = {
+        id: "placementCenterText",
+        afterDraw: function (chart) {
+          const meta = chart.getDatasetMeta(0);
+          if (!meta || !meta.data || !meta.data.length) return;
+          const ctx = chart.ctx;
+          const x = meta.data[0].x;
+          const y = meta.data[0].y;
+          ctx.save();
+          ctx.textAlign = "center";
+          ctx.fillStyle = palette.navy;
+          ctx.font = "700 26px 'IBM Plex Mono', monospace";
+          ctx.fillText(percentPlaced.toFixed(1) + "%", x, y - 6);
+          ctx.fillStyle = palette.dim;
+          ctx.font = "500 11px 'IBM Plex Mono', monospace";
+          ctx.fillText(placed + " placed / " + rows.length + " total", x, y + 18);
+          ctx.restore();
+        }
+      };
+
+      const shadowPlugin = {
+        id: "placementArcShadow",
+        beforeDatasetDraw: function (chart, args) {
+          if (args.index !== 0) return;
+          chart.ctx.save();
+          chart.ctx.shadowColor = hexToRgba(palette.navy, 0.18);
+          chart.ctx.shadowBlur = 24;
+          chart.ctx.shadowOffsetY = 10;
+        },
+        afterDatasetDraw: function (chart, args) {
+          if (args.index !== 0) return;
+          chart.ctx.restore();
+        }
+      };
+
+      doughnutChartInstance = new Chart(canvas.getContext("2d"), {
+        type: "doughnut",
+        plugins: [centerTextPlugin, shadowPlugin],
+        data: {
+          labels: ["Placed", "Not Placed"],
+          datasets: [{
+            data: [placed, notPlaced],
+            backgroundColor: [palette.sage, palette.coral],
+            hoverBackgroundColor: [hexToRgba(palette.sage, 0.92), hexToRgba(palette.coral, 0.92)],
+            borderColor: [palette.surface, palette.surface],
+            borderWidth: 6,
+            hoverOffset: 16,
+            spacing: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: "68%",
+          animation: { duration: 700, easing: "easeOutCubic" },
+          layout: { padding: { top: 10, right: 12, bottom: 8, left: 12 } },
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: {
+                usePointStyle: true,
+                pointStyle: "circle",
+                boxWidth: 8,
+                padding: 18,
+                color: palette.text,
+                font: { family: "'IBM Plex Mono', monospace", size: 11 }
+              }
+            },
+            tooltip: {
+              backgroundColor: hexToRgba(palette.navy, 0.94),
+              padding: 12,
+              callbacks: {
+                label: function (context) {
+                  const count = Number(context.parsed) || 0;
+                  const share = rows.length ? ((count / rows.length) * 100).toFixed(1) : "0.0";
+                  return context.label + ": " + formatInteger(count) + " students (" + share + "%)";
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function drawScatter(rows) {
+      const canvas = elements.scatterChartCanvas;
+      const statusEl = elements.vizScatterStatus;
+      const palette = getThemeColors();
+      if (!canvas) return;
+
+      const validRows = rows.filter(function (row) {
+        return Number.isFinite(Number(row.cgpa)) && isFiniteNumber(row.placed);
+      });
+      if (!validRows.length) {
+        setVizState(statusEl, canvas, "No valid CGPA and placement values are available.", false);
+        if (scatterChartInstance) { scatterChartInstance.destroy(); scatterChartInstance = null; }
+        return;
+      }
+
+      const sampled = sampleEvenly(validRows, 650);
+      const bucketCounts = Object.create(null);
+      const placedPoints = [];
+      const notPlacedPoints = [];
+      const regressionX = [];
+      const regressionY = [];
+
+      sampled.forEach(function (row) {
+        const cgpa = Number(row.cgpa);
+        const placed = Number(row.placed) === 1 ? 1 : 0;
+        const bucket = String(placed) + ":" + String(Math.round(cgpa * 10) / 10);
+        const bucketIndex = bucketCounts[bucket] || 0;
+        bucketCounts[bucket] = bucketIndex + 1;
+        const offsets = [0, 0.05, -0.05, 0.1, -0.1, 0.15, -0.15, 0.2, -0.2];
+        const jitter = offsets[bucketIndex % offsets.length] + Math.floor(bucketIndex / offsets.length) * 0.012;
+        const point = { x: cgpa, y: placed + jitter, score: row.__score, name: row.__name };
+        if (placed) placedPoints.push(point);
+        else notPlacedPoints.push(point);
+        regressionX.push(cgpa);
+        regressionY.push(placed);
+      });
+
+      const model = linearRegression(regressionX, regressionY);
+      const xMin = Math.min.apply(null, regressionX);
+      const xMax = Math.max.apply(null, regressionX);
+      const linePoints = [
+        { x: xMin, y: model.intercept + model.slope * xMin },
+        { x: xMax, y: model.intercept + model.slope * xMax }
+      ];
+      const signature = String(sampled.length) + "|" + model.slope.toFixed(4);
+      if (analyticsState.renderKeys.placementScatter === signature && scatterChartInstance) return;
+      analyticsState.renderKeys.placementScatter = signature;
+
+      showVizCanvas(statusEl, canvas);
+      if (scatterChartInstance) scatterChartInstance.destroy();
+
+      scatterChartInstance = new Chart(canvas.getContext("2d"), {
+        type: "scatter",
+        data: {
+          datasets: [
+            {
+              label: "Placed",
+              data: placedPoints,
+              backgroundColor: hexToRgba(palette.sage, 0.5),
+              borderColor: hexToRgba(palette.sage, 0.95),
+              pointRadius: 3,
+              pointHoverRadius: 5,
+              pointBorderWidth: 1
+            },
+            {
+              label: "Not Placed",
+              data: notPlacedPoints,
+              backgroundColor: hexToRgba(palette.coral, 0.45),
+              borderColor: hexToRgba(palette.coral, 0.95),
+              pointRadius: 3,
+              pointHoverRadius: 5,
+              pointBorderWidth: 1
+            },
+            {
+              label: "Linear Trend",
+              type: "line",
+              data: linePoints,
+              borderColor: palette.navy,
+              borderWidth: 2,
+              borderDash: [7, 5],
+              pointRadius: 0,
+              tension: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 600, easing: "easeOutQuad" },
+          parsing: false,
+          layout: { padding: { left: 8, right: 16, top: 8, bottom: 8 } },
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: {
+                usePointStyle: true,
+                padding: 18,
+                color: palette.text,
+                font: { family: "'IBM Plex Mono', monospace", size: 11 }
+              }
+            },
+            tooltip: {
+              backgroundColor: hexToRgba(palette.navy, 0.94),
+              padding: 12,
+              callbacks: {
+                label: function (context) {
+                  if (context.dataset.type === "line") return "Trend line";
+                  const point = context.raw;
+                  return [
+                    point.name,
+                    "CGPA: " + formatDecimal(point.x, 2),
+                    "Placement: " + (context.dataset.label === "Placed" ? "Placed" : "Not Placed"),
+                    "Score: " + (Number.isFinite(point.score) ? formatDecimal(point.score, 1) : "--")
+                  ];
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              title: { display: true, text: "CGPA", color: palette.dim, font: { family: "'IBM Plex Mono', monospace", size: 11 } },
+              grid: { color: hexToRgba(palette.navy, 0.08) },
+              ticks: { color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 10 } }
+            },
+            y: {
+              min: -0.32,
+              max: 1.32,
+              title: { display: true, text: "Placement Outcome", color: palette.dim, font: { family: "'IBM Plex Mono', monospace", size: 11 } },
+              grid: { color: hexToRgba(palette.navy, 0.08) },
+              ticks: {
+                color: palette.text,
+                font: { family: "'IBM Plex Mono', monospace", size: 10 },
+                callback: function (value) {
+                  if (Math.abs(value) < 0.04) return "Not Placed";
+                  if (Math.abs(value - 1) < 0.04) return "Placed";
+                  return "";
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function drawHeatmap(rows) {
+      const canvas = elements.heatmapChartCanvas;
+      const statusEl = elements.vizHeatmapStatus;
+      const palette = getThemeColors();
+      if (!canvas) return;
+
+      const columns = [
+        { key: "__score", label: "Score" },
+        { key: "__attendance", label: "Attendance" },
+        { key: "cgpa", label: "CGPA" },
+        { key: "internships", label: "Internships" },
+        { key: "communication_skill", label: "Communication" },
+        { key: "problem_solving", label: "Problem Solving" },
+        { key: "placed", label: "Placement" }
+      ];
+
+      const validRows = rows.filter(function (row) {
+        return columns.some(function (column) { return Number.isFinite(Number(row[column.key])); });
+      });
+      if (!validRows.length) {
+        setVizState(statusEl, canvas, "Not enough numeric data is available for the correlation heatmap.", false);
+        analyticsState.heatmapModel = null;
+        return;
+      }
+
+      const matrix = columns.map(function (_, rowIndex) {
+        return columns.map(function (_, colIndex) {
+          if (rowIndex === colIndex) return 1;
+          const xs = validRows.map(function (row) { return Number(row[columns[colIndex].key]); });
+          const ys = validRows.map(function (row) { return Number(row[columns[rowIndex].key]); });
+          return pearsonCorr(xs, ys);
+        });
+      });
+
+      showVizCanvas(statusEl, canvas);
+      const dpr = window.devicePixelRatio || 1;
+      const containerWidth = Math.max(420, canvas.parentElement.offsetWidth || 640);
+      const margin = { top: 78, right: 24, bottom: 74, left: 128 };
+      const gridWidth = containerWidth - margin.left - margin.right;
+      const cellSize = Math.max(42, Math.floor(gridWidth / columns.length));
+      const contentWidth = margin.left + cellSize * columns.length + margin.right;
+      const contentHeight = margin.top + cellSize * columns.length + margin.bottom;
+      canvas.width = contentWidth * dpr;
+      canvas.height = contentHeight * dpr;
+      canvas.style.width = contentWidth + "px";
+      canvas.style.height = contentHeight + "px";
+
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, contentWidth, contentHeight);
+
+      function mixColor(start, end, amount) {
+        return start.map(function (channel, index) { return Math.round(channel + (end[index] - channel) * amount); });
+      }
+      function toColor(value) {
+        const coral = [217, 79, 61];
+        const neutral = [245, 241, 235];
+        const sage = [58, 125, 92];
+        const intensity = Math.min(1, Math.abs(value));
+        const rgb = value < 0 ? mixColor(neutral, coral, intensity) : mixColor(neutral, sage, intensity);
+        return "rgb(" + rgb.join(",") + ")";
+      }
+
+      columns.forEach(function (_, rowIndex) {
+        columns.forEach(function (_, colIndex) {
+          const value = matrix[rowIndex][colIndex];
+          const x = margin.left + colIndex * cellSize;
+          const y = margin.top + rowIndex * cellSize;
+          const isHover = analyticsState.heatmapHoverCell && analyticsState.heatmapHoverCell.row === rowIndex && analyticsState.heatmapHoverCell.col === colIndex;
+          ctx.fillStyle = toColor(value);
+          ctx.fillRect(x + 4, y + 4, cellSize - 8, cellSize - 8);
+          ctx.strokeStyle = isHover ? palette.navy : hexToRgba(palette.navy, 0.08);
+          ctx.lineWidth = isHover ? 2 : 1;
+          ctx.strokeRect(x + 4, y + 4, cellSize - 8, cellSize - 8);
+          ctx.fillStyle = Math.abs(value) > 0.45 ? "#ffffff" : palette.navy;
+          ctx.font = "600 " + Math.max(11, Math.min(15, Math.floor(cellSize / 5))) + "px 'IBM Plex Mono', monospace";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(value.toFixed(2), x + cellSize / 2, y + cellSize / 2);
+        });
+      });
+
+      ctx.fillStyle = palette.navy;
+      ctx.font = "600 11px 'IBM Plex Mono', monospace";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      columns.forEach(function (column, index) {
+        ctx.fillText(column.label, margin.left + index * cellSize + cellSize / 2, margin.top - 26);
+      });
+      ctx.textAlign = "right";
+      columns.forEach(function (column, index) {
+        ctx.fillText(column.label, margin.left - 12, margin.top + index * cellSize + cellSize / 2);
+      });
+
+      const legendX = margin.left;
+      const legendY = margin.top + cellSize * columns.length + 22;
+      const legendWidth = Math.min(320, cellSize * columns.length);
+      const legendGradient = ctx.createLinearGradient(legendX, 0, legendX + legendWidth, 0);
+      legendGradient.addColorStop(0, toColor(-1));
+      legendGradient.addColorStop(0.5, toColor(0));
+      legendGradient.addColorStop(1, toColor(1));
+      ctx.fillStyle = legendGradient;
+      ctx.fillRect(legendX, legendY, legendWidth, 10);
+      ctx.strokeStyle = hexToRgba(palette.navy, 0.08);
+      ctx.strokeRect(legendX, legendY, legendWidth, 10);
+      ctx.fillStyle = palette.dim;
+      ctx.font = "500 10px 'IBM Plex Mono', monospace";
+      ctx.textAlign = "left";
+      ctx.fillText("-1.00", legendX, legendY + 24);
+      ctx.textAlign = "center";
+      ctx.fillText("0.00", legendX + legendWidth / 2, legendY + 24);
+      ctx.textAlign = "right";
+      ctx.fillText("+1.00", legendX + legendWidth, legendY + 24);
+      ctx.textAlign = "left";
+      ctx.fillText("Pearson correlation", legendX, legendY - 10);
+
+      analyticsState.heatmapModel = {
+        matrix: matrix,
+        labels: columns.map(function (column) { return column.label; }),
+        margin: margin,
+        cellSize: cellSize
+      };
+    }
+
+    function drawBarChart(rows) {
+      const canvas = elements.scoreBarChartCanvas;
+      const statusEl = elements.vizScoreBarStatus;
+      const palette = getThemeColors();
+      if (!canvas) return;
+
+      const topRows = rows.filter(function (row) { return Number.isFinite(row.__score); })
+        .sort(function (a, b) { return b.__score - a.__score; })
+        .slice(0, 10);
+      if (!topRows.length) {
+        setVizState(statusEl, canvas, "No valid score metric is available for the leaderboard.", false);
+        if (scoreBarChartInstance) { scoreBarChartInstance.destroy(); scoreBarChartInstance = null; }
+        return;
+      }
+
+      const labels = topRows.map(function (row) { return row.__name; });
+      const values = topRows.map(function (row) { return row.__score; });
+      const signature = labels.join("|") + "|" + values.map(function (value) { return value.toFixed(2); }).join("|");
+      if (analyticsState.renderKeys.scoreBar === signature && scoreBarChartInstance) return;
+      analyticsState.renderKeys.scoreBar = signature;
+
+      showVizCanvas(statusEl, canvas);
+      if (scoreBarChartInstance) scoreBarChartInstance.destroy();
+
+      const valueLabelPlugin = {
+        id: "scoreBarLabels",
+        afterDatasetsDraw: function (chart) {
+          const ctx = chart.ctx;
+          ctx.save();
+          ctx.fillStyle = palette.navy;
+          ctx.font = "600 10px 'IBM Plex Mono', monospace";
+          chart.getDatasetMeta(0).data.forEach(function (bar, index) {
+            ctx.textAlign = "left";
+            ctx.fillText(values[index].toFixed(1), bar.x + 8, bar.y + 3);
+          });
+          ctx.restore();
+        }
+      };
+
+      scoreBarChartInstance = new Chart(canvas.getContext("2d"), {
+        type: "bar",
+        plugins: [valueLabelPlugin],
+        data: {
+          labels: labels,
+          datasets: [{
+            data: values,
+            backgroundColor: values.map(function (value, index) {
+              const alpha = 0.38 + ((index + 1) / values.length) * 0.38;
+              return hexToRgba(index < 3 ? palette.sage : palette.navy, alpha);
+            }),
+            borderRadius: 10,
+            borderSkipped: false,
+            barThickness: 18
+          }]
+        },
+        options: {
+          indexAxis: "y",
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 650, easing: "easeOutQuart" },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: hexToRgba(palette.navy, 0.94),
+              padding: 12,
+              callbacks: {
+                label: function (context) {
+                  return "Score: " + formatDecimal(context.parsed.x, 1);
+                },
+                afterLabel: function (context) {
+                  const row = topRows[context.dataIndex];
+                  return "Attendance: " + (Number.isFinite(row.__attendance) ? formatDecimal(row.__attendance, 1) + "%" : "--");
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              title: { display: true, text: "Score", color: palette.dim, font: { family: "'IBM Plex Mono', monospace", size: 11 } },
+              grid: { color: hexToRgba(palette.navy, 0.08) },
+              ticks: { color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 10 } }
+            },
+            y: {
+              grid: { display: false },
+              ticks: { color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 10 }, autoSkip: false }
+            }
+          }
+        }
+      });
+    }
+
+    function drawScatterPlot(rows) {
+      const canvas = elements.attendanceScoreChartCanvas;
+      const statusEl = elements.vizAttendanceScatterStatus;
+      const palette = getThemeColors();
+      if (!canvas) return;
+
+      const validRows = rows.filter(function (row) {
+        return Number.isFinite(row.__attendance) && Number.isFinite(row.__score);
+      });
+      if (!validRows.length) {
+        setVizState(statusEl, canvas, "Attendance and score values are required for this chart.", false);
+        if (attendanceScoreChartInstance) { attendanceScoreChartInstance.destroy(); attendanceScoreChartInstance = null; }
+        return;
+      }
+
+      const sampled = sampleEvenly(validRows, 700);
+      const points = sampled.map(function (row) {
+        return { x: row.__attendance, y: row.__score, name: row.__name, pass: row.__pass, cgpa: row.cgpa };
+      });
+      const regression = linearRegression(
+        points.map(function (point) { return point.x; }),
+        points.map(function (point) { return point.y; })
+      );
+      const xMin = Math.min.apply(null, points.map(function (point) { return point.x; }));
+      const xMax = Math.max.apply(null, points.map(function (point) { return point.x; }));
+      const linePoints = [
+        { x: xMin, y: regression.intercept + regression.slope * xMin },
+        { x: xMax, y: regression.intercept + regression.slope * xMax }
+      ];
+      const signature = String(points.length) + "|" + regression.slope.toFixed(4) + "|" + regression.intercept.toFixed(2);
+      if (analyticsState.renderKeys.attendanceScatter === signature && attendanceScoreChartInstance) return;
+      analyticsState.renderKeys.attendanceScatter = signature;
+
+      showVizCanvas(statusEl, canvas);
+      if (attendanceScoreChartInstance) attendanceScoreChartInstance.destroy();
+
+      attendanceScoreChartInstance = new Chart(canvas.getContext("2d"), {
+        type: "scatter",
+        data: {
+          datasets: [
+            {
+              label: "Students",
+              data: points,
+              backgroundColor: points.map(function (point) { return point.pass ? hexToRgba(palette.sage, 0.42) : hexToRgba(palette.coral, 0.42); }),
+              borderColor: points.map(function (point) { return point.pass ? hexToRgba(palette.sage, 0.9) : hexToRgba(palette.coral, 0.9); }),
+              pointRadius: 4,
+              pointHoverRadius: 6,
+              pointBorderWidth: 1
+            },
+            {
+              label: "Regression",
+              type: "line",
+              data: linePoints,
+              borderColor: palette.navy,
+              borderDash: [7, 5],
+              borderWidth: 2,
+              pointRadius: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 650, easing: "easeOutQuart" },
+          parsing: false,
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: { usePointStyle: true, padding: 18, color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 11 } }
+            },
+            tooltip: {
+              backgroundColor: hexToRgba(palette.navy, 0.94),
+              padding: 12,
+              callbacks: {
+                label: function (context) {
+                  if (context.dataset.type === "line") return "Regression line";
+                  return [
+                    context.raw.name,
+                    "Attendance: " + formatDecimal(context.raw.x, 1) + "%",
+                    "Score: " + formatDecimal(context.raw.y, 1),
+                    "CGPA: " + safeDecimal(context.raw.cgpa, 2)
+                  ];
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              title: { display: true, text: "Attendance (%)", color: palette.dim, font: { family: "'IBM Plex Mono', monospace", size: 11 } },
+              grid: { color: hexToRgba(palette.navy, 0.08) },
+              ticks: { color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 10 } }
+            },
+            y: {
+              title: { display: true, text: "Score", color: palette.dim, font: { family: "'IBM Plex Mono', monospace", size: 11 } },
+              grid: { color: hexToRgba(palette.navy, 0.08) },
+              ticks: { color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 10 } }
+            }
+          }
+        }
+      });
+    }
+
+    function drawDoughnut(rows) {
+      const canvas = elements.gradeDoughnutChartCanvas;
+      const statusEl = elements.vizGradeDoughnutStatus;
+      const palette = getThemeColors();
+      if (!canvas) return;
+
+      const gradeOrder = ["A", "B", "C", "D", "F"];
+      const counts = gradeOrder.map(function (grade) {
+        return rows.filter(function (row) { return row.__grade === grade; }).length;
+      });
+      const total = counts.reduce(function (sum, value) { return sum + value; }, 0);
+      if (!total) {
+        setVizState(statusEl, canvas, "No valid score values are available for the grade distribution.", false);
+        if (gradeDoughnutChartInstance) { gradeDoughnutChartInstance.destroy(); gradeDoughnutChartInstance = null; }
+        return;
+      }
+
+      const signature = counts.join("|");
+      if (analyticsState.renderKeys.gradeDoughnut === signature && gradeDoughnutChartInstance) return;
+      analyticsState.renderKeys.gradeDoughnut = signature;
+
+      showVizCanvas(statusEl, canvas);
+      if (gradeDoughnutChartInstance) gradeDoughnutChartInstance.destroy();
+
+      gradeDoughnutChartInstance = new Chart(canvas.getContext("2d"), {
+        type: "doughnut",
+        data: {
+          labels: gradeOrder,
+          datasets: [{
+            data: counts,
+            backgroundColor: [
+              palette.sage,
+              hexToRgba(palette.sage, 0.7),
+              hexToRgba(palette.navy, 0.7),
+              hexToRgba(palette.coral, 0.72),
+              palette.coral
+            ],
+            borderColor: [palette.surface, palette.surface, palette.surface, palette.surface, palette.surface],
+            borderWidth: 5,
+            hoverOffset: 12
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: "62%",
+          animation: { duration: 680, easing: "easeOutCubic" },
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: { usePointStyle: true, padding: 18, color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 11 } }
+            },
+            tooltip: {
+              backgroundColor: hexToRgba(palette.navy, 0.94),
+              padding: 12,
+              callbacks: {
+                label: function (context) {
+                  const count = Number(context.parsed) || 0;
+                  const share = total ? ((count / total) * 100).toFixed(1) : "0.0";
+                  return "Grade " + context.label + ": " + formatInteger(count) + " students (" + share + "%)";
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function renderAnalysis(rows) {
+      const scores = rows.map(function (row) { return row.__score; }).filter(Number.isFinite);
+      const attendance = rows.map(function (row) { return row.__attendance; }).filter(Number.isFinite);
+      const cgpas = rows.map(function (row) { return Number(row.cgpa); }).filter(Number.isFinite);
+      const internships = rows.map(function (row) { return Number(row.internships); }).filter(Number.isFinite);
+      const pairRows = rows.filter(function (row) { return Number.isFinite(row.__attendance) && Number.isFinite(row.__score); });
+      const regression = linearRegression(
+        pairRows.map(function (row) { return row.__attendance; }),
+        pairRows.map(function (row) { return row.__score; })
+      );
+      const correlation = pearsonCorr(
+        pairRows.map(function (row) { return row.__attendance; }),
+        pairRows.map(function (row) { return row.__score; })
+      );
+      const passRate = rows.length ? rows.filter(function (row) { return row.__pass; }).length / rows.length : 0;
+
+      renderStatTable(elements.analysisOverviewBody, [
+        { label: "Records in Current View", value: formatInteger(rows.length) },
+        { label: "Mean Score", value: scores.length ? formatDecimal(average(scores), 2) : "--" },
+        { label: "Score Variance", value: scores.length ? formatDecimal(variance(scores), 2) : "--" },
+        { label: "Score Std. Dev.", value: scores.length ? formatDecimal(stdDev(scores), 2) : "--" },
+        { label: "Average Attendance", value: attendance.length ? formatDecimal(average(attendance), 2) + "%" : "--" },
+        { label: "Pass Rate", value: rows.length ? formatPercent(passRate) : "--" }
+      ]);
+
+      renderStatTable(elements.analysisRelationshipBody, [
+        { label: "Attendance vs Score Correlation", value: pairRows.length ? formatDecimal(correlation, 3) : "--" },
+        { label: "Regression Slope", value: pairRows.length ? formatDecimal(regression.slope, 4) : "--" },
+        { label: "Regression Intercept", value: pairRows.length ? formatDecimal(regression.intercept, 2) : "--" },
+        { label: "R²", value: pairRows.length ? formatDecimal(regression.r2, 3) : "--" },
+        { label: "Mean CGPA", value: cgpas.length ? formatDecimal(average(cgpas), 2) : "--" },
+        { label: "Avg. Internships", value: internships.length ? formatDecimal(average(internships), 2) : "--" }
+      ]);
+    }
+
+    function renderInsights(rows) {
+      if (!elements.insightsBody) return;
+      if (!rows.length) {
+        elements.insightsBody.innerHTML = '<div class="insight-item">Load the dataset to generate narrative insights.</div>';
+        return;
+      }
+
+      const scores = rows.map(function (row) { return row.__score; }).filter(Number.isFinite);
+      const gradeCounts = rows.reduce(function (acc, row) {
+        acc[row.__grade] = (acc[row.__grade] || 0) + 1;
+        return acc;
+      }, {});
+      const topGrade = Object.keys(gradeCounts).sort(function (left, right) {
+        return (gradeCounts[right] || 0) - (gradeCounts[left] || 0);
+      })[0] || "Unknown";
+      const correlation = pearsonCorr(
+        rows.map(function (row) { return row.__attendance; }),
+        rows.map(function (row) { return row.__score; })
+      );
+      const spread = stdDev(scores);
+      const passRate = rows.filter(function (row) { return row.__pass; }).length / rows.length;
+      const topRow = rows.filter(function (row) { return Number.isFinite(row.__score); }).sort(function (a, b) { return b.__score - a.__score; })[0];
+
+      function describeCorrelation(value) {
+        const abs = Math.abs(value);
+        if (abs >= 0.7) return "strong";
+        if (abs >= 0.4) return "moderate";
+        if (abs >= 0.2) return "light";
+        return "weak";
+      }
+
+      const insights = [
+        "Attendance and score show a " + describeCorrelation(correlation) + " " + (correlation >= 0 ? "positive" : "negative") + " relationship (r = " + formatDecimal(correlation, 3) + "), which makes the regression overlay easier to defend during presentation.",
+        "The dominant grade bucket in the current view is " + topGrade + ", while the score spread sits at a standard deviation of " + formatDecimal(spread, 2) + ".",
+        "The current pass rate is " + formatPercent(passRate) + (topRow ? ", and the highest-scoring student in this view is " + topRow.__name + " with a score of " + formatDecimal(topRow.__score, 1) + "." : ".")
+      ];
+
+      elements.insightsBody.innerHTML = insights.map(function (text) {
+        return '<div class="insight-item">' + escapeHtml(text) + '</div>';
+      }).join("");
+    }
+
+    async function drawTopFeatures() {
+      const canvas = elements.featuresChartCanvas;
+      const statusEl = elements.vizFeaturesStatus;
+      const palette = getThemeColors();
+      if (!canvas) return;
+
+      const representative = analyticsState.rows.find(function (row) {
+        return Number.isFinite(Number(row.cgpa)) && Number.isFinite(Number(row.internships));
+      });
+      const repPayload = representative ? {
+        include_explanation: true,
+        age: Number(representative.age) || 21,
+        cgpa: Number(representative.cgpa) || 7.5,
+        backlogs: Number(representative.backlogs) || 0,
+        attendance: Number(representative.attendance) || 80,
+        tenth_percentage: Number(representative.tenth_percentage) || 78,
+        twelfth_percentage: Number(representative.twelfth_percentage) || 76,
+        branch: representative.branch || "CSE",
+        college_tier: Number(representative.college_tier) || 2,
+        python_skill: Number(representative.python_skill) || 6,
+        "c++_skill": Number(representative["c++_skill"]) || 6,
+        java_skill: Number(representative.java_skill) || 6,
+        ml_skill: Number(representative.ml_skill) || 5,
+        web_dev_skill: Number(representative.web_dev_skill) || 5,
+        communication_skill: Number(representative.communication_skill) || 6,
+        aptitude_score: Number(representative.aptitude_score) || 72,
+        logical_reasoning: Number(representative.logical_reasoning) || 70,
+        internships: Number(representative.internships) || 1,
+        projects: Number(representative.projects) || 2,
+        github_projects: Number(representative.github_projects) || 2,
+        hackathons: Number(representative.hackathons) || 1,
+        certifications: Number(representative.certifications) || 1,
+        coding_contest_rating: Number(representative.coding_contest_rating) || 1200,
+        teamwork: Number(representative.teamwork) || 6,
+        leadership: Number(representative.leadership) || 5,
+        problem_solving: Number(representative.problem_solving) || 6,
+        time_management: Number(representative.time_management) || 6,
+        gender: representative.gender || "Male",
+        city_tier: Number(representative.city_tier) || 2,
+        family_income: Number(representative.family_income) || 8
+      } : createPredictionPayload(new FormData(elements.predictForm)).payload;
+
+      try {
+        const data = await requestJson("/predict", { method: "POST", body: repPayload });
+        if (!data.shap_explanation || typeof data.shap_explanation !== "object" || !Object.keys(data.shap_explanation).length) {
+          setVizState(statusEl, canvas, "SHAP explanation was not returned by the API.", true);
+          return;
+        }
+
+        const renameMap = {
+          avg_problem_solving: "Avg Problem Solving",
+          problem_solving: "Problem Solving",
+          communication_skill: "Communication Skill",
+          cgpa: "CGPA",
+          internships: "Internships",
+          family_income: "Family Income",
+          college_tier: "College Tier",
+          aptitude_score: "Aptitude Score",
+          logical_reasoning: "Logical Reasoning",
+          coding_contest_rating: "Contest Rating",
+          python_skill: "Python Skill",
+          ml_skill: "ML Skill",
+          web_dev_skill: "Web Dev Skill",
+          "c++_skill": "C++ Skill",
+          java_skill: "Java Skill",
+          teamwork: "Teamwork",
+          leadership: "Leadership",
+          time_management: "Time Management",
+          hackathons: "Hackathons",
+          certifications: "Certifications",
+          projects: "Projects",
+          github_projects: "GitHub Projects",
+          tenth_percentage: "10th Percentage",
+          twelfth_percentage: "12th Percentage",
+          attendance: "Attendance",
+          backlogs: "Backlogs",
+          city_tier: "City Tier",
+          age: "Age",
+          gender: "Gender"
+        };
+
+        const sorted = Object.keys(data.shap_explanation).map(function (key) {
+          return { key: key, raw: Number(data.shap_explanation[key]) };
+        }).filter(function (item) {
+          return Number.isFinite(item.raw);
+        }).sort(function (left, right) {
+          return Math.abs(right.raw) - Math.abs(left.raw);
+        }).slice(0, 10);
+
+        if (!sorted.length) {
+          setVizState(statusEl, canvas, "No valid SHAP values were returned for the representative prediction.", true);
+          return;
+        }
+
+        const labels = sorted.map(function (item) {
+          return renameMap[item.key] || item.key.replace(/_/g, " ").replace(/\b\w/g, function (letter) { return letter.toUpperCase(); });
+        });
+        const values = sorted.map(function (item) { return item.raw; });
+        showVizCanvas(statusEl, canvas);
+        if (featuresChartInstance) featuresChartInstance.destroy();
+
+        const shapLabelPlugin = {
+          id: "shapValueLabels",
+          afterDatasetsDraw: function (chart) {
+            const ctx = chart.ctx;
+            ctx.save();
+            ctx.fillStyle = palette.navy;
+            ctx.font = "600 10px 'IBM Plex Mono', monospace";
+            chart.getDatasetMeta(0).data.forEach(function (bar, index) {
+              const value = values[index];
+              ctx.textAlign = value >= 0 ? "left" : "right";
+              ctx.fillText((value >= 0 ? "+" : "") + value.toFixed(3), bar.x + (value >= 0 ? 8 : -8), bar.y + 3);
+            });
+            ctx.restore();
+          }
+        };
+
+        featuresChartInstance = new Chart(canvas.getContext("2d"), {
+          type: "bar",
+          plugins: [shapLabelPlugin],
+          data: {
+            labels: labels,
+            datasets: [{
+              data: values,
+              backgroundColor: values.map(function (value) {
+                return value >= 0 ? hexToRgba(palette.sage, 0.82) : hexToRgba(palette.coral, 0.82);
+              }),
+              borderRadius: 10,
+              borderSkipped: false,
+              barThickness: 16
+            }]
+          },
+          options: {
+            indexAxis: "y",
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 700, easing: "easeOutQuart" },
+            layout: { padding: { left: 10, right: 28, top: 10, bottom: 10 } },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: hexToRgba(palette.navy, 0.94),
+                padding: 12,
+                callbacks: {
+                  label: function (context) {
+                    const raw = values[context.dataIndex];
+                    return [
+                      "SHAP: " + (raw >= 0 ? "+" : "") + raw.toFixed(4),
+                      raw >= 0 ? "Direction: positive uplift" : "Direction: negative drag"
+                    ];
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                title: { display: true, text: "Signed SHAP Value", color: palette.dim, font: { family: "'IBM Plex Mono', monospace", size: 11 } },
+                grid: {
+                  color: function (context) { return context.tick.value === 0 ? hexToRgba(palette.navy, 0.3) : hexToRgba(palette.navy, 0.08); },
+                  lineWidth: function (context) { return context.tick.value === 0 ? 1.5 : 1; }
+                },
+                ticks: { color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 10 } }
+              },
+              y: {
+                grid: { display: false },
+                ticks: { color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 10 }, autoSkip: false }
+              }
+            }
+          }
+        });
+      } catch (_) {
+        setVizState(statusEl, canvas, "Feature importance is temporarily unavailable.", true);
+      }
+    }
   })();
 </script>
 </body>
