@@ -587,10 +587,10 @@
         </div>
       </div>
 
-      <!-- CGPA vs Placement Scatter -->
+      <!-- Branch Distribution -->
       <div class="panel">
-        <p class="viz-panel-title">CGPA vs Placement</p>
-        <p class="viz-panel-sub">CGPA distribution by placement outcome — vertical jitter applied for clarity</p>
+        <p class="viz-panel-title">Branch Distribution</p>
+        <p class="viz-panel-sub">Top branch buckets computed from the full parquet-backed dataset profile</p>
         <div id="vizScatterStatus" class="viz-status-msg">⏳ Fetching data...</div>
         <div style="position: relative; height: 270px;">
           <canvas id="scatterChart" style="display: none;"></canvas>
@@ -602,7 +602,7 @@
     <!-- Row 2: Correlation Heatmap (full width) -->
     <div class="panel" style="margin-bottom: 20px;">
       <p class="viz-panel-title">Correlation Heatmap</p>
-      <p class="viz-panel-sub">Pearson r between numeric dataset features: Age, CGPA, Internships, Placement — computed from live API data</p>
+      <p class="viz-panel-sub">Pearson r between numeric dataset features - computed by the live API against the full parquet dataset</p>
       <div id="vizHeatmapStatus" class="viz-status-msg">⏳ Fetching data...</div>
       <div class="viz-heatmap-wrap">
         <canvas id="heatmapChart" style="display: none; max-width: 100%;"></canvas>
@@ -641,7 +641,7 @@
       PROD_BASE_URL: "https://daalab-ay225-garcia-a.onrender.com"
     };
     const API_BASE_URL = API_ENV.USE_LOCAL_API ? API_ENV.LOCAL_BASE_URL : API_ENV.PROD_BASE_URL;
-    const REQUEST_TIMEOUT_MS = 10000;
+    const REQUEST_TIMEOUT_MS = 30000;
     const STORAGE_KEY = "placement-dashboard-state-v1";
     const PAGE_SIZE_OPTIONS = [10, 20, 50];
 
@@ -723,7 +723,6 @@
     let scoreBarChartInstance = null;
     let gradeDoughnutChartInstance = null;
     let attendanceScoreChartInstance = null;
-    const DATASET_SAMPLE_LIMIT = 1000;
     const DEFAULT_SORT_VALUE = "__score:desc";
     const analyticsState = {
       loaded: false,
@@ -731,6 +730,7 @@
       rows: [],
       viewRows: [],
       stats: null,
+      datasetProfile: null,
       featureChartReady: false,
       renderKeys: Object.create(null),
       loadGate: null,
@@ -777,7 +777,7 @@
         state.pageSize = PAGE_SIZE_OPTIONS.includes(value) ? value : defaultState.pageSize;
         state.currentPage = 1;
         persistState();
-        if (analyticsState.loaded) applyFilterSort();
+        if (analyticsState.loaded) fetchStudents();
       });
       elements.resetFiltersButton.addEventListener("click", function () {
         resetTable();
@@ -786,27 +786,26 @@
         if (!analyticsState.loaded || studentsLoading || state.currentPage <= 1) return;
         state.currentPage -= 1;
         persistState();
-        renderTable(analyticsState.viewRows);
-        updatePaginationUI();
+        fetchStudents();
       });
       elements.nextPageButton.addEventListener("click", function () {
         if (!analyticsState.loaded || studentsLoading || state.currentPage >= state.totalPages) return;
         state.currentPage += 1;
         persistState();
-        renderTable(analyticsState.viewRows);
-        updatePaginationUI();
+        fetchStudents();
       });
       elements.predictForm.addEventListener("submit", handlePredictionSubmit);
       if (elements.nameFilterInput) {
         elements.nameFilterInput.addEventListener("input", function () {
           state.currentPage = 1;
-          runDebouncedStudentsFetch();
+          applyClientPageSearch();
         });
       }
       if (elements.sortSelect) {
         elements.sortSelect.addEventListener("change", function () {
           state.currentPage = 1;
-          applyFilterSort();
+          persistState();
+          if (analyticsState.loaded) fetchStudents();
         });
       }
     }
@@ -814,7 +813,7 @@
     function runDebouncedStudentsFetch() {
       if (debounceHandle !== null) window.clearTimeout(debounceHandle);
       debounceHandle = window.setTimeout(function () {
-        if (analyticsState.loaded) applyFilterSort();
+        if (analyticsState.loaded) fetchStudents();
       }, 180);
     }
 
@@ -868,12 +867,14 @@
       setStudentsLoading(true);
       setStudentsStatus("loading", "Loading students...");
       try {
+        const sortParams = getApiSortParams();
         const data = await requestJson("/students", {
           method: "GET",
           signal: studentsController.signal,
           params: {
             page: state.currentPage, limit: state.pageSize,
-            cgpa_min: validation.values.cgpaMin, internships_min: validation.values.internshipsMin
+            cgpa_min: validation.values.cgpaMin, internships_min: validation.values.internshipsMin,
+            sort_by: sortParams.sortBy, sort_order: sortParams.sortOrder
           }
         });
         if (!isValidStudentsResponse(data)) throw new Error("Students response returned unexpected data.");
@@ -885,9 +886,22 @@
           persistState(); fetchStudents(); return;
         }
 
-        renderStudentsTable(data.data);
-        if (data.data.length === 0) setStudentsStatus("empty", "No results found");
-        else setStudentsStatus("ready", "");
+        const pageOffset = Math.max(0, (state.currentPage - 1) * state.pageSize);
+        const normalizedRows = normalizeDatasetRows(data.data, pageOffset);
+        analyticsState.rows = normalizedRows;
+        analyticsState.viewRows = normalizedRows.slice();
+        window.DS = normalizedRows.slice();
+        window.DS_VIEW = normalizedRows.slice();
+        window.DS_META = {
+          total_rows: getDatasetTotalRows(),
+          displayed_rows: normalizedRows.length,
+          page: state.currentPage,
+          page_size: state.pageSize
+        };
+
+        applyClientPageSearch();
+        if (normalizedRows.length === 0) setStudentsStatus("empty", "No results found");
+        else setStudentsStatus("ready", "Showing page " + formatInteger(state.currentPage) + " of " + formatInteger(state.totalPages) + " from " + formatInteger(getDatasetTotalRows()) + " dataset records.");
 
         updateTotalLabel(); updatePaginationUI(); persistState();
       } catch (error) {
@@ -1019,7 +1033,7 @@
       cacheDynamicElements();
       window.DS = [];
       window.DS_VIEW = [];
-      window.DS_META = { total_rows: 0, sampled_rows: 0 };
+      window.DS_META = { total_rows: 0, displayed_rows: 0, source: "paginated-api" };
     }
 
     function injectDashboardStyles() {
@@ -1054,8 +1068,8 @@
       const nameField = document.createElement("div");
       nameField.className = "field field--wide";
       nameField.innerHTML = [
-        '<label for="nameFilterInput">Search Name</label>',
-        '<input id="nameFilterInput" type="text" placeholder="Student 0001 or API name">',
+        '<label for="nameFilterInput">Search Page</label>',
+        '<input id="nameFilterInput" type="text" placeholder="Current visible page only">',
         '<span class="error-text"></span>'
       ].join("");
 
@@ -1090,21 +1104,21 @@
       wrapper.innerHTML = [
         '<div class="viz-row-2" id="student2ChartsRow">',
         '  <div class="panel">',
-        '    <p class="viz-panel-title">Top 10 Scores</p>',
-        '    <p class="viz-panel-sub">Student 2 leaderboard driven by the strongest score-like metric available from the API sample</p>',
+        '    <p class="viz-panel-title">Dataset Branch Buckets</p>',
+        '    <p class="viz-panel-sub">Full-dataset branch counts from /stats/dataset, not a browser-side row sample</p>',
         '    <div id="vizScoreBarStatus" class="viz-status-msg">Dataset not loaded yet.</div>',
         '    <div style="position: relative; height: 360px;"><canvas id="scoreBarChart" style="display:none;"></canvas></div>',
         '  </div>',
         '  <div class="panel">',
-        '    <p class="viz-panel-title">Grade Distribution</p>',
-        '    <p class="viz-panel-sub">Derived grade bands from the loaded score metric</p>',
+        '    <p class="viz-panel-title">Gender Distribution</p>',
+        '    <p class="viz-panel-sub">Full-dataset gender buckets from the live parquet profile</p>',
         '    <div id="vizGradeDoughnutStatus" class="viz-status-msg">Dataset not loaded yet.</div>',
         '    <div style="position: relative; height: 320px;"><canvas id="gradeDoughnutChart" style="display:none;"></canvas></div>',
         '  </div>',
         '</div>',
         '<div class="panel" style="margin-bottom: 20px;">',
-        '  <p class="viz-panel-title">Attendance vs Score</p>',
-        '  <p class="viz-panel-sub">Student 2 scatter plot with a regression line for clearer trend reading</p>',
+        '  <p class="viz-panel-title">Dataset Profile Source</p>',
+        '  <p class="viz-panel-sub">Table rows stay paginated while aggregate values come from the full dataset endpoints</p>',
         '  <div id="vizAttendanceScatterStatus" class="viz-status-msg">Dataset not loaded yet.</div>',
         '  <div style="position: relative; height: 320px;"><canvas id="attendanceScoreChart" style="display:none;"></canvas></div>',
         '</div>',
@@ -1207,24 +1221,28 @@
       try {
         const results = await Promise.all([
           requestJson("/stats/overview", { method: "GET" }).catch(function () { return null; }),
-          fetchStudentSample(DATASET_SAMPLE_LIMIT)
+          requestJson("/stats/dataset", { method: "GET" }).catch(function () { return null; })
         ]);
 
         analyticsState.stats = results[0] && isValidStatsResponse(results[0]) ? results[0] : null;
-        analyticsState.rows = normalizeDatasetRows(results[1]);
-        analyticsState.viewRows = analyticsState.rows.slice();
+        analyticsState.datasetProfile = results[1] && isValidDatasetProfile(results[1]) ? results[1] : null;
+        analyticsState.rows = [];
+        analyticsState.viewRows = [];
         analyticsState.loaded = true;
         analyticsState.featureChartReady = false;
         analyticsState.renderKeys = Object.create(null);
 
-        window.DS = analyticsState.rows.slice();
-        window.DS_VIEW = analyticsState.viewRows.slice();
+        window.DS = [];
+        window.DS_VIEW = [];
         window.DS_META = {
-          total_rows: analyticsState.stats ? Number(analyticsState.stats.total_students) || analyticsState.rows.length : analyticsState.rows.length,
-          sampled_rows: analyticsState.rows.length
+          total_rows: getDatasetTotalRows(),
+          displayed_rows: 0,
+          source: "paginated-api"
         };
 
-        resetTable(false);
+        renderDatasetWideSummary();
+        renderDatasetWideVisuals();
+        await fetchStudents();
         maybeRenderFeatureChart();
         bindHeatmapInteractions();
         bindResponsiveHeatmap();
@@ -1235,33 +1253,11 @@
       }
     }
 
-    async function fetchStudentSample(sampleLimit) {
-      const firstPage = await requestJson("/students", { method: "GET", params: { page: 1, limit: 50 } });
-      if (!isValidStudentsResponse(firstPage)) throw new Error("Students response returned unexpected data.");
-
-      const rows = firstPage.data.slice();
-      const pageLimit = Number(firstPage.limit) || 50;
-      const pagesNeeded = Math.min(firstPage.total_pages, Math.ceil(sampleLimit / pageLimit));
-
-      if (pagesNeeded > 1) {
-        const requests = [];
-        for (let page = 2; page <= pagesNeeded; page += 1) {
-          requests.push(requestJson("/students", { method: "GET", params: { page: page, limit: pageLimit } }).catch(function () { return null; }));
-        }
-        const remainingPages = await Promise.all(requests);
-        remainingPages.forEach(function (pageData) {
-          if (pageData && isValidStudentsResponse(pageData)) Array.prototype.push.apply(rows, pageData.data);
-        });
-      }
-      if (!rows.length) throw new Error("The API returned an empty dataset.");
-      return rows.slice(0, sampleLimit);
-    }
-
-    function normalizeDatasetRows(rows) {
+    function normalizeDatasetRows(rows, offset = 0) {
       return rows.map(function (row, index) {
         const normalized = Object.assign({}, row);
-        normalized.__index = index + 1;
-        normalized.__name = resolveDisplayName(row, index + 1);
+        normalized.__index = offset + index + 1;
+        normalized.__name = resolveDisplayName(row, offset + index + 1);
         normalized.__score = resolveScoreValue(row);
         normalized.__attendance = resolveAttendanceValue(row);
         normalized.__studyHours = resolveStudyHoursValue(row);
@@ -1271,8 +1267,521 @@
       });
     }
 
+    function getDatasetTotalRows() {
+      if (analyticsState.stats && isFiniteNumber(analyticsState.stats.total_students)) return Number(analyticsState.stats.total_students);
+      if (analyticsState.datasetProfile && isFiniteNumber(analyticsState.datasetProfile.row_count)) return Number(analyticsState.datasetProfile.row_count);
+      return Number(state.totalRecords) || analyticsState.rows.length || 0;
+    }
+
+    function getPlacementCounts() {
+      const total = getDatasetTotalRows();
+      const profileCounts = analyticsState.datasetProfile && analyticsState.datasetProfile.placement_counts;
+      if (profileCounts && isFiniteNumber(profileCounts.placed) && isFiniteNumber(profileCounts.not_placed)) {
+        return {
+          placed: Math.max(0, Number(profileCounts.placed)),
+          notPlaced: Math.max(0, Number(profileCounts.not_placed)),
+          total: Math.max(0, Number(profileCounts.placed) + Number(profileCounts.not_placed))
+        };
+      }
+      const rate = analyticsState.stats && isFiniteNumber(analyticsState.stats.placement_rate) ? Number(analyticsState.stats.placement_rate) : 0;
+      const rateFraction = rate > 1 ? rate / 100 : rate;
+      const placed = Math.round(total * rateFraction);
+      return { placed: placed, notPlaced: Math.max(0, total - placed), total: total };
+    }
+
+    function getApiSortParams() {
+      const sortSpec = parseSortSpec(elements.sortSelect ? elements.sortSelect.value : DEFAULT_SORT_VALUE);
+      const fieldMap = {
+        __score: "aptitude_score",
+        __attendance: "attendance",
+        cgpa: "cgpa",
+        internships: "internships"
+      };
+      return {
+        sortBy: fieldMap[sortSpec.field] || undefined,
+        sortOrder: sortSpec.direction
+      };
+    }
+
+    function applyClientPageSearch() {
+      const nameFilter = elements.nameFilterInput ? elements.nameFilterInput.value.trim().toLowerCase() : "";
+      let pageRows = analyticsState.rows.slice();
+      if (nameFilter) {
+        pageRows = pageRows.filter(function (row) {
+          return String(row.__name || "").toLowerCase().includes(nameFilter);
+        });
+      }
+      analyticsState.viewRows = pageRows;
+      window.DS_VIEW = pageRows.slice();
+      renderTable(pageRows);
+      renderCurrentPageAnalysis(analyticsState.rows);
+      updatePaginationUI();
+      updateTotalLabel();
+    }
+
+    function renderDatasetWideSummary() {
+      const stats = analyticsState.stats;
+      if (!stats) return;
+      elements.statTotalStudents.textContent = formatInteger(stats.total_students);
+      elements.statPlacementRate.textContent = formatPercent(stats.placement_rate);
+      elements.statAvgCgpa.textContent = formatDecimal(stats.avg_cgpa, 2);
+      elements.statAvgInternships.textContent = formatDecimal(stats.avg_internships, 2);
+      setStatsLoading(false);
+      setStatsError("");
+    }
+
+    function renderDatasetWideVisuals() {
+      if (!analyticsState.loaded) return;
+      drawDatasetPlacementDoughnut();
+      drawDatasetBranchDistribution();
+      drawDatasetBranchLeaderboard();
+      drawDatasetCorrelationHeatmap();
+      drawDatasetGenderDoughnut();
+      renderDatasetProfileSource();
+      renderDatasetAnalysis();
+      renderDatasetInsights();
+    }
+
+    function drawDatasetPlacementDoughnut() {
+      const canvas = elements.doughnutChartCanvas;
+      const statusEl = elements.vizDoughnutStatus;
+      const palette = getThemeColors();
+      if (!canvas) return;
+
+      const counts = getPlacementCounts();
+      if (!counts.total) {
+        setVizState(statusEl, canvas, "No dataset-level placement counts are available.", true);
+        return;
+      }
+
+      const signature = [counts.total, counts.placed, counts.notPlaced].join("|");
+      if (analyticsState.renderKeys.datasetPlacement === signature && doughnutChartInstance) return;
+      analyticsState.renderKeys.datasetPlacement = signature;
+
+      showVizCanvas(statusEl, canvas);
+      if (doughnutChartInstance) doughnutChartInstance.destroy();
+
+      const centerTextPlugin = {
+        id: "datasetPlacementCenter",
+        afterDraw: function (chart) {
+          const meta = chart.getDatasetMeta(0);
+          if (!meta || !meta.data || !meta.data.length) return;
+          const ctx = chart.ctx;
+          const x = meta.data[0].x;
+          const y = meta.data[0].y;
+          const rate = counts.total ? counts.placed / counts.total : 0;
+          ctx.save();
+          ctx.textAlign = "center";
+          ctx.fillStyle = palette.navy;
+          ctx.font = "700 25px 'IBM Plex Mono', monospace";
+          ctx.fillText(formatPercent(rate), x, y - 6);
+          ctx.fillStyle = palette.dim;
+          ctx.font = "500 10px 'IBM Plex Mono', monospace";
+          ctx.fillText(formatInteger(counts.total) + " records", x, y + 18);
+          ctx.restore();
+        }
+      };
+
+      doughnutChartInstance = new Chart(canvas.getContext("2d"), {
+        type: "doughnut",
+        plugins: [centerTextPlugin],
+        data: {
+          labels: ["Placed", "Not Placed"],
+          datasets: [{
+            data: [counts.placed, counts.notPlaced],
+            backgroundColor: [palette.sage, palette.coral],
+            borderColor: [palette.surface, palette.surface],
+            borderWidth: 5,
+            hoverOffset: 12
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: "66%",
+          plugins: {
+            legend: { position: "bottom", labels: { usePointStyle: true, color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 11 } } },
+            tooltip: {
+              backgroundColor: hexToRgba(palette.navy, 0.94),
+              callbacks: {
+                label: function (context) {
+                  const count = Number(context.parsed) || 0;
+                  const share = counts.total ? (count / counts.total) : 0;
+                  return context.label + ": " + formatInteger(count) + " students (" + formatPercent(share) + ")";
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function drawDatasetBranchDistribution() {
+      const canvas = elements.scatterChartCanvas;
+      const statusEl = elements.vizScatterStatus;
+      const palette = getThemeColors();
+      const distribution = analyticsState.datasetProfile && Array.isArray(analyticsState.datasetProfile.branch_distribution)
+        ? analyticsState.datasetProfile.branch_distribution.slice(0, 10)
+        : [];
+      if (!canvas) return;
+      if (!distribution.length) {
+        setVizState(statusEl, canvas, "Full-dataset branch distribution is unavailable.", true);
+        return;
+      }
+
+      const labels = distribution.map(function (item) { return item.branch || "Unknown"; });
+      const values = distribution.map(function (item) { return Number(item.count) || 0; });
+      const signature = labels.join("|") + values.join("|");
+      if (analyticsState.renderKeys.datasetBranches === signature && scatterChartInstance) return;
+      analyticsState.renderKeys.datasetBranches = signature;
+
+      showVizCanvas(statusEl, canvas);
+      if (scatterChartInstance) scatterChartInstance.destroy();
+
+      scatterChartInstance = new Chart(canvas.getContext("2d"), {
+        type: "bar",
+        data: {
+          labels: labels,
+          datasets: [{
+            label: "Students",
+            data: values,
+            backgroundColor: labels.map(function (_, index) {
+              return index % 2 === 0 ? hexToRgba(palette.sage, 0.78) : hexToRgba(palette.navy, 0.72);
+            }),
+            borderRadius: 6,
+            borderSkipped: false
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: hexToRgba(palette.navy, 0.94),
+              callbacks: {
+                label: function (context) {
+                  const count = Number(context.parsed.y) || 0;
+                  return formatInteger(count) + " students from " + formatInteger(getDatasetTotalRows()) + " records";
+                }
+              }
+            }
+          },
+          scales: {
+            x: { grid: { display: false }, ticks: { color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 10 } } },
+            y: { title: { display: true, text: "Students", color: palette.dim, font: { family: "'IBM Plex Mono', monospace", size: 11 } }, grid: { color: hexToRgba(palette.navy, 0.08) }, ticks: { color: palette.text, callback: function (value) { return formatInteger(value); } } }
+          }
+        }
+      });
+    }
+
+    function drawDatasetCorrelationHeatmap() {
+      const canvas = elements.heatmapChartCanvas;
+      const statusEl = elements.vizHeatmapStatus;
+      const profile = analyticsState.datasetProfile;
+      if (!canvas) return;
+      if (!profile || !profile.correlation || !Array.isArray(profile.correlation.labels) || !Array.isArray(profile.correlation.matrix) || !profile.correlation.labels.length) {
+        setVizState(statusEl, canvas, "Full-dataset correlation matrix is unavailable.", true);
+        analyticsState.heatmapModel = null;
+        return;
+      }
+
+      drawCorrelationMatrixHeatmap(profile.correlation.labels, profile.correlation.matrix, getDatasetTotalRows());
+    }
+
+    function drawCorrelationMatrixHeatmap(labels, matrix, recordCount) {
+      const canvas = elements.heatmapChartCanvas;
+      const statusEl = elements.vizHeatmapStatus;
+      const palette = getThemeColors();
+      if (!canvas) return;
+
+      const readableLabels = labels.map(function (label) {
+        return String(label).replace(/_/g, " ").replace(/\b\w/g, function (letter) { return letter.toUpperCase(); });
+      });
+      const size = Math.min(readableLabels.length, matrix.length);
+      if (!size) {
+        setVizState(statusEl, canvas, "Full-dataset correlation matrix is empty.", true);
+        return;
+      }
+
+      showVizCanvas(statusEl, canvas);
+      const dpr = window.devicePixelRatio || 1;
+      const containerWidth = Math.max(520, canvas.parentElement.offsetWidth || 720);
+      const margin = { top: 86, right: 30, bottom: 82, left: 150 };
+      const gridWidth = containerWidth - margin.left - margin.right;
+      const cellSize = Math.max(34, Math.min(72, Math.floor(gridWidth / size)));
+      const contentWidth = margin.left + cellSize * size + margin.right;
+      const contentHeight = margin.top + cellSize * size + margin.bottom;
+      canvas.width = contentWidth * dpr;
+      canvas.height = contentHeight * dpr;
+      canvas.style.width = contentWidth + "px";
+      canvas.style.height = contentHeight + "px";
+
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, contentWidth, contentHeight);
+
+      function mix(start, end, amount) {
+        return start.map(function (channel, index) { return Math.round(channel + (end[index] - channel) * amount); });
+      }
+      function colorFor(value) {
+        const coral = [217, 79, 61];
+        const neutral = [245, 241, 235];
+        const sage = [58, 125, 92];
+        const numeric = Number.isFinite(Number(value)) ? Number(value) : 0;
+        const intensity = Math.min(1, Math.abs(numeric));
+        const rgb = numeric < 0 ? mix(neutral, coral, intensity) : mix(neutral, sage, intensity);
+        return "rgb(" + rgb.join(",") + ")";
+      }
+
+      for (let row = 0; row < size; row += 1) {
+        for (let col = 0; col < size; col += 1) {
+          const value = Number(matrix[row] && matrix[row][col]);
+          const safeValue = Number.isFinite(value) ? value : 0;
+          const x = margin.left + col * cellSize;
+          const y = margin.top + row * cellSize;
+          const isHover = analyticsState.heatmapHoverCell && analyticsState.heatmapHoverCell.row === row && analyticsState.heatmapHoverCell.col === col;
+          ctx.fillStyle = colorFor(safeValue);
+          ctx.fillRect(x + 3, y + 3, cellSize - 6, cellSize - 6);
+          ctx.strokeStyle = isHover ? palette.navy : hexToRgba(palette.navy, 0.08);
+          ctx.lineWidth = isHover ? 2 : 1;
+          ctx.strokeRect(x + 3, y + 3, cellSize - 6, cellSize - 6);
+          ctx.fillStyle = Math.abs(safeValue) > 0.55 ? "#ffffff" : palette.navy;
+          ctx.font = "600 " + Math.max(9, Math.min(12, Math.floor(cellSize / 5))) + "px 'IBM Plex Mono', monospace";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(safeValue.toFixed(2), x + cellSize / 2, y + cellSize / 2);
+        }
+      }
+
+      ctx.fillStyle = palette.navy;
+      ctx.font = "600 10px 'IBM Plex Mono', monospace";
+      ctx.textBaseline = "middle";
+      readableLabels.slice(0, size).forEach(function (label, index) {
+        const x = margin.left + index * cellSize + cellSize / 2;
+        ctx.save();
+        ctx.translate(x, margin.top - 16);
+        ctx.rotate(-Math.PI / 5);
+        ctx.textAlign = "left";
+        ctx.fillText(label, 0, 0);
+        ctx.restore();
+      });
+      ctx.textAlign = "right";
+      readableLabels.slice(0, size).forEach(function (label, index) {
+        ctx.fillText(label, margin.left - 12, margin.top + index * cellSize + cellSize / 2);
+      });
+
+      const legendX = margin.left;
+      const legendY = margin.top + cellSize * size + 24;
+      const legendWidth = Math.min(320, cellSize * size);
+      const gradient = ctx.createLinearGradient(legendX, 0, legendX + legendWidth, 0);
+      gradient.addColorStop(0, colorFor(-1));
+      gradient.addColorStop(0.5, colorFor(0));
+      gradient.addColorStop(1, colorFor(1));
+      ctx.fillStyle = gradient;
+      ctx.fillRect(legendX, legendY, legendWidth, 10);
+      ctx.strokeStyle = hexToRgba(palette.navy, 0.1);
+      ctx.strokeRect(legendX, legendY, legendWidth, 10);
+      ctx.fillStyle = palette.dim;
+      ctx.font = "500 10px 'IBM Plex Mono', monospace";
+      ctx.textAlign = "left";
+      ctx.fillText("Full-dataset Pearson r", legendX, legendY - 11);
+      ctx.fillText("-1.00", legendX, legendY + 24);
+      ctx.textAlign = "center";
+      ctx.fillText("0.00", legendX + legendWidth / 2, legendY + 24);
+      ctx.textAlign = "right";
+      ctx.fillText("+1.00", legendX + legendWidth, legendY + 24);
+      ctx.fillText("n = " + formatInteger(recordCount), contentWidth - margin.right, legendY + 5);
+
+      analyticsState.heatmapModel = {
+        matrix: matrix,
+        labels: readableLabels.slice(0, size),
+        margin: margin,
+        cellSize: cellSize
+      };
+    }
+
+    function drawDatasetGenderDoughnut() {
+      const canvas = elements.gradeDoughnutChartCanvas;
+      const statusEl = elements.vizGradeDoughnutStatus;
+      const palette = getThemeColors();
+      const distribution = analyticsState.datasetProfile && Array.isArray(analyticsState.datasetProfile.gender_distribution)
+        ? analyticsState.datasetProfile.gender_distribution
+        : [];
+      if (!canvas) return;
+      if (!distribution.length) {
+        setVizState(statusEl, canvas, "Full-dataset gender distribution is unavailable.", true);
+        return;
+      }
+
+      const labels = distribution.map(function (item) { return item.gender || "Unknown"; });
+      const values = distribution.map(function (item) { return Number(item.count) || 0; });
+      const total = values.reduce(function (sum, value) { return sum + value; }, 0);
+      const signature = labels.join("|") + values.join("|");
+      if (analyticsState.renderKeys.datasetGender === signature && gradeDoughnutChartInstance) return;
+      analyticsState.renderKeys.datasetGender = signature;
+
+      showVizCanvas(statusEl, canvas);
+      if (gradeDoughnutChartInstance) gradeDoughnutChartInstance.destroy();
+
+      gradeDoughnutChartInstance = new Chart(canvas.getContext("2d"), {
+        type: "doughnut",
+        data: {
+          labels: labels,
+          datasets: [{
+            data: values,
+            backgroundColor: [palette.sage, palette.coral, hexToRgba(palette.navy, 0.72), "#b5820d"],
+            borderColor: labels.map(function () { return palette.surface; }),
+            borderWidth: 5,
+            hoverOffset: 10
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: "62%",
+          plugins: {
+            legend: { position: "bottom", labels: { usePointStyle: true, color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 11 } } },
+            tooltip: {
+              backgroundColor: hexToRgba(palette.navy, 0.94),
+              callbacks: {
+                label: function (context) {
+                  const count = Number(context.parsed) || 0;
+                  return context.label + ": " + formatInteger(count) + " students (" + formatPercent(total ? count / total : 0) + ")";
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function drawDatasetBranchLeaderboard() {
+      const canvas = elements.scoreBarChartCanvas;
+      const statusEl = elements.vizScoreBarStatus;
+      const palette = getThemeColors();
+      const distribution = analyticsState.datasetProfile && Array.isArray(analyticsState.datasetProfile.branch_distribution)
+        ? analyticsState.datasetProfile.branch_distribution.slice(0, 10)
+        : [];
+      if (!canvas) return;
+      if (!distribution.length) {
+        setVizState(statusEl, canvas, "Full-dataset branch counts are unavailable.", true);
+        return;
+      }
+
+      const labels = distribution.map(function (item) { return item.branch || "Unknown"; });
+      const values = distribution.map(function (item) { return Number(item.count) || 0; });
+      showVizCanvas(statusEl, canvas);
+      if (scoreBarChartInstance) scoreBarChartInstance.destroy();
+      scoreBarChartInstance = new Chart(canvas.getContext("2d"), {
+        type: "bar",
+        data: {
+          labels: labels,
+          datasets: [{
+            data: values,
+            backgroundColor: values.map(function (_, index) { return index < 3 ? hexToRgba(palette.sage, 0.82) : hexToRgba(palette.navy, 0.66); }),
+            borderRadius: 8,
+            borderSkipped: false
+          }]
+        },
+        options: {
+          indexAxis: "y",
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: hexToRgba(palette.navy, 0.94),
+              callbacks: {
+                label: function (context) {
+                  return formatInteger(context.parsed.x) + " students";
+                }
+              }
+            }
+          },
+          scales: {
+            x: { ticks: { color: palette.text, callback: function (value) { return formatInteger(value); } }, grid: { color: hexToRgba(palette.navy, 0.08) } },
+            y: { ticks: { color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 10 }, autoSkip: false }, grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    function renderDatasetProfileSource() {
+      const canvas = elements.attendanceScoreChartCanvas;
+      const statusEl = elements.vizAttendanceScatterStatus;
+      if (canvas) canvas.style.display = "none";
+      if (!statusEl) return;
+      const profile = analyticsState.datasetProfile;
+      const stats = analyticsState.stats;
+      statusEl.style.display = "block";
+      statusEl.style.color = "var(--text-dim)";
+      statusEl.innerHTML = [
+        "Full dataset loaded through aggregate endpoints.",
+        "Records: " + formatInteger(getDatasetTotalRows()),
+        "Columns: " + (profile && isFiniteNumber(profile.column_count) ? formatInteger(profile.column_count) : "--"),
+        "Placement rate: " + (stats ? formatPercent(stats.placement_rate) : "--"),
+        "Rows below remain paginated at " + formatInteger(state.pageSize) + " per page."
+      ].map(escapeHtml).join("<br>");
+    }
+
+    function renderDatasetAnalysis() {
+      if (!elements.analysisOverviewBody || !elements.analysisRelationshipBody) return;
+      const stats = analyticsState.stats;
+      const profile = analyticsState.datasetProfile;
+      const counts = getPlacementCounts();
+      renderStatTable(elements.analysisOverviewBody, [
+        { label: "Full Dataset Records", value: formatInteger(getDatasetTotalRows()) },
+        { label: "Column Count", value: profile && isFiniteNumber(profile.column_count) ? formatInteger(profile.column_count) : "--" },
+        { label: "Expected Columns", value: profile && isFiniteNumber(profile.expected_column_count) ? formatInteger(profile.expected_column_count) : "--" },
+        { label: "Placed Students", value: formatInteger(counts.placed) },
+        { label: "Not Placed Students", value: formatInteger(counts.notPlaced) },
+        { label: "Placement Rate", value: counts.total ? formatPercent(counts.placed / counts.total) : (stats ? formatPercent(stats.placement_rate) : "--") }
+      ]);
+
+      renderStatTable(elements.analysisRelationshipBody, [
+        { label: "Mean CGPA", value: stats ? formatDecimal(stats.avg_cgpa, 2) : "--" },
+        { label: "Avg. Internships", value: stats ? formatDecimal(stats.avg_internships, 2) : "--" },
+        { label: "Missing Columns", value: profile && Array.isArray(profile.missing_columns) ? formatInteger(profile.missing_columns.length) : "--" },
+        { label: "Extra Columns", value: profile && Array.isArray(profile.extra_columns) ? formatInteger(profile.extra_columns.length) : "--" },
+        { label: "Branch Buckets", value: profile && Array.isArray(profile.branch_distribution) ? formatInteger(profile.branch_distribution.length) : "--" },
+        { label: "Gender Buckets", value: profile && Array.isArray(profile.gender_distribution) ? formatInteger(profile.gender_distribution.length) : "--" }
+      ]);
+    }
+
+    function renderDatasetInsights() {
+      if (!elements.insightsBody) return;
+      const profile = analyticsState.datasetProfile;
+      const stats = analyticsState.stats;
+      const counts = getPlacementCounts();
+      if (!profile && !stats) {
+        elements.insightsBody.innerHTML = '<div class="insight-item">Load the dataset to generate full-dataset insights.</div>';
+        return;
+      }
+      const topBranch = profile && Array.isArray(profile.branch_distribution) && profile.branch_distribution.length ? profile.branch_distribution[0] : null;
+      const topGender = profile && Array.isArray(profile.gender_distribution) && profile.gender_distribution.length ? profile.gender_distribution[0] : null;
+      const insights = [
+        "The dashboard is connected to " + formatInteger(getDatasetTotalRows()) + " parquet-backed records; table pages are fetched in small chunks so the browser never tries to render all rows at once.",
+        "Placement counts are computed from the full dataset: " + formatInteger(counts.placed) + " placed and " + formatInteger(counts.notPlaced) + " not placed" + (counts.total ? " (" + formatPercent(counts.placed / counts.total) + " placed)." : "."),
+        "The full-dataset averages are " + (stats ? formatDecimal(stats.avg_cgpa, 2) : "--") + " CGPA and " + (stats ? formatDecimal(stats.avg_internships, 2) : "--") + " internships per student."
+      ];
+      if (topBranch) insights.push("The largest branch bucket is " + safeText(topBranch.branch) + " with " + formatInteger(topBranch.count) + " students.");
+      if (topGender) insights.push("The largest gender bucket is " + safeText(topGender.gender) + " with " + formatInteger(topGender.count) + " students.");
+      elements.insightsBody.innerHTML = insights.map(function (text) {
+        return '<div class="insight-item">' + escapeHtml(text) + '</div>';
+      }).join("");
+    }
+
+    function renderCurrentPageAnalysis() {
+      renderDatasetAnalysis();
+      renderDatasetInsights();
+    }
+
     function applyFilterSort() {
       if (!analyticsState.loaded) return [];
+      fetchStudents();
+      renderDatasetWideVisuals();
+      return analyticsState.viewRows.slice();
 
       const validation = validateFilters(state.filters);
       renderFilterErrors(validation.errors);
@@ -1334,7 +1843,7 @@
       renderInsights(rows);
       updatePaginationUI();
       updateTotalLabel();
-      setStudentsStatus(rows.length ? "ready" : "empty", rows.length ? "Showing " + formatInteger(rows.length) + " loaded records." : "No records match the current view.");
+      setStudentsStatus(rows.length ? "ready" : "empty", rows.length ? "Showing " + formatInteger(rows.length) + " records from the current API page." : "No records match the current view.");
       setStudentsLoading(false);
       return rows;
     }
@@ -1351,8 +1860,11 @@
       elements.pageSizeSelect.value = String(state.pageSize);
       if (elements.nameFilterInput) elements.nameFilterInput.value = "";
       if (elements.sortSelect) elements.sortSelect.value = DEFAULT_SORT_VALUE;
-      const rows = analyticsState.loaded ? applyFilterSort() : [];
-      if (announce && analyticsState.loaded) setStudentsStatus(rows.length ? "ready" : "empty", "Table reset to the original dataset view.");
+      if (analyticsState.loaded) {
+        fetchStudents();
+        renderDatasetWideVisuals();
+      }
+      if (announce && analyticsState.loaded) setStudentsStatus("ready", "Table reset to the original dataset view.");
     }
 
     function renderSummaryCards(data) {
@@ -1392,7 +1904,8 @@
         return;
       }
       const start = Math.max(0, (state.currentPage - 1) * state.pageSize);
-      const pageRows = rows.slice(start, start + state.pageSize);
+      const isServerPage = rows === analyticsState.viewRows && state.totalRecords > rows.length;
+      const pageRows = isServerPage ? rows.slice(0, state.pageSize) : rows.slice(start, start + state.pageSize);
       const fragment = document.createDocumentFragment();
 
       pageRows.forEach(function (row) {
@@ -1448,12 +1961,12 @@
           tooltip.style.opacity = "1";
           tooltip.innerHTML = "<strong>" + escapeHtml(info.xLabel) + " vs " + escapeHtml(info.yLabel) + "</strong>Correlation: " + formatDecimal(info.value, 3);
         }
-        drawHeatmap(analyticsState.viewRows);
+        drawDatasetCorrelationHeatmap();
       });
       elements.heatmapChartCanvas.addEventListener("mouseleave", function () {
         analyticsState.heatmapHoverCell = null;
         if (tooltip) tooltip.style.opacity = "0";
-        drawHeatmap(analyticsState.viewRows);
+        drawDatasetCorrelationHeatmap();
       });
       elements.heatmapChartCanvas.dataset.boundHover = "true";
     }
@@ -1464,7 +1977,7 @@
       window.addEventListener("resize", function () {
         if (!analyticsState.loaded) return;
         if (debounceHandle !== null) window.clearTimeout(debounceHandle);
-        debounceHandle = window.setTimeout(function () { drawHeatmap(analyticsState.viewRows); }, 120);
+        debounceHandle = window.setTimeout(function () { drawDatasetCorrelationHeatmap(); }, 120);
       });
     }
 
@@ -1758,7 +2271,7 @@
         if (!response.ok) throw new Error((data && data.detail) ? data.detail : "Request failed with status " + response.status);
         return data;
       } catch (error) {
-        if (error.name === "AbortError" && timeoutController.signal.aborted && !(signal && signal.aborted)) throw new Error("Request timed out after 10 seconds.");
+        if (error.name === "AbortError" && timeoutController.signal.aborted && !(signal && signal.aborted)) throw new Error("Request timed out after " + Math.round(REQUEST_TIMEOUT_MS / 1000) + " seconds.");
         if (error.name === "AbortError") { const e = new Error("Request canceled"); e.name = "CanceledError"; throw e; }
         throw error;
       } finally { window.clearTimeout(timeoutId); }
@@ -1791,6 +2304,7 @@
     ═══════════════════════════════════════════════ */
     function cloneDefaultState() { return { currentPage: defaultState.currentPage, totalPages: defaultState.totalPages, totalRecords: defaultState.totalRecords, pageSize: defaultState.pageSize, filters: { cgpaMin: defaultState.filters.cgpaMin, internshipsMin: defaultState.filters.internshipsMin } }; }
     function isValidStatsResponse(data) { return data && isFiniteNumber(data.total_students) && isFiniteNumber(data.placement_rate) && isFiniteNumber(data.avg_cgpa) && isFiniteNumber(data.avg_internships); }
+    function isValidDatasetProfile(data) { return data && isFiniteNumber(data.row_count) && Array.isArray(data.columns) && data.placement_counts && Array.isArray(data.branch_distribution) && Array.isArray(data.gender_distribution); }
     function isValidStudentsResponse(data) { return data && Array.isArray(data.data) && isFiniteNumber(data.total) && isFiniteNumber(data.page) && isFiniteNumber(data.limit) && isFiniteNumber(data.total_pages); }
     
     function isValidPredictResponse(data) { 
@@ -2682,7 +3196,7 @@
     }
 
     function fetchVizData() {
-      if (analyticsState.loaded) applyFilterSort();
+      if (analyticsState.loaded) renderDatasetWideVisuals();
     }
 
     function drawPlacementDoughnut(rows) {
