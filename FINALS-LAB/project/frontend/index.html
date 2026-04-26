@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DataSci Collab · 2-Student Git Activity</title>
+  <title>Design, Analysis, & Algorithm Collab · 2-Student Git Activity</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%231a2035'/><text x='16' y='23' font-size='20' text-anchor='middle' fill='%23c8b98a'>D</text></svg>">
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -58,7 +58,7 @@
 
     .masthead-left .overline {
       font-family: var(--mono);
-      font-size: 0.65rem;
+      font-size: 0.85rem;
       letter-spacing: 3px;
       text-transform: uppercase;
       color: #7a8499;
@@ -67,7 +67,7 @@
 
     .masthead-left h1 {
       font-family: var(--display);
-      font-size: 2.2rem;
+      font-size: 2.8rem;
       font-weight: 900;
       color: #fff;
       line-height: 1.15;
@@ -77,7 +77,7 @@
 
     .masthead-left .sub {
       font-family: var(--mono);
-      font-size: 0.75rem;
+      font-size: 0.95rem;
       color: #7a8499;
       margin-top: 8px;
       letter-spacing: 0.5px;
@@ -205,8 +205,8 @@
 
     /* ── TABLE ────────────────────────────────────── */
     .table-scroll { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); }
-    table { width: 100%; border-collapse: collapse; font-size: 0.78rem; background: #fff; }
-    thead th { background: var(--navy); color: #c8b98a; text-align: left; padding: 10px 14px; font-size: 0.65rem; letter-spacing: 1.5px; text-transform: uppercase; white-space: nowrap; position: sticky; top: 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 1.1rem; background: #fff; }
+    thead th { background: var(--navy); color: #c8b98a; text-align: left; padding: 10px 14px; font-size: 0.85rem; letter-spacing: 1.5px; text-transform: uppercase; white-space: nowrap; position: sticky; top: 0; }
     tbody tr { border-bottom: 1px solid var(--border); transition: background 0.12s; }
     tbody tr:hover { background: var(--surface2); }
     tbody td { padding: 9px 14px; color: var(--text); }
@@ -220,9 +220,9 @@
     /* ── SUMMARY STAT CARDS ──────────────────────── */
     .stat-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
     .stat-tile { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 16px; box-shadow: var(--shadow); text-align: center; position: relative; overflow: hidden; }
-    .stat-tile .st-label { font-size: 0.6rem; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 10px; }
-    .stat-tile .st-val { font-family: var(--display); font-size: 1.9rem; font-weight: 700; color: var(--coral); line-height: 1; }
-    .stat-tile .st-sub { font-size: 0.65rem; color: var(--text-dim); margin-top: 6px; }
+    .stat-tile .st-label { font-size: 1.1rem; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 10px; }
+    .stat-tile .st-val { font-family: var(--display); font-size: 2.4rem; font-weight: 700; color: var(--coral); line-height: 1; }
+    .stat-tile .st-sub { font-size: 0.85rem; color: var(--text-dim); margin-top: 6px; }
 
     .skeleton { display: inline-block; color: transparent !important; background: linear-gradient(90deg, var(--surface2) 0%, #e6e0d4 50%, var(--surface2) 100%); background-size: 200% 100%; animation: shimmer 1.5s linear infinite; border-radius: 4px; min-width: 60px; min-height: 1.2em; }
     @keyframes shimmer { 0% { background-position: 100% 50%; } 100% { background-position: -100% 50%; } }
@@ -240,7 +240,7 @@
     .result-card { background: var(--navy); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-md); color: #fff; min-height: 220px; display: flex; flex-direction: column; justify-content: center; }
     .result-title { font-family: var(--mono); font-size: 0.7rem; color: #8a93b0; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; }
     .result-value { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; font-family: var(--display); font-size: 1.8rem; font-weight: 700; color: #fff; }
-    .result-prob { font-size: 0.8rem; color: #c8b98a; margin-bottom: 8px; }
+    .result-prob { font-size: 1.1rem; color: #c8b98a; margin-bottom: 8px; }
     
     .progress-track { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; }
     .progress-bar { height: 100%; width: 0; background: var(--sage); transition: width 0.5s ease; }
@@ -248,7 +248,7 @@
     .spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(217,79,61,0.2); border-top-color: var(--coral); border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 6px; vertical-align: middle; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    footer { text-align: center; padding: 40px 20px 20px; font-size: 0.68rem; color: var(--text-dim); letter-spacing: 1px; border-top: 1px solid var(--border); }
+    footer { text-align: center; padding: 40px 20px 20px; font-size: 0.95rem; color: var(--text-dim); letter-spacing: 1px; border-top: 1px solid var(--border); }
 
     /* ══════════════════════════════════════════════
        VIZ ANALYTICS SECTION — NEW
@@ -262,7 +262,7 @@
 
     .viz-panel-title {
       font-family: var(--mono);
-      font-size: 0.68rem;
+      font-size: 0.95rem;
       color: var(--navy);
       letter-spacing: 2.5px;
       text-transform: uppercase;
@@ -273,7 +273,7 @@
     }
 
     .viz-panel-sub {
-      font-size: 0.63rem;
+      font-size: 0.9rem;
       color: var(--text-dim);
       font-style: italic;
       margin-top: 7px;
@@ -283,7 +283,7 @@
 
     .viz-status-msg {
       font-family: var(--mono);
-      font-size: 0.72rem;
+      font-size: 1.0rem;
       color: var(--text-dim);
       text-align: center;
       padding: 36px 0;
@@ -309,7 +309,7 @@
 
 <header class="masthead">
   <div class="masthead-left">
-    <p class="overline">Computer Science · Data Science Track · Git Collaborative Activity</p>
+    <p class="overline">COMPUTER SCIENCE · DESIGN, ANALYSIS, & ALGORITHM</p>
     <h1>Student <em>Placement</em><br>Analytics Dashboard</h1>
     <p class="sub">Dataset: Live DB · API Driven · Academic Term 2025</p>
   </div>
@@ -323,7 +323,10 @@
 
 <div class="assignment-banner">
   <div class="assign-block s1">
-    <div class="assign-label">Student 1 · Repo Owner</div>
+    <div class="assign-label" style="display: flex; justify-content: space-between; align-items: center;">
+      <span>Student 1 · Repo Owner</span>
+      <div class="branch-pill" style="background: #fde8e6; border: 1px solid #f5bdb9; color: var(--coral); margin: 0;"><span class="dot" style="background: var(--coral);"></span><strong>GARCIA, Aahron Jamez</strong></div>
+    </div>
     <h3>Data Engine &amp; API Integration</h3>
     <ul class="task-list">
       <li>Create the GitHub repo &amp; push this file</li>
@@ -336,7 +339,10 @@
     <span class="branch-tag">branch: feature/data-engine</span>
   </div>
   <div class="assign-block s2">
-    <div class="assign-label">Student 2 · Collaborator</div>
+    <div class="assign-label" style="display: flex; justify-content: space-between; align-items: center;">
+      <span>Student 2 · Collaborator</span>
+      <div class="branch-pill" style="background: #ddf2e9; border: 1px solid #a8dcc3; color: var(--sage); margin: 0;"><span class="dot" style="background: var(--sage);"></span><strong>CARVAJAL, Chrstian Ezekiel L.</strong></div>
+    </div>
     <h3>Model Inference &amp; Prediction</h3>
     <ul class="task-list">
       <li>Implement <code>drawBarChart()</code> — top 10 scores horizontal bar</li>
@@ -544,7 +550,7 @@
               <canvas id="shapChart"></canvas>
             </div>
             
-            <div id="shapTopFactors" style="margin-top: 14px; font-size: 0.72rem; line-height: 1.6; color: var(--text);"></div>
+            <div id="shapTopFactors" style="margin-top: 14px; font-size: 1.0rem; line-height: 1.6; color: var(--text);"></div>
             
             <div id="waterfallSection" style="display: none;">
               <div style="border-top: 1px solid var(--border); margin: 16px 0;"></div>
@@ -625,7 +631,7 @@
 </main>
 
 <footer>
-  DATA SCIENCE COLLABORATIVE ACTIVITY &nbsp;·&nbsp; 2-STUDENT GIT WORKFLOW
+  DESIGN, ANALYSIS, & ALGORITHM COLLABORATIVE ACTIVITY &nbsp;·&nbsp; 2-STUDENT GIT WORKFLOW
   <br>Contribution tracked via commits, branches &amp; pull requests on GitHub.
 </footer>
 
@@ -796,9 +802,14 @@
       });
       elements.predictForm.addEventListener("submit", handlePredictionSubmit);
       if (elements.nameFilterInput) {
+        let searchDebounce = null;
         elements.nameFilterInput.addEventListener("input", function () {
-          state.currentPage = 1;
-          applyClientPageSearch();
+          window.clearTimeout(searchDebounce);
+          searchDebounce = window.setTimeout(function () {
+            state.currentPage = 1;
+            persistState();
+            if (analyticsState.loaded) fetchStudents();
+          }, 300);
         });
       }
       if (elements.sortSelect) {
@@ -873,6 +884,7 @@
           signal: studentsController.signal,
           params: {
             page: state.currentPage, limit: state.pageSize,
+            search: elements.nameFilterInput && elements.nameFilterInput.value.trim() ? elements.nameFilterInput.value.trim() : undefined,
             cgpa_min: validation.values.cgpaMin, internships_min: validation.values.internshipsMin,
             sort_by: sortParams.sortBy, sort_order: sortParams.sortOrder
           }
@@ -1043,19 +1055,19 @@
       style.textContent = [
         ".load-gate { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 24px; background: rgba(250, 248, 244, 0.92); backdrop-filter: blur(18px); }",
         ".load-gate__card { width: min(560px, 100%); padding: 32px; border: 1px solid rgba(26,32,53,0.12); border-radius: 28px; background: linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(248,245,239,0.96) 100%); box-shadow: 0 24px 80px rgba(26,32,53,0.14); }",
-        ".load-gate__eyebrow { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; background: rgba(26,32,53,0.06); color: var(--navy); font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }",
+        ".load-gate__eyebrow { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; background: rgba(26,32,53,0.06); color: var(--navy); font-size: 1.0rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }",
         ".load-gate__title { margin: 18px 0 10px; color: var(--navy); font-size: clamp(1.8rem, 4vw, 2.45rem); line-height: 1.05; }",
         ".load-gate__desc { margin: 0 0 20px; color: var(--text); font-size: 0.96rem; line-height: 1.7; }",
         ".load-gate__actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }",
-        ".load-gate__hint { color: var(--text-dim); font-size: 0.78rem; }",
+        ".load-gate__hint { color: var(--text-dim); font-size: 1.05rem; }",
         ".toolbar .field--wide { min-width: 220px; }",
         ".analysis-table { width: 100%; border-collapse: collapse; margin-top: 8px; }",
         ".analysis-table tr + tr { border-top: 1px solid rgba(26,32,53,0.08); }",
-        ".analysis-table td { padding: 10px 0; vertical-align: top; font-size: 0.78rem; }",
+        ".analysis-table td { padding: 10px 0; vertical-align: top; font-size: 1.05rem; }",
         ".analysis-table td:last-child { text-align: right; font-weight: 700; color: var(--navy); }",
         ".insight-list { display: grid; gap: 12px; margin-top: 10px; }",
-        ".insight-item { padding: 14px 16px; border-radius: 16px; background: rgba(26,32,53,0.04); border: 1px solid rgba(26,32,53,0.08); color: var(--text); line-height: 1.65; font-size: 0.8rem; }",
-        ".heatmap-tooltip { position: absolute; pointer-events: none; transform: translate(-50%, calc(-100% - 14px)); min-width: 180px; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(26,32,53,0.08); background: rgba(255,255,255,0.96); box-shadow: 0 20px 44px rgba(26,32,53,0.16); color: var(--navy); font-size: 0.72rem; line-height: 1.45; opacity: 0; transition: opacity 120ms ease; }",
+        ".insight-item { padding: 14px 16px; border-radius: 16px; background: rgba(26,32,53,0.04); border: 1px solid rgba(26,32,53,0.08); color: var(--text); line-height: 1.65; font-size: 1.1rem; }",
+        ".heatmap-tooltip { position: absolute; pointer-events: none; transform: translate(-50%, calc(-100% - 14px)); min-width: 180px; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(26,32,53,0.08); background: rgba(255,255,255,0.96); box-shadow: 0 20px 44px rgba(26,32,53,0.16); color: var(--navy); font-size: 1.0rem; line-height: 1.45; opacity: 0; transition: opacity 120ms ease; }",
         ".heatmap-tooltip strong { display: block; margin-bottom: 2px; }"
       ].join("");
       document.head.appendChild(style);
@@ -1068,8 +1080,8 @@
       const nameField = document.createElement("div");
       nameField.className = "field field--wide";
       nameField.innerHTML = [
-        '<label for="nameFilterInput">Search Page</label>',
-        '<input id="nameFilterInput" type="text" placeholder="Current visible page only">',
+        '<label for="nameFilterInput">Search Database</label>',
+        '<input id="nameFilterInput" type="text" placeholder="Search branch or gender (e.g. CSE, Male)">',
         '<span class="error-text"></span>'
       ].join("");
 
@@ -1304,13 +1316,7 @@
     }
 
     function applyClientPageSearch() {
-      const nameFilter = elements.nameFilterInput ? elements.nameFilterInput.value.trim().toLowerCase() : "";
       let pageRows = analyticsState.rows.slice();
-      if (nameFilter) {
-        pageRows = pageRows.filter(function (row) {
-          return String(row.__name || "").toLowerCase().includes(nameFilter);
-        });
-      }
       analyticsState.viewRows = pageRows;
       window.DS_VIEW = pageRows.slice();
       renderTable(pageRows);
@@ -1400,7 +1406,7 @@
           maintainAspectRatio: false,
           cutout: "66%",
           plugins: {
-            legend: { position: "bottom", labels: { usePointStyle: true, color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 11 } } },
+            legend: { position: "bottom", labels: { usePointStyle: true, color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 15 } } },
             tooltip: {
               backgroundColor: hexToRgba(palette.navy, 0.94),
               callbacks: {
@@ -1468,8 +1474,8 @@
             }
           },
           scales: {
-            x: { grid: { display: false }, ticks: { color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 10 } } },
-            y: { title: { display: true, text: "Students", color: palette.dim, font: { family: "'IBM Plex Mono', monospace", size: 11 } }, grid: { color: hexToRgba(palette.navy, 0.08) }, ticks: { color: palette.text, callback: function (value) { return formatInteger(value); } } }
+            x: { grid: { display: false }, ticks: { color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 14 } } },
+            y: { title: { display: true, text: "Students", color: palette.dim, font: { family: "'IBM Plex Mono', monospace", size: 15 } }, grid: { color: hexToRgba(palette.navy, 0.08) }, ticks: { color: palette.text, callback: function (value) { return formatInteger(value); } } }
           }
         }
       });
@@ -1641,7 +1647,7 @@
           maintainAspectRatio: false,
           cutout: "62%",
           plugins: {
-            legend: { position: "bottom", labels: { usePointStyle: true, color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 11 } } },
+            legend: { position: "bottom", labels: { usePointStyle: true, color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 15 } } },
             tooltip: {
               backgroundColor: hexToRgba(palette.navy, 0.94),
               callbacks: {
@@ -1701,7 +1707,7 @@
           },
           scales: {
             x: { ticks: { color: palette.text, callback: function (value) { return formatInteger(value); } }, grid: { color: hexToRgba(palette.navy, 0.08) } },
-            y: { ticks: { color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 10 }, autoSkip: false }, grid: { display: false } }
+            y: { ticks: { color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 14 }, autoSkip: false }, grid: { display: false } }
           }
         }
       });
@@ -1798,15 +1804,8 @@
         return [];
       }
 
-      const nameFilter = elements.nameFilterInput ? elements.nameFilterInput.value.trim().toLowerCase() : "";
       const sortSpec = parseSortSpec(elements.sortSelect ? elements.sortSelect.value : DEFAULT_SORT_VALUE);
       let rows = analyticsState.rows.slice();
-
-      if (nameFilter) {
-        rows = rows.filter(function (row) {
-          return String(row.__name || "").toLowerCase().includes(nameFilter);
-        });
-      }
       if (validation.values.cgpaMin !== undefined) {
         rows = rows.filter(function (row) { return Number(row.cgpa) >= validation.values.cgpaMin; });
       }
@@ -2425,7 +2424,7 @@
               title: {
                 display: true,
                 text: 'Impact on Prediction',
-                font: { family: "'IBM Plex Mono', monospace", size: 11 },
+                font: { family: "'IBM Plex Mono', monospace", size: 15 },
                 color: '#8a8577'
               },
               grid: { 
@@ -2435,14 +2434,14 @@
               },
               ticks: { 
                 autoSkip: false,
-                font: { family: "'IBM Plex Mono', monospace", size: 10 } 
+                font: { family: "'IBM Plex Mono', monospace", size: 14 } 
               }
             },
             y: {
               grid: { display: false },
               ticks: { 
                 autoSkip: false,
-                font: { family: "'IBM Plex Mono', monospace", size: 10 } 
+                font: { family: "'IBM Plex Mono', monospace", size: 14 } 
               }
             }
           }
@@ -2577,7 +2576,7 @@
             x: {
               grid: { display: false },
               ticks: {
-                font: { family: "'IBM Plex Mono', monospace", size: 10 },
+                font: { family: "'IBM Plex Mono', monospace", size: 14 },
                 maxRotation: 45,
                 minRotation: 45
               }
@@ -2589,7 +2588,7 @@
               title: {
                 display: true,
                 text: 'Running Impact',
-                font: { family: "'IBM Plex Mono', monospace", size: 10 },
+                font: { family: "'IBM Plex Mono', monospace", size: 14 },
                 color: '#8a8577'
               },
               grid: {
@@ -2597,7 +2596,7 @@
                 lineWidth: (ctx) => ctx.tick.value === 0 ? 2 : 1
               },
               ticks: {
-                font: { family: "'IBM Plex Mono', monospace", size: 10 }
+                font: { family: "'IBM Plex Mono', monospace", size: 14 }
               }
             }
           }
@@ -2763,7 +2762,7 @@ const notPlaced = rows.length - placed;
                 boxWidth: 8,
                 padding: 18,
                 color: palette.text,
-                font: { family: "'IBM Plex Mono', monospace", size: 11 }
+                font: { family: "'IBM Plex Mono', monospace", size: 15 }
               }
             },
             tooltip: {
@@ -2880,7 +2879,7 @@ const notPlaced = rows.length - placed;
                 usePointStyle: true,
                 padding: 18,
                 color: palette.text,
-                font: { family: "'IBM Plex Mono', monospace", size: 11 }
+                font: { family: "'IBM Plex Mono', monospace", size: 15 }
               }
             },
             tooltip: {
@@ -2902,18 +2901,18 @@ const notPlaced = rows.length - placed;
           },
           scales: {
             x: {
-              title: { display: true, text: "CGPA", color: palette.dim, font: { family: "'IBM Plex Mono', monospace", size: 11 } },
+              title: { display: true, text: "CGPA", color: palette.dim, font: { family: "'IBM Plex Mono', monospace", size: 15 } },
               grid: { color: hexToRgba(palette.navy, 0.08) },
-              ticks: { color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 10 } }
+              ticks: { color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 14 } }
             },
             y: {
               min: -0.32,
               max: 1.32,
-              title: { display: true, text: "Placement Outcome", color: palette.dim, font: { family: "'IBM Plex Mono', monospace", size: 11 } },
+              title: { display: true, text: "Placement Outcome", color: palette.dim, font: { family: "'IBM Plex Mono', monospace", size: 15 } },
               grid: { color: hexToRgba(palette.navy, 0.08) },
               ticks: {
                 color: palette.text,
-                font: { family: "'IBM Plex Mono', monospace", size: 10 },
+                font: { family: "'IBM Plex Mono', monospace", size: 14 },
                 callback: function (value) {
                   if (Math.abs(value) < 0.04) return "Not Placed";
                   if (Math.abs(value - 1) < 0.04) return "Placed";
@@ -3128,13 +3127,13 @@ const notPlaced = rows.length - placed;
           },
           scales: {
             x: {
-              title: { display: true, text: "Score", color: palette.dim, font: { family: "'IBM Plex Mono', monospace", size: 11 } },
+              title: { display: true, text: "Score", color: palette.dim, font: { family: "'IBM Plex Mono', monospace", size: 15 } },
               grid: { color: hexToRgba(palette.navy, 0.08) },
-              ticks: { color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 10 } }
+              ticks: { color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 14 } }
             },
             y: {
               grid: { display: false },
-              ticks: { color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 10 }, autoSkip: false }
+              ticks: { color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 14 }, autoSkip: false }
             }
           }
         }
@@ -3209,7 +3208,7 @@ const notPlaced = rows.length - placed;
           plugins: {
             legend: {
               position: "bottom",
-              labels: { usePointStyle: true, padding: 18, color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 11 } }
+              labels: { usePointStyle: true, padding: 18, color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 15 } }
             },
             tooltip: {
               backgroundColor: hexToRgba(palette.navy, 0.94),
@@ -3229,14 +3228,14 @@ const notPlaced = rows.length - placed;
           },
           scales: {
             x: {
-              title: { display: true, text: "Attendance (%)", color: palette.dim, font: { family: "'IBM Plex Mono', monospace", size: 11 } },
+              title: { display: true, text: "Attendance (%)", color: palette.dim, font: { family: "'IBM Plex Mono', monospace", size: 15 } },
               grid: { color: hexToRgba(palette.navy, 0.08) },
-              ticks: { color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 10 } }
+              ticks: { color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 14 } }
             },
             y: {
-              title: { display: true, text: "Score", color: palette.dim, font: { family: "'IBM Plex Mono', monospace", size: 11 } },
+              title: { display: true, text: "Score", color: palette.dim, font: { family: "'IBM Plex Mono', monospace", size: 15 } },
               grid: { color: hexToRgba(palette.navy, 0.08) },
-              ticks: { color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 10 } }
+              ticks: { color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 14 } }
             }
           }
         }
@@ -3293,7 +3292,7 @@ const notPlaced = rows.length - placed;
           plugins: {
             legend: {
               position: "bottom",
-              labels: { usePointStyle: true, padding: 18, color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 11 } }
+              labels: { usePointStyle: true, padding: 18, color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 15 } }
             },
             tooltip: {
               backgroundColor: hexToRgba(palette.navy, 0.94),
@@ -3544,16 +3543,16 @@ const notPlaced = rows.length - placed;
             },
             scales: {
               x: {
-                title: { display: true, text: "Signed SHAP Value", color: palette.dim, font: { family: "'IBM Plex Mono', monospace", size: 11 } },
+                title: { display: true, text: "Signed SHAP Value", color: palette.dim, font: { family: "'IBM Plex Mono', monospace", size: 15 } },
                 grid: {
                   color: function (context) { return context.tick.value === 0 ? hexToRgba(palette.navy, 0.3) : hexToRgba(palette.navy, 0.08); },
                   lineWidth: function (context) { return context.tick.value === 0 ? 1.5 : 1; }
                 },
-                ticks: { color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 10 } }
+                ticks: { color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 14 } }
               },
               y: {
                 grid: { display: false },
-                ticks: { color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 10 }, autoSkip: false }
+                ticks: { color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 14 }, autoSkip: false }
               }
             }
           }

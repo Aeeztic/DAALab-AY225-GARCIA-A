@@ -31,6 +31,7 @@ con.execute(f"CREATE VIEW students AS SELECT * FROM read_parquet('{parquet_path_
 async def get_students(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=50),
+    search: str | None = Query(None),
     cgpa_min: float | None = None,
     cgpa_max: float | None = None,
     internships_min: int | None = None,
@@ -43,6 +44,9 @@ async def get_students(
 
     try:
         where_clauses = []
+        if search:
+            search_clean = search.replace("'", "''")
+            where_clauses.append(f"(branch ILIKE '%{search_clean}%' OR gender ILIKE '%{search_clean}%')")
         if cgpa_min is not None:
             where_clauses.append(f"cgpa >= {cgpa_min}")
         if cgpa_max is not None:
