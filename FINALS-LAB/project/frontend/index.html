@@ -418,8 +418,9 @@
               <span class="error-text"></span>
             </div>
 
-            <div class="field" style="margin-top: 14px;">
+            <div class="field" style="margin-top: 14px; display: flex; gap: 8px;">
               <button type="button" id="resetFiltersButton">Reset Filters</button>
+              <button type="button" id="applyFiltersButton" class="button primary">Apply Filters</button>
             </div>
             
             <div style="margin-left: auto; display: flex; flex-direction: column; align-items: flex-end;">
@@ -674,6 +675,7 @@
       internshipsMinInput: document.getElementById("internshipsMinInput"),
       pageSizeSelect: document.getElementById("pageSizeSelect"),
       resetFiltersButton: document.getElementById("resetFiltersButton"),
+      applyFiltersButton: document.getElementById("applyFiltersButton"),
       cgpaMinError: document.getElementById("cgpaMinError"),
       internshipsMinError: document.getElementById("internshipsMinError"),
 
@@ -766,17 +768,27 @@
     }
 
     function wireEvents() {
-      elements.cgpaMinInput.addEventListener("input", function (event) {
-        state.filters.cgpaMin = event.target.value.trim();
+      function applyExplicitFilters() {
+        if (elements.cgpaMinInput) state.filters.cgpaMin = elements.cgpaMinInput.value.trim();
+        if (elements.internshipsMinInput) state.filters.internshipsMin = elements.internshipsMinInput.value.trim();
         state.currentPage = 1;
         persistState();
-        runDebouncedStudentsFetch();
-      });
-      elements.internshipsMinInput.addEventListener("input", function (event) {
-        state.filters.internshipsMin = event.target.value.trim();
-        state.currentPage = 1;
-        persistState();
-        runDebouncedStudentsFetch();
+        if (analyticsState.loaded) fetchStudents();
+      }
+
+      if (elements.applyFiltersButton) {
+        elements.applyFiltersButton.addEventListener("click", applyExplicitFilters);
+      }
+
+      [elements.cgpaMinInput, elements.internshipsMinInput, elements.nameFilterInput].forEach(function(inputElement) {
+        if (inputElement) {
+          inputElement.addEventListener("keydown", function(event) {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              applyExplicitFilters();
+            }
+          });
+        }
       });
       elements.pageSizeSelect.addEventListener("change", function (event) {
         const value = Number(event.target.value);
@@ -801,17 +813,7 @@
         fetchStudents();
       });
       elements.predictForm.addEventListener("submit", handlePredictionSubmit);
-      if (elements.nameFilterInput) {
-        let searchDebounce = null;
-        elements.nameFilterInput.addEventListener("input", function () {
-          window.clearTimeout(searchDebounce);
-          searchDebounce = window.setTimeout(function () {
-            state.currentPage = 1;
-            persistState();
-            if (analyticsState.loaded) fetchStudents();
-          }, 300);
-        });
-      }
+
       if (elements.sortSelect) {
         elements.sortSelect.addEventListener("change", function () {
           state.currentPage = 1;
@@ -821,12 +823,7 @@
       }
     }
 
-    function runDebouncedStudentsFetch() {
-      if (debounceHandle !== null) window.clearTimeout(debounceHandle);
-      debounceHandle = window.setTimeout(function () {
-        if (analyticsState.loaded) fetchStudents();
-      }, 180);
-    }
+
 
     /* ═══════════════════════════════════════════════
        DATA FETCHING — OVERVIEW STATS (unchanged)
