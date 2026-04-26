@@ -83,7 +83,7 @@ After running a prediction or loading the main dashboard, the following analytic
 
 ### 1. Clone the Repository
 ```bash
-git clone <repository_url>
+git clone https://github.com/Aeeztic/DAALab-AY225-GARCIA-A.git
 cd FINALS-LAB/project
 ```
 
@@ -124,7 +124,7 @@ npm run dev
 The backend and frontend are deployed entirely on the [Render](https://render.com/) cloud ecosystem.
 
 **Render Deployment Settings:**
-- **Repository:** Connected to GitHub repo at `https://github.com/aezekiel/DAALab-ay225-GARCIA-A`
+- **Repository:** Connected to GitHub repo at `https://github.com/Aeeztic/DAALab-AY225-GARCIA-A/tree/main/FINALS-LAB/project`
 - **Branch:** Deploys from `main`
 - **Root Directory:** Set to `FINALS-LAB/project`
 - **Build Command:** `pip install -r requirements.txt`
@@ -147,6 +147,87 @@ All dependencies are loaded automatically. A CRON job is implemented to call the
 ### System Endpoints
 - `POST /batch-predict` — Batch prediction from an uploaded `.csv` file.
 - `GET /health` — Instance health check.
+
+---
+
+## Project File Structure
+
+```text
+project/
++-- check_data.py
++-- convert_to_parquet.py
++-- data
+|   +-- processed
+|   |   +-- feature_metadata.json
+|   |   +-- test.parquet
+|   |   +-- train.parquet
+|   |   +-- val.parquet
+|   +-- raw
+|   |   +-- students.csv
+|   +-- students.parquet
++-- frontend
+|   +-- .gitignore
+|   +-- README.md
+|   +-- dist
+|   |   +-- assets
+|   |   |   +-- index-B9AHSszv.js
+|   |   |   +-- index-DziEP_Gh.css
+|   |   +-- favicon.svg
+|   |   +-- icons.svg
+|   |   +-- index.html
+|   +-- eslint.config.js
+|   +-- index.html
+|   +-- package-lock.json
+|   +-- package.json
+|   +-- public
+|   |   +-- favicon.svg
+|   |   +-- icons.svg
+|   +-- src
+|   |   +-- App.jsx
+|   |   +-- api.js
+|   |   +-- assets
+|   |   |   +-- hero.png
+|   |   |   +-- react.svg
+|   |   |   +-- vite.svg
+|   |   +-- components
+|   |   |   +-- StatsCards.jsx
+|   |   +-- index.css
+|   |   +-- main.jsx
+|   +-- vite.config.js
++-- README.md
++-- requirements.txt
++-- src
+|   +-- __init__.py
+|   +-- api
+|   |   +-- __init__.py
+|   |   +-- main.py
+|   |   +-- routes
+|   |       +-- __init__.py
+|   |       +-- batch.py
+|   |       +-- predict.py
+|   |       +-- stats.py
+|   |       +-- students.py
+|   |   +-- schemas
+|   |       +-- __init__.py
+|   |       +-- request_models.py
+|   +-- config
+|   |   +-- settings.py
+|   +-- data
+|   |   +-- pipeline.py
+|   +-- ml
+|       +-- model
+|       |   +-- model.ubj
+|       |   +-- model_metadata.json
+|       |   +-- placement_model.pkl
+|       |   +-- plots
+|       |   |   +-- roc_curve.png
+|       |   |   +-- shap_beeswarm.png
+|       |   |   +-- shap_importance.png
+|       |   +-- shap_values_train.parquet
+|       +-- predict.py
+|       +-- train.py
++-- start.sh
+```
 
 ---
 
