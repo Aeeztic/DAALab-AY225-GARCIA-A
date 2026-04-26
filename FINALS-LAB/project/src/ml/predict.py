@@ -292,7 +292,11 @@ def _normalize_branch(value: Any) -> str:
     branch = str(value).strip().upper()
     if not branch:
         raise InputValidationError("Field 'branch' cannot be empty")
-
+        
+    # Map common abbreviations to full keys from the artifact
+    abbr_map = {"CE": "CIVIL", "ME": "MECH", "EE": "EEE"}
+    branch = abbr_map.get(branch, branch)
+    
     return branch if branch in BRANCH_ENCODING else "OTHER"
 
 

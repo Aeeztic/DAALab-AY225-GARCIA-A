@@ -1910,6 +1910,38 @@
 
       pageRows.forEach(function (row) {
         const tr = document.createElement("tr");
+        tr.style.cursor = "pointer";
+        tr.addEventListener("click", function() {
+          const form = document.getElementById("predictForm");
+          if (!form) return;
+          
+          if (form.elements["cgpa"]) form.elements["cgpa"].value = row.cgpa != null ? row.cgpa : "";
+          if (form.elements["internships"]) form.elements["internships"].value = row.internships != null ? row.internships : 0;
+          if (form.elements["communication_skill"]) form.elements["communication_skill"].value = row.communication_skill != null ? row.communication_skill : 0;
+          if (form.elements["problem_solving"]) form.elements["problem_solving"].value = row.problem_solving != null ? row.problem_solving : 0;
+          if (form.elements["age"]) form.elements["age"].value = row.age != null ? row.age : 21;
+          if (form.elements["projects"]) form.elements["projects"].value = row.projects != null ? row.projects : 2;
+          
+          if (form.elements["branch"] && row.branch) {
+            const branch = String(row.branch).toUpperCase().trim();
+            const select = form.elements["branch"];
+            let found = false;
+            for(let i = 0; i < select.options.length; i++) {
+               if(select.options[i].value === branch) found = true;
+            }
+            select.value = found ? branch : "OTHER";
+          }
+          
+          if (form.elements["gender"] && row.gender) {
+            const gender = String(row.gender).toLowerCase().trim();
+            if (gender === 'male' || gender === 'm') form.elements["gender"].value = "Male";
+            else if (gender === 'female' || gender === 'f') form.elements["gender"].value = "Female";
+            else form.elements["gender"].value = "Other";
+          }
+          
+          document.getElementById("sec-predict").scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+        
         tr.appendChild(makeCell(row.__name));
         tr.appendChild(makeCell(Number.isFinite(row.__score) ? formatDecimal(row.__score, 1) : "--", true));
         tr.appendChild(makeCell(Number.isFinite(row.__attendance) ? formatDecimal(row.__attendance, 1) + "%" : "--", true));

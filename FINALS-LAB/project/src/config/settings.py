@@ -90,7 +90,7 @@ SCHEMA = {
 
 # Update this list to match your actual branch names exactly
 BRANCH_ORDER = [
-    "CSE", "IT", "ECE", "EEE", "MECH", "CIVIL", "CHEM", "BIO", "OTHER"
+    "CSE", "IT", "ECE", "EEE", "MECH", "CIVIL", "CHEM", "BIO", "OTHER", "CE", "ME", "EE"
 ]
 
 GENDER_MAP = {"Male": 0, "Female": 1, "Other": 2}
