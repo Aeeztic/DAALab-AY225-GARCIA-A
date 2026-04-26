@@ -7,7 +7,7 @@ import math
 from typing import Any, Literal
 from pathlib import Path
 
-import polars as pl
+import duckdb
 from fastapi import APIRouter, HTTPException, Query, status
 
 LOGGER = logging.getLogger(__name__)
@@ -20,6 +20,11 @@ PARQUET_PATH = BASE_DIR / "data" / "students.parquet"
 
 # fallback target
 TARGET = "placed"
+
+# Initialize DuckDB connection and create view
+con = duckdb.connect()
+parquet_path_str = str(PARQUET_PATH).replace("\\", "/")
+con.execute(f"CREATE VIEW students AS SELECT * FROM read_parquet('{parquet_path_str}')")
 
 
 @router.get("/students")
@@ -37,38 +42,36 @@ async def get_students(
     """Paginated students endpoint (optimized for 1M rows)."""
 
     try:
-        lf = pl.scan_parquet(PARQUET_PATH)
-
-        # ✅ FILTERS
+        where_clauses = []
         if cgpa_min is not None:
-            lf = lf.filter(pl.col("cgpa") >= cgpa_min)
-
+            where_clauses.append(f"cgpa >= {cgpa_min}")
         if cgpa_max is not None:
-            lf = lf.filter(pl.col("cgpa") <= cgpa_max)
-
+            where_clauses.append(f"cgpa <= {cgpa_max}")
         if internships_min is not None:
-            lf = lf.filter(pl.col("internships") >= internships_min)
-
+            where_clauses.append(f"internships >= {internships_min}")
         if internships_max is not None:
-            lf = lf.filter(pl.col("internships") <= internships_max)
-
+            where_clauses.append(f"internships <= {internships_max}")
         if placement_status is not None:
-            lf = lf.filter(pl.col(TARGET) == placement_status)
-
-        # ✅ SORTING
+            where_clauses.append(f"{TARGET} = {placement_status}")
+            
+        where_str = ""
+        if where_clauses:
+            where_str = "WHERE " + " AND ".join(where_clauses)
+            
+        order_str = ""
         if sort_by:
-            lf = lf.sort(by=sort_by, descending=(sort_order == "desc"))
-
-        # ✅ PAGINATION
+            sort_by_clean = "".join(c for c in sort_by if c.isalnum() or c == "_")
+            desc_str = "DESC" if sort_order == "desc" else "ASC"
+            order_str = f"ORDER BY {sort_by_clean} {desc_str}"
+            
         offset = (page - 1) * limit
-        data_lf = lf.slice(offset, limit)
-
-        # ✅ TOTAL COUNT (lazy)
-        total_lf = lf.select(pl.len().alias("total"))
-
-        # ✅ EXECUTE ONCE
-        data = data_lf.collect().to_dicts()
-        total = total_lf.collect().item()
+        limit_str = f"LIMIT {limit} OFFSET {offset}"
+        
+        query = f"SELECT * FROM students {where_str} {order_str} {limit_str}"
+        data = con.execute(query).arrow().to_pylist()
+        
+        count_query = f"SELECT COUNT(*) FROM students {where_str}"
+        total = con.execute(count_query).fetchone()[0]
 
     except Exception as exc:
         LOGGER.exception("Failed to fetch /students")

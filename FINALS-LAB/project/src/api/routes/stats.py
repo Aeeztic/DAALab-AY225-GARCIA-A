@@ -6,7 +6,7 @@ import logging
 from functools import lru_cache
 from pathlib import Path
 
-import polars as pl
+import duckdb
 from fastapi import APIRouter, HTTPException, status
 
 # If TARGET is defined in your settings, you can keep it.
@@ -76,25 +76,18 @@ def _as_float(value: float | None, *, precision: int = 6) -> float:
     return round(float(value), precision)
 
 
-def _scan_students() -> pl.LazyFrame:
-    return pl.scan_parquet(PARQUET_PATH)
+BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
+PARQUET_PATH = BASE_DIR / "data" / "students.parquet"
 
-
-def _frame_to_distribution(frame: pl.DataFrame, key: str) -> list[dict[str, int | str]]:
-    return [
-        {
-            key: str(row[key]) if row[key] is not None else "Unknown",
-            "count": int(row["count"] or 0),
-        }
-        for row in frame.to_dicts()
-    ]
+con = duckdb.connect()
+parquet_path_str = str(PARQUET_PATH).replace("\\", "/")
+con.execute(f"CREATE VIEW students AS SELECT * FROM read_parquet('{parquet_path_str}')")
 
 
 @lru_cache(maxsize=1)
 def _get_dataset_profile() -> dict[str, object]:
-    lf = _scan_students()
-    schema = lf.collect_schema()
-    actual_columns = schema.names()
+    desc = con.execute("DESCRIBE students").fetchall()
+    actual_columns = [row[0] for row in desc]
 
     missing_columns = [
         column for column in EXPECTED_COLUMNS if column not in actual_columns
@@ -103,48 +96,52 @@ def _get_dataset_profile() -> dict[str, object]:
         column for column in actual_columns if column not in EXPECTED_COLUMNS
     ]
 
-    overview = (
-        lf.select(
-            [
-                pl.len().alias("row_count"),
-                pl.col(TARGET).sum().cast(pl.Int64).alias("placed_count"),
-            ]
-        )
-        .collect()
-        .row(0, named=True)
-    )
+    overview = con.execute(f"SELECT COUNT(*) as row_count, SUM(CAST({TARGET} AS BIGINT)) as placed_count FROM students").fetchone()
 
-    row_count = int(overview["row_count"] or 0)
-    placed_count = int(overview["placed_count"] or 0)
+    row_count = int(overview[0] or 0)
+    placed_count = int(overview[1] or 0)
     not_placed_count = max(0, row_count - placed_count)
 
-    branch_distribution = _frame_to_distribution(
-        lf.group_by("branch")
-        .agg(pl.len().alias("count"))
-        .sort("count", descending=True)
-        .collect(),
-        "branch",
-    )
+    branch_distribution = [
+        {
+            "branch": str(row[0]) if row[0] is not None else "Unknown",
+            "count": int(row[1] or 0),
+        }
+        for row in con.execute("SELECT branch, COUNT(*) as count FROM students GROUP BY branch ORDER BY count DESC").fetchall()
+    ]
 
-    gender_distribution = _frame_to_distribution(
-        lf.group_by("gender")
-        .agg(pl.len().alias("count"))
-        .sort("count", descending=True)
-        .collect(),
-        "gender",
-    )
+    gender_distribution = [
+        {
+            "gender": str(row[0]) if row[0] is not None else "Unknown",
+            "count": int(row[1] or 0),
+        }
+        for row in con.execute("SELECT gender, COUNT(*) as count FROM students GROUP BY gender ORDER BY count DESC").fetchall()
+    ]
 
     heatmap_labels = [column for column in HEATMAP_COLUMNS if column in actual_columns]
     correlation_matrix: list[list[float]] = []
     if heatmap_labels:
-        corr_df = lf.select(heatmap_labels).collect().corr()
-        correlation_matrix = [
-            [
-                _as_float(corr_df.item(row_index, col_index), precision=6)
-                for col_index in range(len(heatmap_labels))
-            ]
-            for row_index in range(len(heatmap_labels))
-        ]
+        n = len(heatmap_labels)
+        select_exprs = []
+        for i in range(n):
+            for j in range(n):
+                c1 = heatmap_labels[i]
+                c2 = heatmap_labels[j]
+                select_exprs.append(f"corr({c1}, {c2})")
+        corr_query = "SELECT " + ", ".join(select_exprs) + " FROM students"
+        corr_result = con.execute(corr_query).fetchone()
+        
+        idx = 0
+        for i in range(n):
+            row_corrs = []
+            for j in range(n):
+                val = corr_result[idx]
+                if i == j:
+                    row_corrs.append(1.0)
+                else:
+                    row_corrs.append(_as_float(val, precision=6) if val is not None else 0.0)
+                idx += 1
+            correlation_matrix.append(row_corrs)
 
     return {
         "row_count": row_count,
@@ -166,29 +163,20 @@ def _get_dataset_profile() -> dict[str, object]:
     }
 
 
-# ✅ FIXED: correct path to parquet
-BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
-PARQUET_PATH = BASE_DIR / "data" / "students.parquet"
-
-
 @router.get("/stats/overview")
 async def get_stats_overview() -> dict[str, float | int]:
     """Return dataset-level overview statistics from parquet."""
 
     try:
-        agg_lf = (
-            _scan_students()
-            .select(
-                [
-                    pl.len().alias("total_students"),
-                    pl.col(TARGET).mean().alias("placement_rate"),
-                    pl.col("cgpa").mean().alias("avg_cgpa"),
-                    pl.col("internships").mean().alias("avg_internships"),
-                ]
-            )
-        )
-
-        result = agg_lf.collect()
+        query = f"""
+        SELECT 
+            COUNT(*) as total_students, 
+            AVG({TARGET}) as placement_rate, 
+            AVG(cgpa) as avg_cgpa, 
+            AVG(internships) as avg_internships 
+        FROM students
+        """
+        result = con.execute(query).fetchone()
 
     except Exception as exc:
         LOGGER.exception(
@@ -199,7 +187,7 @@ async def get_stats_overview() -> dict[str, float | int]:
             detail="Stats service is temporarily unavailable",
         ) from exc
 
-    if result.is_empty():
+    if not result or result[0] == 0:
         return {
             "total_students": 0,
             "placement_rate": 0.0,
@@ -207,13 +195,11 @@ async def get_stats_overview() -> dict[str, float | int]:
             "avg_internships": 0.0,
         }
 
-    row = result.row(0, named=True)
-
     return {
-        "total_students": int(row["total_students"] or 0),
-        "placement_rate": _as_float(row["placement_rate"], precision=6),
-        "avg_cgpa": _as_float(row["avg_cgpa"], precision=4),
-        "avg_internships": _as_float(row["avg_internships"], precision=4),
+        "total_students": int(result[0] or 0),
+        "placement_rate": _as_float(result[1], precision=6),
+        "avg_cgpa": _as_float(result[2], precision=4),
+        "avg_internships": _as_float(result[3], precision=4),
     }
 
 

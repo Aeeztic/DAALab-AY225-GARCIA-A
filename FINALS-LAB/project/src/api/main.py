@@ -65,16 +65,10 @@ def create_app() -> FastAPI:
     """Application factory used by ASGI servers and tests."""
     app = FastAPI(title=APP_TITLE, version=APP_VERSION, lifespan=lifespan)
 
-    origins = [
-        "http://127.0.0.1:5500",
-        "http://localhost:5500",
-        "https://garcia-a.github.io", # Verify this matches your actual GitHub Pages URL
-    ]
-
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=origins,
-        allow_credentials=True,
+        allow_origins=["*"],
+        allow_credentials=False,
         allow_methods=["*"],
         allow_headers=["*"],
     )
