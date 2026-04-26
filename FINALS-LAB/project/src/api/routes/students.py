@@ -68,7 +68,7 @@ async def get_students(
         limit_str = f"LIMIT {limit} OFFSET {offset}"
         
         query = f"SELECT * FROM students {where_str} {order_str} {limit_str}"
-        data = con.execute(query).arrow().to_pylist()
+        data = con.execute(query).fetch_arrow_table().to_pylist()
         
         count_query = f"SELECT COUNT(*) FROM students {where_str}"
         total = con.execute(count_query).fetchone()[0]
