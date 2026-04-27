@@ -156,10 +156,7 @@ All dependencies are loaded automatically. A CRON job is implemented to call the
 
 ```text
 / (Root Repository Directory)
-+-- index.html                 <-- GitHub Pages Live Entrypoint
-+-- assets/                    <-- Live CSS & JS Files
-|   +-- index-B9AHSszv.js
-|   +-- index-DziEP_Gh.css
++-- index.html                 <-- GitHub Pages Live Entrypoint (Self-Contained)
 +-- README.md
 +-- FINALS-LAB/
     +-- project/               <-- Backend & Original Frontend Source
