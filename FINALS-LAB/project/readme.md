@@ -176,7 +176,6 @@ project/
 |   |   +-- icons.svg
 |   |   +-- index.html
 |   +-- eslint.config.js
-|   +-- index.html
 |   +-- package-lock.json
 |   +-- package.json
 |   +-- public
@@ -194,6 +193,7 @@ project/
 |   |   +-- index.css
 |   |   +-- main.jsx
 |   +-- vite.config.js
++-- index.html
 +-- README.md
 +-- requirements.txt
 +-- src
