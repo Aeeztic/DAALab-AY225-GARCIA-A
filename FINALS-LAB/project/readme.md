@@ -1,6 +1,8 @@
 # CARVAJAL, Christian Ezekiel L. & GARCIA, Aahron Jamez
 # Student Placement Analytics - Final Project
 
+**🔴 Live Application (GitHub Pages):** [https://aeeztic.github.io/DAALab-AY225-GARCIA-A/](https://aeeztic.github.io/DAALab-AY225-GARCIA-A/)
+
 A full-stack analytics and prediction platform for student placement outcomes, featuring a highly-optimized FastAPI backend (with DuckDB), a dynamic React + Vite frontend, and continuous deployment on Render.
 
 ---
@@ -15,7 +17,8 @@ A full-stack analytics and prediction platform for student placement outcomes, f
 4. [Step-by-Step Setup](#step-by-step-setup)
 5. [Deployment (Render)](#deployment-render)
 6. [API Endpoints](#api-endpoints)
-7. [Contribution Breakdown & Implementation Details](#contribution-breakdown--implementation-details)
+7. [Project File Structure](#project-file-structure)
+8. [Contribution Breakdown & Implementation Details](#contribution-breakdown--implementation-details)
 
 ---
 
@@ -152,80 +155,36 @@ All dependencies are loaded automatically. A CRON job is implemented to call the
 ## Project File Structure
 
 ```text
-project/
-+-- check_data.py
-+-- convert_to_parquet.py
-+-- data
-|   +-- processed
-|   |   +-- feature_metadata.json
-|   |   +-- test.parquet
-|   |   +-- train.parquet
-|   |   +-- val.parquet
-|   +-- raw
-|   |   +-- students.csv
-|   +-- students.parquet
-+-- frontend
-|   +-- .gitignore
-|   +-- README.md
-|   +-- dist
-|   |   +-- assets
-|   |   |   +-- index-B9AHSszv.js
-|   |   |   +-- index-DziEP_Gh.css
-|   |   +-- favicon.svg
-|   |   +-- icons.svg
-|   |   +-- index.html
-|   +-- eslint.config.js
-|   +-- public
-|   |   +-- favicon.svg
-|   |   +-- icons.svg
-|   +-- src
-|   |   +-- App.jsx
-|   |   +-- api.js
-|   |   +-- assets
-|   |   |   +-- hero.png
-|   |   |   +-- react.svg
-|   |   |   +-- vite.svg
-|   |   +-- components
-|   |   |   +-- StatsCards.jsx
-|   |   +-- index.css
-|   |   +-- main.jsx
-|   +-- vite.config.js
-+-- index.html
-+-- package.json
-+-- package-lock.json
+/ (Root Repository Directory)
++-- index.html                 <-- GitHub Pages Live Entrypoint (Self-Contained)
 +-- README.md
-+-- requirements.txt
-+-- src
-|   +-- __init__.py
-|   +-- api
-|   |   +-- __init__.py
-|   |   +-- main.py
-|   |   +-- routes
-|   |       +-- __init__.py
-|   |       +-- batch.py
-|   |       +-- predict.py
-|   |       +-- stats.py
-|   |       +-- students.py
-|   |   +-- schemas
-|   |       +-- __init__.py
-|   |       +-- request_models.py
-|   +-- config
-|   |   +-- settings.py
-|   +-- data
-|   |   +-- pipeline.py
-|   +-- ml
-|       +-- model
-|       |   +-- model.ubj
-|       |   +-- model_metadata.json
-|       |   +-- placement_model.pkl
-|       |   +-- plots
-|       |   |   +-- roc_curve.png
-|       |   |   +-- shap_beeswarm.png
-|       |   |   +-- shap_importance.png
-|       |   +-- shap_values_train.parquet
-|       +-- predict.py
-|       +-- train.py
-+-- start.sh
++-- FINALS-LAB/
+    +-- project/               <-- Backend & Original Frontend Source
+        +-- package.json
+        +-- package-lock.json
+        +-- check_data.py
+        +-- convert_to_parquet.py
+        +-- requirements.txt
+        +-- start.sh
+        +-- data/
+        |   +-- processed/
+        |   |   +-- feature_metadata.json
+        |   |   +-- test.parquet
+        |   |   +-- train.parquet
+        |   |   +-- val.parquet
+        |   +-- raw/
+        |   |   +-- students.csv
+        |   +-- students.parquet
+        +-- frontend/
+        |   +-- src/           <-- React Components
+        |   +-- public/
+        |   +-- dist/
+        |   +-- vite.config.js
+        +-- src/
+            +-- api/           <-- FastAPI Routes
+            +-- config/
+            +-- data/
+            +-- ml/            <-- XGBoost Models & SHAP logic
 ```
 
 ---
