@@ -112,7 +112,6 @@ uvicorn src.api.main:app --host 0.0.0.0 --port 10000
 
 ### 5. Run the Frontend (Locally)
 ```bash
-cd frontend
 npm install
 npm run dev
 ```
@@ -176,8 +175,6 @@ project/
 |   |   +-- icons.svg
 |   |   +-- index.html
 |   +-- eslint.config.js
-|   +-- package-lock.json
-|   +-- package.json
 |   +-- public
 |   |   +-- favicon.svg
 |   |   +-- icons.svg
@@ -194,6 +191,8 @@ project/
 |   |   +-- main.jsx
 |   +-- vite.config.js
 +-- index.html
++-- package.json
++-- package-lock.json
 +-- README.md
 +-- requirements.txt
 +-- src
