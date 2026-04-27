@@ -1,14 +1,3564 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
-    <script type="module" crossorigin src="./assets/index-B9AHSszv.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-DziEP_Gh.css">
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Design, Analysis, & Algorithm Collab · 2-Student Git Activity</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%231a2035'/><text x='16' y='23' font-size='20' text-anchor='middle' fill='%23c8b98a'>D</text></svg>">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=IBM+Plex+Mono:wght@300;400;600&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ──────────────────────────────────────────────
+       DESIGN TOKENS (Academic Editorial)
+    ────────────────────────────────────────────── */
+    :root {
+      --bg:        #f5f1eb; /* warm parchment */
+      --surface:   #faf8f4; /* elevated card */
+      --surface2:  #ede9e1; /* slightly deeper */
+      --border:    #d8d1c4; /* soft rule */
+      --navy:      #1a2035; /* primary text / headings */
+      --coral:     #d94f3d; /* Student 1 accent */
+      --sage:      #3a7d5c; /* Student 2 accent */
+      --gold:      #b5820d; /* shared stat accent */
+      --text:      #2e3348; /* body text */
+      --text-dim:  #8a8577; /* muted text */
+      --display:   'Playfair Display', Georgia, serif;
+      --mono:      'IBM Plex Mono', 'Courier New', monospace;
+      --radius:    4px;
+      --radius-lg: 10px;
+      --shadow:    0 2px 16px rgba(26,32,53,0.08);
+      --shadow-md: 0 6px 32px rgba(26,32,53,0.12);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--mono);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 80px;
+      line-height: 1.45;
+    }
+
+    /* ── MASTHEAD ─────────────────────────────── */
+    .masthead {
+      background: var(--navy);
+      color: #fff;
+      padding: 36px 48px 30px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      gap: 24px;
+    }
+
+    .masthead-left .overline {
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #7a8499;
+      margin-bottom: 10px;
+    }
+
+    .masthead-left h1 {
+      font-family: var(--display);
+      font-size: 2.8rem;
+      font-weight: 900;
+      color: #fff;
+      line-height: 1.15;
+    }
+
+    .masthead-left h1 em { font-style: italic; color: #c8b98a; }
+
+    .masthead-left .sub {
+      font-family: var(--mono);
+      font-size: 0.95rem;
+      color: #7a8499;
+      margin-top: 8px;
+      letter-spacing: 0.5px;
+    }
+
+    .masthead-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+
+    .branch-pill {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 20px;
+      padding: 5px 12px;
+      color: #c8b98a;
+      letter-spacing: 0.5px;
+    }
+
+    .branch-pill .dot {
+      display: inline-block;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #4ade80;
+      margin-right: 6px;
+      animation: blink 2s infinite;
+      vertical-align: middle;
+    }
+
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+    .rule { height: 1px; background: linear-gradient(90deg, var(--coral) 0%, var(--sage) 100%); margin: 0; }
+
+    /* ── ASSIGNMENT BANNER ───────────────────────── */
+    .assignment-banner { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border-bottom: 1px solid var(--border); }
+    .assign-block { padding: 24px 40px; position: relative; }
+    .assign-block.s1 { background: #fff8f7; border-right: 1px solid var(--border); }
+    .assign-block.s2 { background: #f4fbf8; }
+    .assign-block::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; }
+    .assign-block.s1::before { background: var(--coral); }
+    .assign-block.s2::before { background: var(--sage); }
+
+    .assign-label {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .s1 .assign-label { color: var(--coral); }
+    .s2 .assign-label { color: var(--sage); }
+
+    .assign-block h3 {
+      font-family: var(--display);
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 12px;
+    }
+
+    .task-list { list-style: none; font-size: 0.74rem; color: var(--text-dim); line-height: 1.9; }
+    .task-list li::before { content: '▸  '; }
+    .branch-tag {
+      display: inline-block;
+      margin-top: 12px;
+      font-size: 0.66rem;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 3px 9px;
+      color: var(--text-dim);
+    }
+
+    /* ── MAIN LAYOUT ─────────────────────────────── */
+    main { max-width: 1260px; margin: 0 auto; padding: 48px 36px; display: flex; flex-direction: column; gap: 56px; }
+
+    .section-head {
+      display: flex; align-items: baseline; justify-content: space-between;
+      margin-bottom: 22px; padding-bottom: 14px; border-bottom: 2px solid var(--navy);
+    }
+    .section-head-left { display: flex; align-items: baseline; gap: 16px; }
+    .section-num { font-family: var(--display); font-size: 3rem; font-weight: 900; color: var(--border); line-height: 1; margin-right: 4px; }
+    .section-head h2 { font-family: var(--display); font-size: 1.35rem; font-weight: 700; color: var(--navy); }
+
+    .owner-badge {
+      font-family: var(--mono); font-size: 0.62rem; letter-spacing: 2px;
+      text-transform: uppercase; padding: 4px 12px; border-radius: 20px; font-weight: 600;
+    }
+    .badge-s1 { background: #fde8e6; color: var(--coral); border: 1px solid #f5bdb9; }
+    .badge-s2 { background: #ddf2e9; color: var(--sage);  border: 1px solid #a8dcc3; }
+
+    .todo-box { border-radius: var(--radius); padding: 14px 18px; font-size: 0.75rem; line-height: 1.75; margin-bottom: 24px; }
+    .todo-box.s1 { background: #fff3f2; border: 1px solid #f5bdb9; border-left: 4px solid var(--coral); color: #9b2c2c; }
+    .todo-box strong { display: block; font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; }
+
+    .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 26px; box-shadow: var(--shadow); }
+
+    /* ── FORMS & TOOLBARS ────────────────────────── */
+    .toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; align-items: center; }
+    
+    input[type="text"], input[type="number"], select {
+      background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+      font-family: var(--mono); font-size: 0.76rem; padding: 8px 12px;
+      border-radius: var(--radius); outline: none; transition: all 0.2s; width: 100%;
+    }
+    .toolbar input[type="number"] { width: 160px; }
+    .toolbar select { width: 140px; }
+
+    input:focus, select:focus { border-color: var(--coral); box-shadow: 0 0 0 3px rgba(217,79,61,0.12); }
+    input:disabled, select:disabled, button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    .field label { font-size: 0.7rem; font-weight: 600; color: var(--navy); text-transform: uppercase; letter-spacing: 1px; }
+
+    button {
+      font-family: var(--mono); font-size: 0.74rem; padding: 8px 16px;
+      border-radius: var(--radius); cursor: pointer; transition: all 0.18s;
+      border: 1px solid var(--border); background: var(--surface2); color: var(--text); letter-spacing: 0.3px;
+    }
+    button:hover:not(:disabled) { border-color: var(--coral); color: var(--coral); background: #fff3f2; }
+    button.primary { background: var(--navy); color: #fff; border-color: var(--navy); }
+    button.primary:hover:not(:disabled) { background: #2e3a56; border-color: #2e3a56; }
+
+    .error-text { color: var(--coral); font-size: 0.65rem; min-height: 14px; margin-top: 2px; }
+    .stats-error { background: #fff3f2; border: 1px solid #f5bdb9; color: var(--coral); padding: 10px; border-radius: var(--radius); font-size: 0.75rem; margin-top: 16px; display: none; }
+
+    /* ── TABLE ────────────────────────────────────── */
+    .table-scroll { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: 1.1rem; background: #fff; }
+    thead th { background: var(--navy); color: #c8b98a; text-align: left; padding: 10px 14px; font-size: 0.85rem; letter-spacing: 1.5px; text-transform: uppercase; white-space: nowrap; position: sticky; top: 0; }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background 0.12s; }
+    tbody tr:hover { background: var(--surface2); }
+    tbody td { padding: 9px 14px; color: var(--text); }
+    tbody td.num { color: var(--gold); }
+    .empty-row td { text-align: center; color: var(--text-dim); padding: 30px; font-style: italic; }
+
+    .badge { display: inline-flex; padding: 4px 9px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .badge--success { color: #2a7a50; background: #ddf2e9; border: 1px solid #a8dcc3; }
+    .badge--danger { color: #d94f3d; background: #fde8e6; border: 1px solid #f5bdb9; }
+
+    /* ── SUMMARY STAT CARDS ──────────────────────── */
+    .stat-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+    .stat-tile { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 16px; box-shadow: var(--shadow); text-align: center; position: relative; overflow: hidden; }
+    .stat-tile .st-label { font-size: 1.1rem; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 10px; }
+    .stat-tile .st-val { font-family: var(--display); font-size: 2.4rem; font-weight: 700; color: var(--coral); line-height: 1; }
+    .stat-tile .st-sub { font-size: 0.85rem; color: var(--text-dim); margin-top: 6px; }
+
+    .skeleton { display: inline-block; color: transparent !important; background: linear-gradient(90deg, var(--surface2) 0%, #e6e0d4 50%, var(--surface2) 100%); background-size: 200% 100%; animation: shimmer 1.5s linear infinite; border-radius: 4px; min-width: 60px; min-height: 1.2em; }
+    @keyframes shimmer { 0% { background-position: 100% 50%; } 100% { background-position: -100% 50%; } }
+
+    /* ── PAGINATION ──────────────────────────────── */
+    .pagination { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+    .pagination__info { font-size: 0.75rem; color: var(--text-dim); }
+    .pagination__actions { display: flex; gap: 8px; }
+
+    /* ── PREDICTION LAYOUT ───────────────────────── */
+    .predict-layout { display: grid; grid-template-columns: 1.5fr 1fr; gap: 24px; align-items: start; margin-top: 16px; }
+    .predict-form { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .predict-form .field--full { grid-column: 1 / -1; }
+    
+    .result-card { background: var(--navy); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-md); color: #fff; min-height: 220px; display: flex; flex-direction: column; justify-content: center; }
+    .result-title { font-family: var(--mono); font-size: 0.7rem; color: #8a93b0; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; }
+    .result-value { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; font-family: var(--display); font-size: 1.8rem; font-weight: 700; color: #fff; }
+    .result-prob { font-size: 1.1rem; color: #c8b98a; margin-bottom: 8px; }
+    
+    .progress-track { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; }
+    .progress-bar { height: 100%; width: 0; background: var(--sage); transition: width 0.5s ease; }
+
+    .spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(217,79,61,0.2); border-top-color: var(--coral); border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 6px; vertical-align: middle; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    footer { text-align: center; padding: 40px 20px 20px; font-size: 0.95rem; color: var(--text-dim); letter-spacing: 1px; border-top: 1px solid var(--border); }
+
+    /* ══════════════════════════════════════════════
+       VIZ ANALYTICS SECTION — NEW
+    ══════════════════════════════════════════════ */
+    .viz-row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .viz-panel-title {
+      font-family: var(--mono);
+      font-size: 0.95rem;
+      color: var(--navy);
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      font-weight: 600;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 0;
+    }
+
+    .viz-panel-sub {
+      font-size: 0.9rem;
+      color: var(--text-dim);
+      font-style: italic;
+      margin-top: 7px;
+      margin-bottom: 14px;
+      line-height: 1.55;
+    }
+
+    .viz-status-msg {
+      font-family: var(--mono);
+      font-size: 1.0rem;
+      color: var(--text-dim);
+      text-align: center;
+      padding: 36px 0;
+      font-style: italic;
+      letter-spacing: 0.3px;
+    }
+
+    .viz-heatmap-wrap {
+      overflow-x: auto;
+      display: flex;
+      justify-content: center;
+    }
+
+    @media (max-width: 900px) {
+      .assignment-banner { grid-template-columns: 1fr; }
+      .stat-strip { grid-template-columns: repeat(2, 1fr); }
+      .predict-layout { grid-template-columns: 1fr; }
+      .viz-row-2 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-left">
+    <p class="overline">COMPUTER SCIENCE · DESIGN, ANALYSIS, & ALGORITHM</p>
+    <h1>Student <em>Placement</em><br>Analytics Dashboard</h1>
+    <p class="sub">Dataset: Live DB · API Driven · Academic Term 2025</p>
+  </div>
+  <div class="masthead-right">
+    <div class="branch-pill"><span class="dot"></span>branch: <strong id="branchName">main</strong></div>
+    <div class="branch-pill" style="color:#8a93b0;">production backend api</div>
+  </div>
+</header>
+
+<div class="rule"></div>
+
+<div class="assignment-banner">
+  <div class="assign-block s1">
+    <div class="assign-label" style="display: flex; justify-content: space-between; align-items: center;">
+      <span>Student 1 · Repo Owner</span>
+      <div class="branch-pill" style="background: #fde8e6; border: 1px solid #f5bdb9; color: var(--coral); margin: 0;"><span class="dot" style="background: var(--coral);"></span><strong>GARCIA, Aahron Jamez</strong></div>
+    </div>
+    <h3>Data Engine &amp; API Integration</h3>
+    <ul class="task-list">
+      <li>Create the GitHub repo &amp; push this file</li>
+      <li>Implement <code>loadDataset()</code> — populate <code>window.DS</code></li>
+      <li>Implement <code>renderTable(data)</code> — dynamic HTML table</li>
+      <li>Implement <code>applyFilterSort()</code> — filter by name, sort by column</li>
+      <li>Implement <code>resetTable()</code> — restore original view</li>
+      <li>Implement <code>renderSummaryCards(data)</code> — 4 stat cards (mean score, top scorer, pass rate, avg study hrs)</li>
+    </ul>
+    <span class="branch-tag">branch: feature/data-engine</span>
+  </div>
+  <div class="assign-block s2">
+    <div class="assign-label" style="display: flex; justify-content: space-between; align-items: center;">
+      <span>Student 2 · Collaborator</span>
+      <div class="branch-pill" style="background: #ddf2e9; border: 1px solid #a8dcc3; color: var(--sage); margin: 0;"><span class="dot" style="background: var(--sage);"></span><strong>CARVAJAL, Chrstian Ezekiel L.</strong></div>
+    </div>
+    <h3>Model Inference &amp; Prediction</h3>
+    <ul class="task-list">
+      <li>Implement <code>drawBarChart()</code> — top 10 scores horizontal bar</li>
+      <li>Implement <code>drawScatterPlot()</code> — attendance vs score</li>
+      <li>Implement <code>drawDoughnut()</code> — grade distribution</li>
+      <li>Implement <code>stdDev()</code>, <code>variance()</code>, <code>pearsonCorr()</code>, <code>linearRegression()</code></li>
+      <li>Implement <code>renderAnalysis(data)</code> — populate all stat tables</li>
+      <li>Implement <code>renderInsights(data)</code> — written narrative findings</li>
+    </ul>
+    <span class="branch-tag">branch: feature/ml-predict</span>
+  </div>
+</div>
+
+<main>
+
+  <!-- ─────────────────── SECTION 01 ─────────────────── -->
+  <section id="sec-data">
+    <div class="section-head">
+      <div class="section-head-left">
+        <span class="section-num">01</span>
+        <h2>Dataset Explorer</h2>
+      </div>
+      <span class="owner-badge badge-s1">Student 1 · Repo Owner</span>
+    </div>
+
+    <div class="stat-strip">
+      <div class="stat-tile">
+        <div class="st-label">Total Students</div>
+        <div class="st-val skeleton" id="statTotalStudents">0000</div>
+        <div class="st-sub">dataset records</div>
+      </div>
+      <div class="stat-tile">
+        <div class="st-label">Placement Rate</div>
+        <div class="st-val skeleton" id="statPlacementRate">00%</div>
+        <div class="st-sub">% placed overall</div>
+      </div>
+      <div class="stat-tile">
+        <div class="st-label">Mean CGPA</div>
+        <div class="st-val skeleton" id="statAvgCgpa">0.00</div>
+        <div class="st-sub">out of 10.0</div>
+      </div>
+      <div class="stat-tile">
+        <div class="st-label">Avg Internships</div>
+        <div class="st-val skeleton" id="statAvgInternships">0.0</div>
+        <div class="st-sub">per student</div>
+      </div>
+    </div>
+    <div class="stats-error" id="statsError"></div>
+
+    <div class="panel">
+      <form id="filtersForm" novalidate>
+        <fieldset id="filtersFieldset" style="border:0; margin:0; padding:0;">
+          <div class="toolbar">
+            <div class="field">
+              <label for="cgpaMinInput">Min CGPA</label>
+              <input id="cgpaMinInput" name="cgpaMin" type="number" min="0" max="10" step="any" placeholder="e.g. 7.5">
+              <span class="error-text" id="cgpaMinError"></span>
+            </div>
+            
+            <div class="field">
+              <label for="internshipsMinInput">Min Internships</label>
+              <input id="internshipsMinInput" name="internshipsMin" type="number" min="0" step="1" placeholder="e.g. 1">
+              <span class="error-text" id="internshipsMinError"></span>
+            </div>
+
+            <div class="field">
+              <label for="pageSizeSelect">Page Size</label>
+              <select id="pageSizeSelect" name="pageSize">
+                <option value="10">10 rows</option>
+                <option value="20">20 rows</option>
+                <option value="50">50 rows</option>
+              </select>
+              <span class="error-text"></span>
+            </div>
+
+            <div class="field" style="margin-top: 14px; display: flex; gap: 8px;">
+              <button type="button" id="resetFiltersButton">Reset Filters</button>
+              <button type="button" id="applyFiltersButton" class="button primary">Apply Filters</button>
+            </div>
+            
+            <div style="margin-left: auto; display: flex; flex-direction: column; align-items: flex-end;">
+              <div id="tableStatus" style="font-size: 0.75rem; color: var(--text-dim); margin-bottom: 4px;"></div>
+              <div id="tableTotalLabel" style="font-size: 0.75rem; color: var(--navy); font-weight: 600;">Total: --</div>
+            </div>
+          </div>
+        </fieldset>
+      </form>
+
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Age</th>
+              <th>CGPA</th>
+              <th>Internships</th>
+              <th>Branch</th>
+              <th>Placement Status</th>
+            </tr>
+          </thead>
+          <tbody id="studentsBody">
+            <tr class="empty-row"><td colspan="5">⏳ Initializing engine...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pagination">
+        <div class="pagination__info" id="pageInfo">Page -- of --</div>
+        <div class="pagination__actions">
+          <button type="button" id="prevPageButton">Prev</button>
+          <button type="button" id="nextPageButton" class="primary">Next</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────── SECTION 02 ─────────────────── -->
+  <section id="sec-predict">
+    <div class="section-head">
+      <div class="section-head-left">
+        <span class="section-num">02</span>
+        <h2>Placement Prediction</h2>
+      </div>
+      <span class="owner-badge badge-s2">Student 1 · REPO OWNER</span>
+    </div>
+
+    <div class="panel">
+      <div class="predict-layout">
+        
+        <form id="predictForm" novalidate>
+          <div class="predict-form">
+            <div class="field">
+              <label for="predictCgpa">CGPA (Required)</label>
+              <input id="predictCgpa" name="cgpa" type="number" min="0" max="10" step="0.01" required>
+            </div>
+            <div class="field">
+              <label for="predictInternships">Internships (Req)</label>
+              <input id="predictInternships" name="internships" type="number" min="0" step="1" required>
+            </div>
+            <div class="field">
+              <label for="predictCommunication">Comm. Skill (0-9)</label>
+              <input id="predictCommunication" name="communication_skill" type="number" min="0" max="9" step="1" required>
+            </div>
+            <div class="field">
+              <label for="predictProblemSolving">Prob. Solving (0-9)</label>
+              <input id="predictProblemSolving" name="problem_solving" type="number" min="0" max="9" step="1" required>
+            </div>
+            <div class="field">
+              <label for="predictBranch">Branch</label>
+              <select id="predictBranch" name="branch" required>
+                <option value="">Select branch</option>
+                <option value="CSE">CSE</option><option value="IT">IT</option>
+                <option value="ECE">ECE</option><option value="EEE">EEE</option>
+                <option value="MECH">MECH</option><option value="CIVIL">CIVIL</option>
+                <option value="CHEM">CHEM</option><option value="BIO">BIO</option>
+                <option value="OTHER">OTHER</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="predictGender">Gender</label>
+              <select id="predictGender" name="gender" required>
+                <option value="">Select gender</option>
+                <option value="Male">Male</option><option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="predictAge">Age (Opt, def: 21)</label>
+              <input id="predictAge" name="age" type="number" min="16" max="100" step="1">
+            </div>
+            <div class="field">
+              <label for="predictProjects">Projects (Opt, def: 2)</label>
+              <input id="predictProjects" name="projects" type="number" min="0" step="1">
+            </div>
+
+            <div class="field field--full" style="margin-top: 8px;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <button type="submit" class="primary" id="predictSubmitButton">Run Prediction</button>
+                <div id="predictLoading" style="display:none; font-size: 0.75rem; color: var(--text-dim);">
+                  <span class="spinner"></span> Running inference...
+                </div>
+              </div>
+              <p class="error-text" id="predictError" style="margin-top:8px;"></p>
+            </div>
+          </div>
+        </form>
+
+        <div style="display: flex; flex-direction: column; gap: 16px; min-width: 0;">
+          <aside class="result-card">
+            <p class="result-title">Prediction Engine Output</p>
+            <div class="result-value" id="predictResultValue">
+              <span style="color: #4a5270; font-size: 1.2rem; font-weight: 400;">Awaiting Input...</span>
+            </div>
+            <p class="result-prob" id="predictProbabilityText">Probability: --</p>
+            <div class="progress-track">
+              <div class="progress-bar" id="predictProbabilityBar"></div>
+            </div>
+          </aside>
+
+          <aside class="panel" id="shapCard" style="display: none; padding: 20px; min-height: 200px;">
+            <p class="result-title" style="color: var(--navy); margin-bottom: 16px;">SHAP Explanation</p>
+            <div id="shapEmptyState" style="display: none; font-size: 0.75rem; color: var(--text-dim); font-style: italic;">
+              No explanation available.
+            </div>
+            
+            <div style="position: relative; height: 320px; width: 100%;">
+              <canvas id="shapChart"></canvas>
+            </div>
+            
+            <div id="shapTopFactors" style="margin-top: 14px; font-size: 1.0rem; line-height: 1.6; color: var(--text);"></div>
+            
+            <div id="waterfallSection" style="display: none;">
+              <div style="border-top: 1px solid var(--border); margin: 16px 0;"></div>
+              
+              <div id="waterfallContainer" style="position: relative; height: 340px; width: 100%; margin-top: 10px;">
+                <p class="result-title" style="color: var(--navy); margin-bottom: 12px; text-align: center;">Cumulative Impact (Waterfall)</p>
+                <canvas id="waterfallChart"></canvas>
+              </div>
+              
+              <div id="waterfallHelperText" style="margin-top: 16px; font-size: 0.7rem; color: var(--text-dim); text-align: center; font-style: italic;">
+                Starting from a neutral baseline (0), each factor shifts the prediction step-by-step, showing how the model arrived at the final decision.
+              </div>
+            </div>
+          </aside>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────── SECTION 03 · NEW ─────────────── -->
+  <section id="sec-viz">
+    <div class="section-head">
+      <div class="section-head-left">
+        <span class="section-num">03</span>
+        <h2>Visual Analytics</h2>
+      </div>
+      <span class="owner-badge badge-s2">Student 2 · Collaborator</span>
+    </div>
+
+    <!-- Row 1: Doughnut + Scatter -->
+    <div class="viz-row-2">
+
+      <!-- Placement Distribution Doughnut -->
+      <div class="panel">
+        <p class="viz-panel-title">Placement Distribution</p>
+        <p class="viz-panel-sub">Placed vs Not Placed across the full student dataset</p>
+        <div id="vizDoughnutStatus" class="viz-status-msg">⏳ Fetching data...</div>
+        <div style="position: relative; height: 270px;">
+          <canvas id="doughnutChart" style="display: none;"></canvas>
+        </div>
+      </div>
+
+      <!-- Branch Distribution -->
+      <div class="panel">
+        <p class="viz-panel-title">Branch Distribution</p>
+        <p class="viz-panel-sub">Top branch buckets computed from the full parquet-backed dataset profile</p>
+        <div id="vizScatterStatus" class="viz-status-msg">⏳ Fetching data...</div>
+        <div style="position: relative; height: 270px;">
+          <canvas id="scatterChart" style="display: none;"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Row 2: Correlation Heatmap (full width) -->
+    <div class="panel" style="margin-bottom: 20px;">
+      <p class="viz-panel-title">Correlation Heatmap</p>
+      <p class="viz-panel-sub">Pearson r between numeric dataset features - computed by the live API against the full parquet dataset</p>
+      <div id="vizHeatmapStatus" class="viz-status-msg">⏳ Fetching data...</div>
+      <div class="viz-heatmap-wrap">
+        <canvas id="heatmapChart" style="display: none; max-width: 100%;"></canvas>
+      </div>
+    </div>
+
+    <!-- Row 3: Top Predictive Features Bar Chart -->
+    <div class="panel">
+      <p class="viz-panel-title">Top Predictive Features</p>
+      <p class="viz-panel-sub">SHAP-based feature importance ranked by absolute contribution magnitude — derived from a representative student profile via live /predict API</p>
+      <div id="vizFeaturesStatus" class="viz-status-msg">⏳ Fetching data...</div>
+      <div style="position: relative; height: 360px;">
+        <canvas id="featuresChart" style="display: none;"></canvas>
+      </div>
+    </div>
+
+  </section>
+
+</main>
+
+<footer>
+  DESIGN, ANALYSIS, & ALGORITHM COLLABORATIVE ACTIVITY &nbsp;·&nbsp; 2-STUDENT GIT WORKFLOW
+  <br>Contribution tracked via commits, branches &amp; pull requests on GitHub.
+</footer>
+
+<script>
+  (function () {
+    "use strict";
+
+    /* ═══════════════════════════════════════════════
+       CONFIG & STATE
+    ═══════════════════════════════════════════════ */
+    const API_ENV = {
+      USE_LOCAL_API: false,
+      LOCAL_BASE_URL: "http://127.0.0.1:8000",
+      PROD_BASE_URL: "https://daalab-ay225-garcia-a.onrender.com"
+    };
+    const API_BASE_URL = API_ENV.USE_LOCAL_API ? API_ENV.LOCAL_BASE_URL : API_ENV.PROD_BASE_URL;
+    const REQUEST_TIMEOUT_MS = 30000;
+    const STORAGE_KEY = "placement-dashboard-state-v1";
+    const PAGE_SIZE_OPTIONS = [10, 20, 50];
+
+    const defaultState = {
+      currentPage: 1,
+      totalPages: 0,
+      totalRecords: 0,
+      pageSize: 10,
+      filters: { cgpaMin: "", internshipsMin: "" }
+    };
+    const state = loadPersistedState();
+
+    /* ── Element references ────────────────────── */
+    const elements = {
+      statTotalStudents: document.getElementById("statTotalStudents"),
+      statPlacementRate: document.getElementById("statPlacementRate"),
+      statAvgCgpa: document.getElementById("statAvgCgpa"),
+      statAvgInternships: document.getElementById("statAvgInternships"),
+      statsError: document.getElementById("statsError"),
+
+      filtersFieldset: document.getElementById("filtersFieldset"),
+      cgpaMinInput: document.getElementById("cgpaMinInput"),
+      internshipsMinInput: document.getElementById("internshipsMinInput"),
+      pageSizeSelect: document.getElementById("pageSizeSelect"),
+      resetFiltersButton: document.getElementById("resetFiltersButton"),
+      applyFiltersButton: document.getElementById("applyFiltersButton"),
+      cgpaMinError: document.getElementById("cgpaMinError"),
+      internshipsMinError: document.getElementById("internshipsMinError"),
+
+      tableStatus: document.getElementById("tableStatus"),
+      tableTotalLabel: document.getElementById("tableTotalLabel"),
+      studentsBody: document.getElementById("studentsBody"),
+      pageInfo: document.getElementById("pageInfo"),
+      prevPageButton: document.getElementById("prevPageButton"),
+      nextPageButton: document.getElementById("nextPageButton"),
+
+      predictForm: document.getElementById("predictForm"),
+      predictSubmitButton: document.getElementById("predictSubmitButton"),
+      predictLoading: document.getElementById("predictLoading"),
+      predictError: document.getElementById("predictError"),
+      predictResultValue: document.getElementById("predictResultValue"),
+      predictProbabilityText: document.getElementById("predictProbabilityText"),
+      predictProbabilityBar: document.getElementById("predictProbabilityBar"),
+      
+      shapCard: document.getElementById("shapCard"),
+      shapEmptyState: document.getElementById("shapEmptyState"),
+      shapChartCanvas: document.getElementById("shapChart"),
+      shapTopFactors: document.getElementById("shapTopFactors"),
+      waterfallSection: document.getElementById("waterfallSection"),
+      waterfallChartCanvas: document.getElementById("waterfallChart"),
+
+      /* ── New viz canvas elements ── */
+      doughnutChartCanvas: document.getElementById("doughnutChart"),
+      scatterChartCanvas:  document.getElementById("scatterChart"),
+      heatmapChartCanvas:  document.getElementById("heatmapChart"),
+      featuresChartCanvas: document.getElementById("featuresChart"),
+
+      /* ── New viz status labels ── */
+      vizDoughnutStatus: document.getElementById("vizDoughnutStatus"),
+      vizScatterStatus:  document.getElementById("vizScatterStatus"),
+      vizHeatmapStatus:  document.getElementById("vizHeatmapStatus"),
+      vizFeaturesStatus: document.getElementById("vizFeaturesStatus")
+    };
+
+    /* ── Controller & loading flags ────────────── */
+    let statsController      = null;
+    let studentsController   = null;
+    let predictionController = null;
+    let debounceHandle       = null;
+    let studentsLoading      = false;
+
+    /* ── Existing chart instances ───────────────── */
+    let shapChartInstance      = null;
+    let waterfallChartInstance = null;
+
+    /* ── New viz chart instances ────────────────── */
+    let doughnutChartInstance  = null;
+    let scatterChartInstance   = null;
+    let featuresChartInstance  = null;
+    let scoreBarChartInstance = null;
+    let gradeDoughnutChartInstance = null;
+    let attendanceScoreChartInstance = null;
+    const DEFAULT_SORT_VALUE = "__score:desc";
+    const analyticsState = {
+      loaded: false,
+      loading: false,
+      rows: [],
+      viewRows: [],
+      stats: null,
+      datasetProfile: null,
+      featureChartReady: false,
+      renderKeys: Object.create(null),
+      loadGate: null,
+      heatmapModel: null,
+      heatmapHoverCell: null,
+      resizeBound: false
+    };
+
+    /* ═══════════════════════════════════════════════
+       BOOTSTRAP
+    ═══════════════════════════════════════════════ */
+    injectDashboardEnhancements();
+    initializeUI();
+    wireEvents();
+    exposeStudentFunctions();
+    showDatasetLoadGate();
+
+    /* ═══════════════════════════════════════════════
+       INIT & EVENTS (unchanged)
+    ═══════════════════════════════════════════════ */
+    function initializeUI() {
+      elements.cgpaMinInput.value = state.filters.cgpaMin;
+      elements.internshipsMinInput.value = state.filters.internshipsMin;
+      elements.pageSizeSelect.value = String(state.pageSize);
+      updatePaginationUI();
+    }
+
+    function wireEvents() {
+      function applyExplicitFilters() {
+        if (elements.cgpaMinInput) state.filters.cgpaMin = elements.cgpaMinInput.value.trim();
+        if (elements.internshipsMinInput) state.filters.internshipsMin = elements.internshipsMinInput.value.trim();
+        state.currentPage = 1;
+        persistState();
+        if (analyticsState.loaded) fetchStudents();
+      }
+
+      if (elements.applyFiltersButton) {
+        elements.applyFiltersButton.addEventListener("click", applyExplicitFilters);
+      }
+
+      [elements.cgpaMinInput, elements.internshipsMinInput, elements.nameFilterInput].forEach(function(inputElement) {
+        if (inputElement) {
+          inputElement.addEventListener("keydown", function(event) {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              applyExplicitFilters();
+            }
+          });
+        }
+      });
+      elements.pageSizeSelect.addEventListener("change", function (event) {
+        const value = Number(event.target.value);
+        state.pageSize = PAGE_SIZE_OPTIONS.includes(value) ? value : defaultState.pageSize;
+        state.currentPage = 1;
+        persistState();
+        if (analyticsState.loaded) fetchStudents();
+      });
+      elements.resetFiltersButton.addEventListener("click", function () {
+        resetTable();
+      });
+      elements.prevPageButton.addEventListener("click", function () {
+        if (!analyticsState.loaded || studentsLoading || state.currentPage <= 1) return;
+        state.currentPage -= 1;
+        persistState();
+        fetchStudents();
+      });
+      elements.nextPageButton.addEventListener("click", function () {
+        if (!analyticsState.loaded || studentsLoading || state.currentPage >= state.totalPages) return;
+        state.currentPage += 1;
+        persistState();
+        fetchStudents();
+      });
+      elements.predictForm.addEventListener("submit", handlePredictionSubmit);
+
+      if (elements.sortSelect) {
+        elements.sortSelect.addEventListener("change", function () {
+          state.currentPage = 1;
+          persistState();
+          if (analyticsState.loaded) fetchStudents();
+        });
+      }
+    }
+
+
+
+    /* ═══════════════════════════════════════════════
+       DATA FETCHING — OVERVIEW STATS (unchanged)
+    ═══════════════════════════════════════════════ */
+    async function fetchOverviewStats() {
+      if (statsController) statsController.abort();
+      statsController = new AbortController();
+
+      setStatsLoading(true);
+      setStatsError("");
+      try {
+        const data = await requestJson("/stats/overview", { method: "GET", signal: statsController.signal });
+        if (!isValidStatsResponse(data)) throw new Error("Stats response returned unexpected data.");
+
+        elements.statTotalStudents.textContent = formatInteger(data.total_students);
+        elements.statPlacementRate.textContent = formatPercent(data.placement_rate);
+        elements.statAvgCgpa.textContent = formatDecimal(data.avg_cgpa, 2);
+        elements.statAvgInternships.textContent = formatDecimal(data.avg_internships, 2);
+      } catch (error) {
+        if (error.name === "CanceledError") return;
+        elements.statTotalStudents.textContent = "--";
+        elements.statPlacementRate.textContent = "--";
+        elements.statAvgCgpa.textContent = "--";
+        elements.statAvgInternships.textContent = "--";
+        setStatsError(getFriendlyError(error, "Unable to load overview metrics right now."));
+      } finally {
+        setStatsLoading(false);
+      }
+    }
+
+    /* ═══════════════════════════════════════════════
+       DATA FETCHING — STUDENTS TABLE (unchanged)
+    ═══════════════════════════════════════════════ */
+    async function fetchStudents() {
+      const validation = validateFilters(state.filters);
+      renderFilterErrors(validation.errors);
+
+      if (!validation.isValid) {
+        setStudentsStatus("error", "Please fix filter values to continue.");
+        renderEmptyTable("Invalid filter input");
+        state.totalPages = 0; state.totalRecords = 0;
+        updatePaginationUI(); updateTotalLabel();
+        return;
+      }
+
+      if (studentsController) studentsController.abort();
+      studentsController = new AbortController();
+
+      setStudentsLoading(true);
+      setStudentsStatus("loading", "Loading students...");
+      try {
+        const sortParams = getApiSortParams();
+        const data = await requestJson("/students", {
+          method: "GET",
+          signal: studentsController.signal,
+          params: {
+            page: state.currentPage, limit: state.pageSize,
+            search: elements.nameFilterInput && elements.nameFilterInput.value.trim() ? elements.nameFilterInput.value.trim() : undefined,
+            cgpa_min: validation.values.cgpaMin, internships_min: validation.values.internshipsMin,
+            sort_by: sortParams.sortBy, sort_order: sortParams.sortOrder
+          }
+        });
+        if (!isValidStudentsResponse(data)) throw new Error("Students response returned unexpected data.");
+
+        state.totalPages = Math.max(0, Number(data.total_pages));
+        state.totalRecords = Math.max(0, Number(data.total));
+        if (state.totalPages > 0 && state.currentPage > state.totalPages) {
+          state.currentPage = state.totalPages;
+          persistState(); fetchStudents(); return;
+        }
+
+        const pageOffset = Math.max(0, (state.currentPage - 1) * state.pageSize);
+        const normalizedRows = normalizeDatasetRows(data.data, pageOffset);
+        analyticsState.rows = normalizedRows;
+        analyticsState.viewRows = normalizedRows.slice();
+        window.DS = normalizedRows.slice();
+        window.DS_VIEW = normalizedRows.slice();
+        window.DS_META = {
+          total_rows: getDatasetTotalRows(),
+          displayed_rows: normalizedRows.length,
+          page: state.currentPage,
+          page_size: state.pageSize
+        };
+
+        applyClientPageSearch();
+        if (normalizedRows.length === 0) setStudentsStatus("empty", "No results found");
+        else setStudentsStatus("ready", "Showing page " + formatInteger(state.currentPage) + " of " + formatInteger(state.totalPages) + " from " + formatInteger(getDatasetTotalRows()) + " dataset records.");
+
+        updateTotalLabel(); updatePaginationUI(); persistState();
+      } catch (error) {
+        if (error.name === "CanceledError") return;
+        state.totalPages = 0; state.totalRecords = 0;
+        updatePaginationUI(); updateTotalLabel();
+        renderEmptyTable("No results found");
+        setStudentsStatus("error", getFriendlyError(error, "Students data is temporarily unavailable."));
+      } finally {
+        setStudentsLoading(false);
+      }
+    }
+
+    /* ═══════════════════════════════════════════════
+       PREDICTION HANDLER (unchanged)
+    ═══════════════════════════════════════════════ */
+    async function handlePredictionSubmit(event) {
+      event.preventDefault();
+      const payloadResult = createPredictionPayload(new FormData(elements.predictForm));
+      elements.predictError.textContent = "";
+
+      if (!payloadResult.isValid) { elements.predictError.textContent = payloadResult.error; return; }
+
+      if (predictionController) predictionController.abort();
+      predictionController = new AbortController();
+      setPredictionLoading(true);
+      try {
+        const data = await requestJson("/predict", {
+          method: "POST", signal: predictionController.signal, body: payloadResult.payload
+        });
+        if (!isValidPredictResponse(data)) throw new Error("Prediction response returned unexpected data.");
+
+        const placed = Number(data.prediction) === 1;
+        const probability = Math.max(0, Math.min(1, Number(data.probability)));
+        const percentText = formatPercent(probability);
+
+        elements.predictResultValue.innerHTML = "";
+        const resultLabel = document.createElement("span");
+        resultLabel.textContent = placed ? "Placed" : "Not Placed";
+        const badge = document.createElement("span");
+        badge.className = "badge " + (placed ? "badge--success" : "badge--danger");
+        badge.textContent = placed ? "High Match" : "Low Match";
+        elements.predictResultValue.appendChild(resultLabel);
+        elements.predictResultValue.appendChild(badge);
+
+        elements.predictProbabilityText.textContent = "Probability: " + percentText;
+        elements.predictProbabilityBar.style.width = "0";
+        window.requestAnimationFrame(function () {
+          elements.predictProbabilityBar.style.width = String((probability * 100).toFixed(2)) + "%";
+          if(!placed) elements.predictProbabilityBar.style.background = 'var(--coral)';
+          else elements.predictProbabilityBar.style.background = 'var(--sage)';
+        });
+        
+        // --- SHAP HANDLING LOGIC ---
+        elements.shapCard.style.display = "block";
+        if (data.shap_explanation && Object.keys(data.shap_explanation).length > 0) {
+          elements.shapEmptyState.style.display = "none";
+          elements.shapChartCanvas.style.display = "block";
+          elements.waterfallSection.style.display = "block";
+          
+          renderShapChart(data.shap_explanation);
+          renderWaterfallChart(data.shap_explanation);
+
+        } else {
+          elements.shapEmptyState.style.display = "block";
+          elements.shapChartCanvas.style.display = "none";
+          elements.waterfallSection.style.display = "none";
+          elements.shapTopFactors.innerHTML = "";
+          
+          if (shapChartInstance) {
+            shapChartInstance.destroy();
+            shapChartInstance = null;
+          }
+          if (waterfallChartInstance) {
+            waterfallChartInstance.destroy();
+            waterfallChartInstance = null;
+          }
+        }
+
+      } catch (error) {
+        if (error.name === "CanceledError") return;
+        elements.predictError.textContent = getFriendlyError(error, "Prediction request failed. Please review inputs and try again.");
+      } finally {
+        setPredictionLoading(false);
+      }
+    }
+
+    /* ═══════════════════════════════════════════════
+       TABLE RENDERING (unchanged)
+    ═══════════════════════════════════════════════ */
+    function renderStudentsTable(rows) {
+      if (!Array.isArray(rows) || rows.length === 0) { renderEmptyTable("No results found"); return; }
+      const fragment = document.createDocumentFragment();
+      rows.forEach(function (row) {
+        const tr = document.createElement("tr");
+        tr.appendChild(makeCell(safeInteger(row.age), true));
+        tr.appendChild(makeCell(safeDecimal(row.cgpa, 2), true));
+        tr.appendChild(makeCell(safeInteger(row.internships), true));
+        tr.appendChild(makeCell(safeText(row.branch)));
+
+        const badgeCell = document.createElement("td");
+        const placed = Number(row.placed) === 1;
+        const badge = document.createElement("span");
+        badge.className = "badge " + (placed ? "badge--success" : "badge--danger");
+        badge.textContent = placed ? "Placed" : "Not placed";
+        badgeCell.appendChild(badge);
+        tr.appendChild(badgeCell);
+        fragment.appendChild(tr);
+      });
+      elements.studentsBody.replaceChildren(fragment);
+    }
+
+    function renderEmptyTable(message) {
+      const tr = document.createElement("tr"); tr.className = "empty-row";
+      const td = document.createElement("td"); td.colSpan = 5; td.textContent = message;
+      tr.appendChild(td); elements.studentsBody.replaceChildren(tr);
+    }
+
+    function makeCell(value, isNum = false) {
+      const td = document.createElement("td");
+      if(isNum) td.className = "num";
+      td.textContent = value; return td;
+    }
+
+    function injectDashboardEnhancements() {
+      injectDashboardStyles();
+      injectDataExplorerControls();
+      injectAdvancedAnalyticsPanels();
+      cacheDynamicElements();
+      window.DS = [];
+      window.DS_VIEW = [];
+      window.DS_META = { total_rows: 0, displayed_rows: 0, source: "paginated-api" };
+    }
+
+    function injectDashboardStyles() {
+      if (document.getElementById("dashboardEnhancementStyles")) return;
+      const style = document.createElement("style");
+      style.id = "dashboardEnhancementStyles";
+      style.textContent = [
+        ".load-gate { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 24px; background: rgba(250, 248, 244, 0.92); backdrop-filter: blur(18px); }",
+        ".load-gate__card { width: min(560px, 100%); padding: 32px; border: 1px solid rgba(26,32,53,0.12); border-radius: 28px; background: linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(248,245,239,0.96) 100%); box-shadow: 0 24px 80px rgba(26,32,53,0.14); }",
+        ".load-gate__eyebrow { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; background: rgba(26,32,53,0.06); color: var(--navy); font-size: 1.0rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }",
+        ".load-gate__title { margin: 18px 0 10px; color: var(--navy); font-size: clamp(1.8rem, 4vw, 2.45rem); line-height: 1.05; }",
+        ".load-gate__desc { margin: 0 0 20px; color: var(--text); font-size: 0.96rem; line-height: 1.7; }",
+        ".load-gate__actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }",
+        ".load-gate__hint { color: var(--text-dim); font-size: 1.05rem; }",
+        ".toolbar .field--wide { min-width: 220px; }",
+        ".analysis-table { width: 100%; border-collapse: collapse; margin-top: 8px; }",
+        ".analysis-table tr + tr { border-top: 1px solid rgba(26,32,53,0.08); }",
+        ".analysis-table td { padding: 10px 0; vertical-align: top; font-size: 1.05rem; }",
+        ".analysis-table td:last-child { text-align: right; font-weight: 700; color: var(--navy); }",
+        ".insight-list { display: grid; gap: 12px; margin-top: 10px; }",
+        ".insight-item { padding: 14px 16px; border-radius: 16px; background: rgba(26,32,53,0.04); border: 1px solid rgba(26,32,53,0.08); color: var(--text); line-height: 1.65; font-size: 1.1rem; }",
+        ".heatmap-tooltip { position: absolute; pointer-events: none; transform: translate(-50%, calc(-100% - 14px)); min-width: 180px; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(26,32,53,0.08); background: rgba(255,255,255,0.96); box-shadow: 0 20px 44px rgba(26,32,53,0.16); color: var(--navy); font-size: 1.0rem; line-height: 1.45; opacity: 0; transition: opacity 120ms ease; }",
+        ".heatmap-tooltip strong { display: block; margin-bottom: 2px; }"
+      ].join("");
+      document.head.appendChild(style);
+    }
+
+    function injectDataExplorerControls() {
+      const toolbar = document.querySelector("#sec-data .toolbar");
+      if (!toolbar || document.getElementById("nameFilterInput")) return;
+
+      const nameField = document.createElement("div");
+      nameField.className = "field field--wide";
+      nameField.innerHTML = [
+        '<label for="nameFilterInput">Search Database</label>',
+        '<input id="nameFilterInput" type="text" placeholder="Search branch or gender (e.g. CSE, Male)">',
+        '<span class="error-text"></span>'
+      ].join("");
+
+      const sortField = document.createElement("div");
+      sortField.className = "field field--wide";
+      sortField.innerHTML = [
+        '<label for="sortSelect">Sort View</label>',
+        '<select id="sortSelect">',
+        '  <option value="__score:desc">Score: High to Low</option>',
+        '  <option value="__score:asc">Score: Low to High</option>',
+        '  <option value="__attendance:desc">Attendance: High to Low</option>',
+        '  <option value="cgpa:desc">CGPA: High to Low</option>',
+        '  <option value="internships:desc">Internships: High to Low</option>',
+        '  <option value="__name:asc">Name: A to Z</option>',
+        '</select>',
+        '<span class="error-text"></span>'
+      ].join("");
+
+      const resetParent = elements.resetFiltersButton ? elements.resetFiltersButton.parentElement : null;
+      if (elements.resetFiltersButton) elements.resetFiltersButton.textContent = "Reset View";
+      if (resetParent) {
+        toolbar.insertBefore(nameField, resetParent);
+        toolbar.insertBefore(sortField, resetParent);
+      }
+    }
+
+    function injectAdvancedAnalyticsPanels() {
+      const vizSection = document.getElementById("sec-viz");
+      if (!vizSection || document.getElementById("student2ChartsRow")) return;
+
+      const wrapper = document.createElement("div");
+      wrapper.innerHTML = [
+        '<div class="viz-row-2" id="student2ChartsRow">',
+        '  <div class="panel">',
+        '    <p class="viz-panel-title">Dataset Branch Buckets</p>',
+        '    <p class="viz-panel-sub">Full-dataset branch counts from /stats/dataset, not a browser-side row sample</p>',
+        '    <div id="vizScoreBarStatus" class="viz-status-msg">Dataset not loaded yet.</div>',
+        '    <div style="position: relative; height: 360px;"><canvas id="scoreBarChart" style="display:none;"></canvas></div>',
+        '  </div>',
+        '  <div class="panel">',
+        '    <p class="viz-panel-title">Gender Distribution</p>',
+        '    <p class="viz-panel-sub">Full-dataset gender buckets from the live parquet profile</p>',
+        '    <div id="vizGradeDoughnutStatus" class="viz-status-msg">Dataset not loaded yet.</div>',
+        '    <div style="position: relative; height: 320px;"><canvas id="gradeDoughnutChart" style="display:none;"></canvas></div>',
+        '  </div>',
+        '</div>',
+        '<div class="panel" style="margin-bottom: 20px;">',
+        '  <p class="viz-panel-title">Dataset Profile Source</p>',
+        '  <p class="viz-panel-sub">Table rows stay paginated while aggregate values come from the full dataset endpoints</p>',
+        '  <div id="vizAttendanceScatterStatus" class="viz-status-msg">Dataset not loaded yet.</div>',
+        '  <div style="position: relative; height: 320px;"><canvas id="attendanceScoreChart" style="display:none;"></canvas></div>',
+        '</div>',
+        '<div class="viz-row-2" id="student2NarrativesRow">',
+        '  <div class="panel">',
+        '    <p class="viz-panel-title">Quantitative Analysis</p>',
+        '    <p class="viz-panel-sub">Variance, spread, correlation, and regression summaries for the current dataset view</p>',
+        '    <table class="analysis-table"><tbody id="analysisOverviewBody"></tbody></table>',
+        '    <table class="analysis-table"><tbody id="analysisRelationshipBody"></tbody></table>',
+        '  </div>',
+        '  <div class="panel">',
+        '    <p class="viz-panel-title">Narrative Insights</p>',
+        '    <p class="viz-panel-sub">Presentation-ready findings generated from the same live metrics as the charts</p>',
+        '    <div id="insightsBody" class="insight-list"></div>',
+        '  </div>',
+        '</div>'
+      ].join("");
+      vizSection.appendChild(wrapper);
+    }
+
+    function cacheDynamicElements() {
+      elements.nameFilterInput = document.getElementById("nameFilterInput");
+      elements.sortSelect = document.getElementById("sortSelect");
+      elements.tableHeadRow = document.querySelector("#sec-data table thead tr");
+      elements.statsTiles = Array.prototype.slice.call(document.querySelectorAll("#sec-data .stat-strip .stat-tile"));
+      elements.scoreBarChartCanvas = document.getElementById("scoreBarChart");
+      elements.vizScoreBarStatus = document.getElementById("vizScoreBarStatus");
+      elements.gradeDoughnutChartCanvas = document.getElementById("gradeDoughnutChart");
+      elements.vizGradeDoughnutStatus = document.getElementById("vizGradeDoughnutStatus");
+      elements.attendanceScoreChartCanvas = document.getElementById("attendanceScoreChart");
+      elements.vizAttendanceScatterStatus = document.getElementById("vizAttendanceScatterStatus");
+      elements.analysisOverviewBody = document.getElementById("analysisOverviewBody");
+      elements.analysisRelationshipBody = document.getElementById("analysisRelationshipBody");
+      elements.insightsBody = document.getElementById("insightsBody");
+    }
+
+    function exposeStudentFunctions() {
+      window.loadDataset = loadDataset;
+      window.renderTable = renderTable;
+      window.applyFilterSort = applyFilterSort;
+      window.resetTable = resetTable;
+      window.renderSummaryCards = renderSummaryCards;
+      window.drawBarChart = drawBarChart;
+      window.drawScatterPlot = drawScatterPlot;
+      window.drawDoughnut = drawDoughnut;
+      window.variance = variance;
+      window.stdDev = stdDev;
+      window.pearsonCorr = pearsonCorr;
+      window.linearRegression = linearRegression;
+      window.renderAnalysis = renderAnalysis;
+      window.renderInsights = renderInsights;
+    }
+
+    function showDatasetLoadGate(errorMessage) {
+      if (!analyticsState.loadGate) {
+        const gate = document.createElement("div");
+        gate.className = "load-gate";
+        gate.innerHTML = [
+          '<div class="load-gate__card">',
+          '  <span class="load-gate__eyebrow">Live API Dataset</span>',
+          '  <h1 class="load-gate__title">Load the analytics workspace</h1>',
+          '  <p class="load-gate__desc">This dashboard waits for an explicit dataset load so the table, summaries, and visual analytics all initialize together from the live API.</p>',
+          '  <div class="load-gate__actions">',
+          '    <button type="button" class="primary" id="loadDatasetButton">Load Dataset from API</button>',
+          '    <span class="load-gate__hint" id="loadDatasetHint">Loads overview metrics plus a performant analytics sample.</span>',
+          '  </div>',
+          '  <p class="error-text" id="loadDatasetError" style="margin-top: 16px; min-height: 1.25em;"></p>',
+          '</div>'
+        ].join("");
+        document.body.appendChild(gate);
+        analyticsState.loadGate = gate;
+        const button = gate.querySelector("#loadDatasetButton");
+        button.addEventListener("click", async function () {
+          button.disabled = true;
+          gate.querySelector("#loadDatasetHint").textContent = "Loading dataset...";
+          gate.querySelector("#loadDatasetError").textContent = "";
+          try {
+            await loadDataset();
+            gate.style.display = "none";
+          } catch (error) {
+            gate.querySelector("#loadDatasetHint").textContent = "Live API request failed.";
+            gate.querySelector("#loadDatasetError").textContent = getFriendlyError(error, "Unable to load the dataset right now.");
+          } finally {
+            button.disabled = false;
+          }
+        });
+      }
+      analyticsState.loadGate.style.display = "flex";
+      if (errorMessage) {
+        const errorNode = analyticsState.loadGate.querySelector("#loadDatasetError");
+        if (errorNode) errorNode.textContent = errorMessage;
+      }
+    }
+
+    async function loadDataset() {
+      analyticsState.loading = true;
+      setStudentsLoading(true);
+      setStudentsStatus("loading", "Loading dataset from API...");
+      setStatsError("");
+      try {
+        const results = await Promise.all([
+          requestJson("/stats/overview", { method: "GET" }).catch(function () { return null; }),
+          requestJson("/stats/dataset", { method: "GET" }).catch(function () { return null; })
+        ]);
+
+        analyticsState.stats = results[0] && isValidStatsResponse(results[0]) ? results[0] : null;
+        analyticsState.datasetProfile = results[1] && isValidDatasetProfile(results[1]) ? results[1] : null;
+        analyticsState.rows = [];
+        analyticsState.viewRows = [];
+        analyticsState.loaded = true;
+        analyticsState.featureChartReady = false;
+        analyticsState.renderKeys = Object.create(null);
+
+        window.DS = [];
+        window.DS_VIEW = [];
+        window.DS_META = {
+          total_rows: getDatasetTotalRows(),
+          displayed_rows: 0,
+          source: "paginated-api"
+        };
+
+        renderDatasetWideSummary();
+        renderDatasetWideVisuals();
+        await fetchStudents();
+        maybeRenderFeatureChart();
+        bindHeatmapInteractions();
+        bindResponsiveHeatmap();
+        return analyticsState.rows;
+      } finally {
+        analyticsState.loading = false;
+        setStudentsLoading(false);
+      }
+    }
+
+    function normalizeDatasetRows(rows, offset = 0) {
+      return rows.map(function (row, index) {
+        const normalized = Object.assign({}, row);
+        normalized.__index = offset + index + 1;
+        normalized.__name = resolveDisplayName(row, offset + index + 1);
+        normalized.__score = resolveScoreValue(row);
+        normalized.__attendance = resolveAttendanceValue(row);
+        normalized.__studyHours = resolveStudyHoursValue(row);
+        normalized.__grade = resolveGradeBucket(normalized.__score);
+        normalized.__pass = resolvePassFlag(row, normalized.__score);
+        return normalized;
+      });
+    }
+
+    function getDatasetTotalRows() {
+      if (analyticsState.stats && isFiniteNumber(analyticsState.stats.total_students)) return Number(analyticsState.stats.total_students);
+      if (analyticsState.datasetProfile && isFiniteNumber(analyticsState.datasetProfile.row_count)) return Number(analyticsState.datasetProfile.row_count);
+      return Number(state.totalRecords) || analyticsState.rows.length || 0;
+    }
+
+    function getPlacementCounts() {
+      const total = getDatasetTotalRows();
+      const profileCounts = analyticsState.datasetProfile && analyticsState.datasetProfile.placement_counts;
+      if (profileCounts && isFiniteNumber(profileCounts.placed) && isFiniteNumber(profileCounts.not_placed)) {
+        return {
+          placed: Math.max(0, Number(profileCounts.placed)),
+          notPlaced: Math.max(0, Number(profileCounts.not_placed)),
+          total: Math.max(0, Number(profileCounts.placed) + Number(profileCounts.not_placed))
+        };
+      }
+      const rate = analyticsState.stats && isFiniteNumber(analyticsState.stats.placement_rate) ? Number(analyticsState.stats.placement_rate) : 0;
+      const rateFraction = rate > 1 ? rate / 100 : rate;
+      const placed = Math.round(total * rateFraction);
+      return { placed: placed, notPlaced: Math.max(0, total - placed), total: total };
+    }
+
+    function getApiSortParams() {
+      const sortSpec = parseSortSpec(elements.sortSelect ? elements.sortSelect.value : DEFAULT_SORT_VALUE);
+      const fieldMap = {
+        __score: "aptitude_score",
+        __attendance: "attendance",
+        cgpa: "cgpa",
+        internships: "internships"
+      };
+      return {
+        sortBy: fieldMap[sortSpec.field] || undefined,
+        sortOrder: sortSpec.direction
+      };
+    }
+
+    function applyClientPageSearch() {
+      let pageRows = analyticsState.rows.slice();
+      analyticsState.viewRows = pageRows;
+      window.DS_VIEW = pageRows.slice();
+      renderTable(pageRows);
+      renderCurrentPageAnalysis(analyticsState.rows);
+      updatePaginationUI();
+      updateTotalLabel();
+    }
+
+    function renderDatasetWideSummary() {
+      const stats = analyticsState.stats;
+      if (!stats) return;
+      elements.statTotalStudents.textContent = formatInteger(stats.total_students);
+      elements.statPlacementRate.textContent = formatPercent(stats.placement_rate);
+      elements.statAvgCgpa.textContent = formatDecimal(stats.avg_cgpa, 2);
+      elements.statAvgInternships.textContent = formatDecimal(stats.avg_internships, 2);
+      setStatsLoading(false);
+      setStatsError("");
+    }
+
+    function renderDatasetWideVisuals() {
+      if (!analyticsState.loaded) return;
+      drawDatasetPlacementDoughnut();
+      drawDatasetBranchDistribution();
+      drawDatasetBranchLeaderboard();
+      drawDatasetCorrelationHeatmap();
+      drawDatasetGenderDoughnut();
+      renderDatasetProfileSource();
+      renderDatasetAnalysis();
+      renderDatasetInsights();
+    }
+
+    function drawDatasetPlacementDoughnut() {
+      const canvas = elements.doughnutChartCanvas;
+      const statusEl = elements.vizDoughnutStatus;
+      const palette = getThemeColors();
+      if (!canvas) return;
+
+      const counts = getPlacementCounts();
+      if (!counts.total) {
+        setVizState(statusEl, canvas, "No dataset-level placement counts are available.", true);
+        return;
+      }
+
+      const signature = [counts.total, counts.placed, counts.notPlaced].join("|");
+      if (analyticsState.renderKeys.datasetPlacement === signature && doughnutChartInstance) return;
+      analyticsState.renderKeys.datasetPlacement = signature;
+
+      showVizCanvas(statusEl, canvas);
+      if (doughnutChartInstance) doughnutChartInstance.destroy();
+
+      const centerTextPlugin = {
+        id: "datasetPlacementCenter",
+        afterDraw: function (chart) {
+          const meta = chart.getDatasetMeta(0);
+          if (!meta || !meta.data || !meta.data.length) return;
+          const ctx = chart.ctx;
+          const x = meta.data[0].x;
+          const y = meta.data[0].y;
+          const rate = counts.total ? counts.placed / counts.total : 0;
+          ctx.save();
+          ctx.textAlign = "center";
+          ctx.fillStyle = palette.navy;
+          ctx.font = "700 25px 'IBM Plex Mono', monospace";
+          ctx.fillText(formatPercent(rate), x, y - 6);
+          ctx.fillStyle = palette.dim;
+          ctx.font = "500 10px 'IBM Plex Mono', monospace";
+          ctx.fillText(formatInteger(counts.total) + " records", x, y + 18);
+          ctx.restore();
+        }
+      };
+
+      doughnutChartInstance = new Chart(canvas.getContext("2d"), {
+        type: "doughnut",
+        plugins: [centerTextPlugin],
+        data: {
+          labels: ["Placed", "Not Placed"],
+          datasets: [{
+            data: [counts.placed, counts.notPlaced],
+            backgroundColor: [palette.sage, palette.coral],
+            borderColor: [palette.surface, palette.surface],
+            borderWidth: 5,
+            hoverOffset: 12
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: "66%",
+          plugins: {
+            legend: { position: "bottom", labels: { usePointStyle: true, color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 15 } } },
+            tooltip: {
+              backgroundColor: hexToRgba(palette.navy, 0.94),
+              callbacks: {
+                label: function (context) {
+                  const count = Number(context.parsed) || 0;
+                  const share = counts.total ? (count / counts.total) : 0;
+                  return context.label + ": " + formatInteger(count) + " students (" + formatPercent(share) + ")";
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function drawDatasetBranchDistribution() {
+      const canvas = elements.scatterChartCanvas;
+      const statusEl = elements.vizScatterStatus;
+      const palette = getThemeColors();
+      const distribution = analyticsState.datasetProfile && Array.isArray(analyticsState.datasetProfile.branch_distribution)
+        ? analyticsState.datasetProfile.branch_distribution.slice(0, 10)
+        : [];
+      if (!canvas) return;
+      if (!distribution.length) {
+        setVizState(statusEl, canvas, "Full-dataset branch distribution is unavailable.", true);
+        return;
+      }
+
+      const labels = distribution.map(function (item) { return item.branch || "Unknown"; });
+      const values = distribution.map(function (item) { return Number(item.count) || 0; });
+      const signature = labels.join("|") + values.join("|");
+      if (analyticsState.renderKeys.datasetBranches === signature && scatterChartInstance) return;
+      analyticsState.renderKeys.datasetBranches = signature;
+
+      showVizCanvas(statusEl, canvas);
+      if (scatterChartInstance) scatterChartInstance.destroy();
+
+      scatterChartInstance = new Chart(canvas.getContext("2d"), {
+        type: "bar",
+        data: {
+          labels: labels,
+          datasets: [{
+            label: "Students",
+            data: values,
+            backgroundColor: labels.map(function (_, index) {
+              return index % 2 === 0 ? hexToRgba(palette.sage, 0.78) : hexToRgba(palette.navy, 0.72);
+            }),
+            borderRadius: 6,
+            borderSkipped: false
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: hexToRgba(palette.navy, 0.94),
+              callbacks: {
+                label: function (context) {
+                  const count = Number(context.parsed.y) || 0;
+                  return formatInteger(count) + " students from " + formatInteger(getDatasetTotalRows()) + " records";
+                }
+              }
+            }
+          },
+          scales: {
+            x: { grid: { display: false }, ticks: { color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 14 } } },
+            y: { title: { display: true, text: "Students", color: palette.dim, font: { family: "'IBM Plex Mono', monospace", size: 15 } }, grid: { color: hexToRgba(palette.navy, 0.08) }, ticks: { color: palette.text, callback: function (value) { return formatInteger(value); } } }
+          }
+        }
+      });
+    }
+
+    function drawDatasetCorrelationHeatmap() {
+      const canvas = elements.heatmapChartCanvas;
+      const statusEl = elements.vizHeatmapStatus;
+      const profile = analyticsState.datasetProfile;
+      if (!canvas) return;
+      if (!profile || !profile.correlation || !Array.isArray(profile.correlation.labels) || !Array.isArray(profile.correlation.matrix) || !profile.correlation.labels.length) {
+        setVizState(statusEl, canvas, "Full-dataset correlation matrix is unavailable.", true);
+        analyticsState.heatmapModel = null;
+        return;
+      }
+
+      drawCorrelationMatrixHeatmap(profile.correlation.labels, profile.correlation.matrix, getDatasetTotalRows());
+    }
+
+    function drawCorrelationMatrixHeatmap(labels, matrix, recordCount) {
+      const canvas = elements.heatmapChartCanvas;
+      const statusEl = elements.vizHeatmapStatus;
+      const palette = getThemeColors();
+      if (!canvas) return;
+
+      const readableLabels = labels.map(function (label) {
+        return String(label).replace(/_/g, " ").replace(/\b\w/g, function (letter) { return letter.toUpperCase(); });
+      });
+      const size = Math.min(readableLabels.length, matrix.length);
+      if (!size) {
+        setVizState(statusEl, canvas, "Full-dataset correlation matrix is empty.", true);
+        return;
+      }
+
+      showVizCanvas(statusEl, canvas);
+      const dpr = window.devicePixelRatio || 1;
+      const containerWidth = Math.max(520, canvas.parentElement.offsetWidth || 720);
+      const margin = { top: 86, right: 30, bottom: 82, left: 150 };
+      const gridWidth = containerWidth - margin.left - margin.right;
+      const cellSize = Math.max(34, Math.min(72, Math.floor(gridWidth / size)));
+      const contentWidth = margin.left + cellSize * size + margin.right;
+      const contentHeight = margin.top + cellSize * size + margin.bottom;
+      canvas.width = contentWidth * dpr;
+      canvas.height = contentHeight * dpr;
+      canvas.style.width = contentWidth + "px";
+      canvas.style.height = contentHeight + "px";
+
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, contentWidth, contentHeight);
+
+      function mix(start, end, amount) {
+        return start.map(function (channel, index) { return Math.round(channel + (end[index] - channel) * amount); });
+      }
+      function colorFor(value) {
+        const coral = [217, 79, 61];
+        const neutral = [245, 241, 235];
+        const sage = [58, 125, 92];
+        const numeric = Number.isFinite(Number(value)) ? Number(value) : 0;
+        const intensity = Math.min(1, Math.abs(numeric));
+        const rgb = numeric < 0 ? mix(neutral, coral, intensity) : mix(neutral, sage, intensity);
+        return "rgb(" + rgb.join(",") + ")";
+      }
+
+      for (let row = 0; row < size; row += 1) {
+        for (let col = 0; col < size; col += 1) {
+          const value = Number(matrix[row] && matrix[row][col]);
+          const safeValue = Number.isFinite(value) ? value : 0;
+          const x = margin.left + col * cellSize;
+          const y = margin.top + row * cellSize;
+          const isHover = analyticsState.heatmapHoverCell && analyticsState.heatmapHoverCell.row === row && analyticsState.heatmapHoverCell.col === col;
+          ctx.fillStyle = colorFor(safeValue);
+          ctx.fillRect(x + 3, y + 3, cellSize - 6, cellSize - 6);
+          ctx.strokeStyle = isHover ? palette.navy : hexToRgba(palette.navy, 0.08);
+          ctx.lineWidth = isHover ? 2 : 1;
+          ctx.strokeRect(x + 3, y + 3, cellSize - 6, cellSize - 6);
+          ctx.fillStyle = Math.abs(safeValue) > 0.55 ? "#ffffff" : palette.navy;
+          ctx.font = "600 " + Math.max(9, Math.min(12, Math.floor(cellSize / 5))) + "px 'IBM Plex Mono', monospace";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(safeValue.toFixed(2), x + cellSize / 2, y + cellSize / 2);
+        }
+      }
+
+      ctx.fillStyle = palette.navy;
+      ctx.font = "600 10px 'IBM Plex Mono', monospace";
+      ctx.textBaseline = "middle";
+      readableLabels.slice(0, size).forEach(function (label, index) {
+        const x = margin.left + index * cellSize + cellSize / 2;
+        ctx.save();
+        ctx.translate(x, margin.top - 16);
+        ctx.rotate(-Math.PI / 5);
+        ctx.textAlign = "left";
+        ctx.fillText(label, 0, 0);
+        ctx.restore();
+      });
+      ctx.textAlign = "right";
+      readableLabels.slice(0, size).forEach(function (label, index) {
+        ctx.fillText(label, margin.left - 12, margin.top + index * cellSize + cellSize / 2);
+      });
+
+      const legendX = margin.left;
+      const legendY = margin.top + cellSize * size + 24;
+      const legendWidth = Math.min(320, cellSize * size);
+      const gradient = ctx.createLinearGradient(legendX, 0, legendX + legendWidth, 0);
+      gradient.addColorStop(0, colorFor(-1));
+      gradient.addColorStop(0.5, colorFor(0));
+      gradient.addColorStop(1, colorFor(1));
+      ctx.fillStyle = gradient;
+      ctx.fillRect(legendX, legendY, legendWidth, 10);
+      ctx.strokeStyle = hexToRgba(palette.navy, 0.1);
+      ctx.strokeRect(legendX, legendY, legendWidth, 10);
+      ctx.fillStyle = palette.dim;
+      ctx.font = "500 10px 'IBM Plex Mono', monospace";
+      ctx.textAlign = "left";
+      ctx.fillText("Full-dataset Pearson r", legendX, legendY - 11);
+      ctx.fillText("-1.00", legendX, legendY + 24);
+      ctx.textAlign = "center";
+      ctx.fillText("0.00", legendX + legendWidth / 2, legendY + 24);
+      ctx.textAlign = "right";
+      ctx.fillText("+1.00", legendX + legendWidth, legendY + 24);
+      ctx.fillText("n = " + formatInteger(recordCount), contentWidth - margin.right, legendY + 5);
+
+      analyticsState.heatmapModel = {
+        matrix: matrix,
+        labels: readableLabels.slice(0, size),
+        margin: margin,
+        cellSize: cellSize
+      };
+    }
+
+    function drawDatasetGenderDoughnut() {
+      const canvas = elements.gradeDoughnutChartCanvas;
+      const statusEl = elements.vizGradeDoughnutStatus;
+      const palette = getThemeColors();
+      const distribution = analyticsState.datasetProfile && Array.isArray(analyticsState.datasetProfile.gender_distribution)
+        ? analyticsState.datasetProfile.gender_distribution
+        : [];
+      if (!canvas) return;
+      if (!distribution.length) {
+        setVizState(statusEl, canvas, "Full-dataset gender distribution is unavailable.", true);
+        return;
+      }
+
+      const labels = distribution.map(function (item) { return item.gender || "Unknown"; });
+      const values = distribution.map(function (item) { return Number(item.count) || 0; });
+      const total = values.reduce(function (sum, value) { return sum + value; }, 0);
+      const signature = labels.join("|") + values.join("|");
+      if (analyticsState.renderKeys.datasetGender === signature && gradeDoughnutChartInstance) return;
+      analyticsState.renderKeys.datasetGender = signature;
+
+      showVizCanvas(statusEl, canvas);
+      if (gradeDoughnutChartInstance) gradeDoughnutChartInstance.destroy();
+
+      gradeDoughnutChartInstance = new Chart(canvas.getContext("2d"), {
+        type: "doughnut",
+        data: {
+          labels: labels,
+          datasets: [{
+            data: values,
+            backgroundColor: [palette.sage, palette.coral, hexToRgba(palette.navy, 0.72), "#b5820d"],
+            borderColor: labels.map(function () { return palette.surface; }),
+            borderWidth: 5,
+            hoverOffset: 10
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: "62%",
+          plugins: {
+            legend: { position: "bottom", labels: { usePointStyle: true, color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 15 } } },
+            tooltip: {
+              backgroundColor: hexToRgba(palette.navy, 0.94),
+              callbacks: {
+                label: function (context) {
+                  const count = Number(context.parsed) || 0;
+                  return context.label + ": " + formatInteger(count) + " students (" + formatPercent(total ? count / total : 0) + ")";
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function drawDatasetBranchLeaderboard() {
+      const canvas = elements.scoreBarChartCanvas;
+      const statusEl = elements.vizScoreBarStatus;
+      const palette = getThemeColors();
+      const distribution = analyticsState.datasetProfile && Array.isArray(analyticsState.datasetProfile.branch_distribution)
+        ? analyticsState.datasetProfile.branch_distribution.slice(0, 10)
+        : [];
+      if (!canvas) return;
+      if (!distribution.length) {
+        setVizState(statusEl, canvas, "Full-dataset branch counts are unavailable.", true);
+        return;
+      }
+
+      const labels = distribution.map(function (item) { return item.branch || "Unknown"; });
+      const values = distribution.map(function (item) { return Number(item.count) || 0; });
+      showVizCanvas(statusEl, canvas);
+      if (scoreBarChartInstance) scoreBarChartInstance.destroy();
+      scoreBarChartInstance = new Chart(canvas.getContext("2d"), {
+        type: "bar",
+        data: {
+          labels: labels,
+          datasets: [{
+            data: values,
+            backgroundColor: values.map(function (_, index) { return index < 3 ? hexToRgba(palette.sage, 0.82) : hexToRgba(palette.navy, 0.66); }),
+            borderRadius: 8,
+            borderSkipped: false
+          }]
+        },
+        options: {
+          indexAxis: "y",
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: hexToRgba(palette.navy, 0.94),
+              callbacks: {
+                label: function (context) {
+                  return formatInteger(context.parsed.x) + " students";
+                }
+              }
+            }
+          },
+          scales: {
+            x: { ticks: { color: palette.text, callback: function (value) { return formatInteger(value); } }, grid: { color: hexToRgba(palette.navy, 0.08) } },
+            y: { ticks: { color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 14 }, autoSkip: false }, grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    function renderDatasetProfileSource() {
+      const canvas = elements.attendanceScoreChartCanvas;
+      const statusEl = elements.vizAttendanceScatterStatus;
+      if (canvas) canvas.style.display = "none";
+      if (!statusEl) return;
+      const profile = analyticsState.datasetProfile;
+      const stats = analyticsState.stats;
+      statusEl.style.display = "block";
+      statusEl.style.color = "var(--text-dim)";
+      statusEl.innerHTML = [
+        "Full dataset loaded through aggregate endpoints.",
+        "Records: " + formatInteger(getDatasetTotalRows()),
+        "Columns: " + (profile && isFiniteNumber(profile.column_count) ? formatInteger(profile.column_count) : "--"),
+        "Placement rate: " + (stats ? formatPercent(stats.placement_rate) : "--"),
+        "Rows below remain paginated at " + formatInteger(state.pageSize) + " per page."
+      ].map(escapeHtml).join("<br>");
+    }
+
+    function renderDatasetAnalysis() {
+      if (!elements.analysisOverviewBody || !elements.analysisRelationshipBody) return;
+      const stats = analyticsState.stats;
+      const profile = analyticsState.datasetProfile;
+      const counts = getPlacementCounts();
+      renderStatTable(elements.analysisOverviewBody, [
+        { label: "Full Dataset Records", value: formatInteger(getDatasetTotalRows()) },
+        { label: "Column Count", value: profile && isFiniteNumber(profile.column_count) ? formatInteger(profile.column_count) : "--" },
+        { label: "Expected Columns", value: profile && isFiniteNumber(profile.expected_column_count) ? formatInteger(profile.expected_column_count) : "--" },
+        { label: "Placed Students", value: formatInteger(counts.placed) },
+        { label: "Not Placed Students", value: formatInteger(counts.notPlaced) },
+        { label: "Placement Rate", value: counts.total ? formatPercent(counts.placed / counts.total) : (stats ? formatPercent(stats.placement_rate) : "--") }
+      ]);
+
+      renderStatTable(elements.analysisRelationshipBody, [
+        { label: "Mean CGPA", value: stats ? formatDecimal(stats.avg_cgpa, 2) : "--" },
+        { label: "Avg. Internships", value: stats ? formatDecimal(stats.avg_internships, 2) : "--" },
+        { label: "Missing Columns", value: profile && Array.isArray(profile.missing_columns) ? formatInteger(profile.missing_columns.length) : "--" },
+        { label: "Extra Columns", value: profile && Array.isArray(profile.extra_columns) ? formatInteger(profile.extra_columns.length) : "--" },
+        { label: "Branch Buckets", value: profile && Array.isArray(profile.branch_distribution) ? formatInteger(profile.branch_distribution.length) : "--" },
+        { label: "Gender Buckets", value: profile && Array.isArray(profile.gender_distribution) ? formatInteger(profile.gender_distribution.length) : "--" }
+      ]);
+    }
+
+    function renderDatasetInsights() {
+      if (!elements.insightsBody) return;
+      const profile = analyticsState.datasetProfile;
+      const stats = analyticsState.stats;
+      const counts = getPlacementCounts();
+      if (!profile && !stats) {
+        elements.insightsBody.innerHTML = '<div class="insight-item">Load the dataset to generate full-dataset insights.</div>';
+        return;
+      }
+      const topBranch = profile && Array.isArray(profile.branch_distribution) && profile.branch_distribution.length ? profile.branch_distribution[0] : null;
+      const topGender = profile && Array.isArray(profile.gender_distribution) && profile.gender_distribution.length ? profile.gender_distribution[0] : null;
+      const insights = [
+        "The dashboard is connected to " + formatInteger(getDatasetTotalRows()) + " parquet-backed records; table pages are fetched in small chunks so the browser never tries to render all rows at once.",
+        "Placement counts are computed from the full dataset: " + formatInteger(counts.placed) + " placed and " + formatInteger(counts.notPlaced) + " not placed" + (counts.total ? " (" + formatPercent(counts.placed / counts.total) + " placed)." : "."),
+        "The full-dataset averages are " + (stats ? formatDecimal(stats.avg_cgpa, 2) : "--") + " CGPA and " + (stats ? formatDecimal(stats.avg_internships, 2) : "--") + " internships per student."
+      ];
+      if (topBranch) insights.push("The largest branch bucket is " + safeText(topBranch.branch) + " with " + formatInteger(topBranch.count) + " students.");
+      if (topGender) insights.push("The largest gender bucket is " + safeText(topGender.gender) + " with " + formatInteger(topGender.count) + " students.");
+      elements.insightsBody.innerHTML = insights.map(function (text) {
+        return '<div class="insight-item">' + escapeHtml(text) + '</div>';
+      }).join("");
+    }
+
+    function renderCurrentPageAnalysis() {
+      renderDatasetAnalysis();
+      renderDatasetInsights();
+    }
+
+    function applyFilterSort() {
+      if (!analyticsState.loaded) return [];
+      fetchStudents();
+      renderDatasetWideVisuals();
+      return analyticsState.viewRows.slice();
+
+      const validation = validateFilters(state.filters);
+      renderFilterErrors(validation.errors);
+      if (!validation.isValid) {
+        state.totalPages = 0;
+        state.totalRecords = 0;
+        renderTable([]);
+        renderSummaryCards([]);
+        renderAnalysis([]);
+        renderInsights([]);
+        updatePaginationUI();
+        updateTotalLabel();
+        setStudentsStatus("error", "Please fix the current filters.");
+        return [];
+      }
+
+      const sortSpec = parseSortSpec(elements.sortSelect ? elements.sortSelect.value : DEFAULT_SORT_VALUE);
+      let rows = analyticsState.rows.slice();
+      if (validation.values.cgpaMin !== undefined) {
+        rows = rows.filter(function (row) { return Number(row.cgpa) >= validation.values.cgpaMin; });
+      }
+      if (validation.values.internshipsMin !== undefined) {
+        rows = rows.filter(function (row) { return Number(row.internships) >= validation.values.internshipsMin; });
+      }
+
+      rows.sort(function (left, right) {
+        const a = getSortValue(left, sortSpec.field);
+        const b = getSortValue(right, sortSpec.field);
+        let result = 0;
+        if (typeof a === "string" || typeof b === "string") result = String(a || "").localeCompare(String(b || ""), undefined, { numeric: true, sensitivity: "base" });
+        else result = Number(a || 0) - Number(b || 0);
+        if (result === 0) result = Number(left.__index) - Number(right.__index);
+        return sortSpec.direction === "asc" ? result : -result;
+      });
+
+      analyticsState.viewRows = rows;
+      window.DS_VIEW = rows.slice();
+      state.totalRecords = rows.length;
+      state.totalPages = rows.length ? Math.ceil(rows.length / state.pageSize) : 0;
+      if (state.totalPages === 0) state.currentPage = 1;
+      else if (state.currentPage > state.totalPages) state.currentPage = state.totalPages;
+
+      renderTable(rows);
+      renderSummaryCards(rows);
+      drawPlacementDoughnut(rows);
+      drawScatter(rows);
+      drawHeatmap(rows);
+      drawBarChart(rows);
+      drawScatterPlot(rows);
+      drawDoughnut(rows);
+      renderAnalysis(rows);
+      renderInsights(rows);
+      updatePaginationUI();
+      updateTotalLabel();
+      setStudentsStatus(rows.length ? "ready" : "empty", rows.length ? "Showing " + formatInteger(rows.length) + " records from the current API page." : "No records match the current view.");
+      setStudentsLoading(false);
+      return rows;
+    }
+
+    function resetTable(announce = true) {
+      state.filters.cgpaMin = "";
+      state.filters.internshipsMin = "";
+      state.pageSize = defaultState.pageSize;
+      state.currentPage = 1;
+      persistState();
+      clearFilterErrors();
+      elements.cgpaMinInput.value = "";
+      elements.internshipsMinInput.value = "";
+      elements.pageSizeSelect.value = String(state.pageSize);
+      if (elements.nameFilterInput) elements.nameFilterInput.value = "";
+      if (elements.sortSelect) elements.sortSelect.value = DEFAULT_SORT_VALUE;
+      if (analyticsState.loaded) {
+        fetchStudents();
+        renderDatasetWideVisuals();
+      }
+      if (announce && analyticsState.loaded) setStudentsStatus("ready", "Table reset to the original dataset view.");
+    }
+
+    function renderSummaryCards(data) {
+      const rows = Array.isArray(data) ? data : [];
+      const scores = rows.map(function (row) { return row.__score; }).filter(Number.isFinite);
+      const studyHours = rows.map(function (row) { return row.__studyHours; }).filter(Number.isFinite);
+      const passCount = rows.filter(function (row) { return row.__pass; }).length;
+      const topScorer = rows.slice().sort(function (a, b) { return (b.__score || 0) - (a.__score || 0); })[0] || null;
+      const cards = [
+        { label: "Mean Score", value: scores.length ? formatDecimal(average(scores), 1) : "--", sub: "Composite score from the live student sample" },
+        { label: "Top Scorer", value: topScorer ? topScorer.__name : "--", sub: topScorer && Number.isFinite(topScorer.__score) ? "Score " + formatDecimal(topScorer.__score, 1) : "No valid score available" },
+        { label: "Pass Rate", value: rows.length ? formatPercent(passCount / rows.length) : "--", sub: "Uses placement as the pass outcome when available" },
+        { label: "Avg Study Hrs", value: studyHours.length ? formatDecimal(average(studyHours), 1) + " hrs" : "--", sub: "Falls back to time-management signals when study hours are missing" }
+      ];
+
+      cards.forEach(function (card, index) {
+        const tile = elements.statsTiles[index];
+        if (!tile) return;
+        const label = tile.querySelector(".st-label");
+        const value = tile.querySelector(".st-val");
+        const sub = tile.querySelector(".st-sub");
+        if (label) label.textContent = card.label;
+        if (value) {
+          value.textContent = card.value;
+          value.classList.remove("skeleton");
+        }
+        if (sub) sub.textContent = card.sub;
+      });
+      setStatsError(rows.length ? "" : (analyticsState.loaded ? "No rows match the current filters." : "Load the dataset to populate the summary cards."));
+    }
+
+    function renderTable(data) {
+      ensureTableHeaders();
+      const rows = Array.isArray(data) ? data : [];
+      if (!rows.length) {
+        renderEmptyTable("No records available for the current filters.");
+        return;
+      }
+      const start = Math.max(0, (state.currentPage - 1) * state.pageSize);
+      const isServerPage = rows === analyticsState.viewRows && state.totalRecords > rows.length;
+      const pageRows = isServerPage ? rows.slice(0, state.pageSize) : rows.slice(start, start + state.pageSize);
+      const fragment = document.createDocumentFragment();
+
+      pageRows.forEach(function (row) {
+        const tr = document.createElement("tr");
+        tr.style.cursor = "pointer";
+        tr.addEventListener("click", function() {
+          const form = document.getElementById("predictForm");
+          if (!form) return;
+          
+          if (form.elements["cgpa"]) form.elements["cgpa"].value = row.cgpa != null ? row.cgpa : "";
+          if (form.elements["internships"]) form.elements["internships"].value = row.internships != null ? row.internships : 0;
+          if (form.elements["communication_skill"]) form.elements["communication_skill"].value = row.communication_skill != null ? row.communication_skill : 0;
+          if (form.elements["problem_solving"]) form.elements["problem_solving"].value = row.problem_solving != null ? row.problem_solving : 0;
+          if (form.elements["age"]) form.elements["age"].value = row.age != null ? row.age : 21;
+          if (form.elements["projects"]) form.elements["projects"].value = row.projects != null ? row.projects : 2;
+          
+          if (form.elements["branch"] && row.branch) {
+            const branch = String(row.branch).toUpperCase().trim();
+            const select = form.elements["branch"];
+            let found = false;
+            for(let i = 0; i < select.options.length; i++) {
+               if(select.options[i].value === branch) found = true;
+            }
+            select.value = found ? branch : "OTHER";
+          }
+          
+          if (form.elements["gender"] && row.gender) {
+            const gender = String(row.gender).toLowerCase().trim();
+            if (gender === 'male' || gender === 'm') form.elements["gender"].value = "Male";
+            else if (gender === 'female' || gender === 'f') form.elements["gender"].value = "Female";
+            else form.elements["gender"].value = "Other";
+          }
+          
+          document.getElementById("sec-predict").scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+        
+        tr.appendChild(makeCell(row.__name));
+        tr.appendChild(makeCell(Number.isFinite(row.__score) ? formatDecimal(row.__score, 1) : "--", true));
+        tr.appendChild(makeCell(Number.isFinite(row.__attendance) ? formatDecimal(row.__attendance, 1) + "%" : "--", true));
+        tr.appendChild(makeCell(safeDecimal(row.cgpa, 2), true));
+        const badgeCell = document.createElement("td");
+        const badge = document.createElement("span");
+        badge.className = "badge " + (row.__pass ? "badge--success" : "badge--danger");
+        badge.textContent = row.__pass ? "Pass / Placed" : "Risk / Not Placed";
+        badgeCell.appendChild(badge);
+        tr.appendChild(badgeCell);
+        fragment.appendChild(tr);
+      });
+
+      elements.studentsBody.replaceChildren(fragment);
+    }
+
+    function ensureTableHeaders() {
+      if (!elements.tableHeadRow) return;
+      elements.tableHeadRow.innerHTML = "<th>Student</th><th>Score</th><th>Attendance</th><th>CGPA</th><th>Status</th>";
+    }
+
+    function maybeRenderFeatureChart() {
+      if (!analyticsState.loaded || analyticsState.featureChartReady) return;
+      analyticsState.featureChartReady = true;
+      drawTopFeatures();
+    }
+
+    function bindHeatmapInteractions() {
+      if (!elements.heatmapChartCanvas || elements.heatmapChartCanvas.dataset.boundHover === "true") return;
+      const wrapper = elements.heatmapChartCanvas.parentElement;
+      if (wrapper && !wrapper.querySelector(".heatmap-tooltip")) {
+        const tip = document.createElement("div");
+        tip.className = "heatmap-tooltip";
+        wrapper.appendChild(tip);
+      }
+      const tooltip = wrapper ? wrapper.querySelector(".heatmap-tooltip") : null;
+      elements.heatmapChartCanvas.addEventListener("mousemove", function (event) {
+        if (!analyticsState.heatmapModel) return;
+        const info = getHeatmapCellFromEvent(event, analyticsState.heatmapModel);
+        if (!info) {
+          analyticsState.heatmapHoverCell = null;
+          if (tooltip) tooltip.style.opacity = "0";
+          return;
+        }
+        analyticsState.heatmapHoverCell = info;
+        if (tooltip) {
+          tooltip.style.left = info.centerX + "px";
+          tooltip.style.top = info.centerY + "px";
+          tooltip.style.opacity = "1";
+          tooltip.innerHTML = "<strong>" + escapeHtml(info.xLabel) + " vs " + escapeHtml(info.yLabel) + "</strong>Correlation: " + formatDecimal(info.value, 3);
+        }
+        drawDatasetCorrelationHeatmap();
+      });
+      elements.heatmapChartCanvas.addEventListener("mouseleave", function () {
+        analyticsState.heatmapHoverCell = null;
+        if (tooltip) tooltip.style.opacity = "0";
+        drawDatasetCorrelationHeatmap();
+      });
+      elements.heatmapChartCanvas.dataset.boundHover = "true";
+    }
+
+    function bindResponsiveHeatmap() {
+      if (analyticsState.resizeBound) return;
+      analyticsState.resizeBound = true;
+      window.addEventListener("resize", function () {
+        if (!analyticsState.loaded) return;
+        if (debounceHandle !== null) window.clearTimeout(debounceHandle);
+        debounceHandle = window.setTimeout(function () { drawDatasetCorrelationHeatmap(); }, 120);
+      });
+    }
+
+    function parseSortSpec(value) {
+      const parts = String(value || DEFAULT_SORT_VALUE).split(":");
+      return { field: parts[0] || "__score", direction: parts[1] === "asc" ? "asc" : "desc" };
+    }
+
+    function getSortValue(row, field) {
+      return row ? row[field] : "";
+    }
+
+    function pickNumber(row, keys) {
+      for (let index = 0; index < keys.length; index += 1) {
+        const raw = Number(row[keys[index]]);
+        if (Number.isFinite(raw)) return raw;
+      }
+      return null;
+    }
+
+    function pickText(row, keys) {
+      for (let index = 0; index < keys.length; index += 1) {
+        const value = row[keys[index]];
+        if (typeof value === "string" && value.trim()) return value.trim();
+      }
+      return "";
+    }
+
+    function resolveDisplayName(row, index) {
+      return pickText(row, ["name", "student_name", "full_name", "candidate_name"]) || ("Student " + String(index).padStart(4, "0"));
+    }
+
+    function resolveScoreValue(row) {
+      const direct = pickNumber(row, ["score", "final_score", "exam_score", "aptitude_score"]);
+      if (direct !== null) return direct;
+      const parts = [];
+      const tenth = pickNumber(row, ["tenth_percentage"]);
+      const twelfth = pickNumber(row, ["twelfth_percentage"]);
+      const cgpa = pickNumber(row, ["cgpa"]);
+      if (tenth !== null) parts.push(tenth);
+      if (twelfth !== null) parts.push(twelfth);
+      if (cgpa !== null) parts.push(cgpa * 10);
+      return parts.length ? average(parts) : null;
+    }
+
+    function resolveAttendanceValue(row) {
+      return pickNumber(row, ["attendance"]);
+    }
+
+    function resolveStudyHoursValue(row) {
+      const direct = pickNumber(row, ["study_hours", "studyHours", "hours_studied"]);
+      if (direct !== null) return direct;
+      const timeManagement = pickNumber(row, ["time_management"]);
+      const projects = pickNumber(row, ["projects"]);
+      const internships = pickNumber(row, ["internships"]);
+      const derived = (timeManagement || 0) * 0.9 + (projects || 0) * 0.35 + (internships || 0) * 0.8;
+      return derived > 0 ? derived : null;
+    }
+
+    function resolveGradeBucket(score) {
+      if (!Number.isFinite(score)) return "Unknown";
+      if (score >= 85) return "A";
+      if (score >= 75) return "B";
+      if (score >= 65) return "C";
+      if (score >= 50) return "D";
+      return "F";
+    }
+
+    function resolvePassFlag(row, score) {
+      if (isFiniteNumber(row.passed)) return Number(row.passed) === 1;
+      if (isFiniteNumber(row.pass)) return Number(row.pass) === 1;
+      if (isFiniteNumber(row.placed)) return Number(row.placed) === 1;
+      return Number.isFinite(score) ? score >= 60 : false;
+    }
+
+    function average(values) {
+      const valid = (Array.isArray(values) ? values : []).filter(Number.isFinite);
+      if (!valid.length) return 0;
+      return valid.reduce(function (sum, value) { return sum + value; }, 0) / valid.length;
+    }
+
+    function sampleEvenly(rows, maxPoints) {
+      if (!Array.isArray(rows) || rows.length <= maxPoints) return rows.slice();
+      const sampled = [];
+      const step = rows.length / maxPoints;
+      for (let index = 0; index < maxPoints; index += 1) sampled.push(rows[Math.floor(index * step)]);
+      return sampled;
+    }
+
+    function getThemeColors() {
+      const root = getComputedStyle(document.documentElement);
+      return {
+        sage: root.getPropertyValue("--sage").trim() || "#3a7d5c",
+        coral: root.getPropertyValue("--coral").trim() || "#d94f3d",
+        navy: root.getPropertyValue("--navy").trim() || "#1a2035",
+        text: root.getPropertyValue("--text").trim() || "#2e3348",
+        dim: root.getPropertyValue("--text-dim").trim() || "#8a8577",
+        border: root.getPropertyValue("--border").trim() || "#d8d1c4",
+        surface: "#ffffff"
+      };
+    }
+
+    function hexToRgba(hex, alpha) {
+      const safeHex = (hex || "").replace("#", "");
+      if (safeHex.length !== 6) return "rgba(26,32,53," + alpha + ")";
+      const value = parseInt(safeHex, 16);
+      const r = (value >> 16) & 255;
+      const g = (value >> 8) & 255;
+      const b = value & 255;
+      return "rgba(" + r + "," + g + "," + b + "," + alpha + ")";
+    }
+
+    function setVizState(statusEl, canvas, message, isError) {
+      if (statusEl) {
+        statusEl.style.display = "block";
+        statusEl.textContent = message;
+        statusEl.style.color = isError ? "var(--coral)" : "var(--text-dim)";
+      }
+      if (canvas) canvas.style.display = "none";
+    }
+
+    function showVizCanvas(statusEl, canvas) {
+      if (statusEl) statusEl.style.display = "none";
+      if (canvas) canvas.style.display = "block";
+    }
+
+    function renderStatTable(body, rows) {
+      if (!body) return;
+      const fragment = document.createDocumentFragment();
+      rows.forEach(function (item) {
+        const tr = document.createElement("tr");
+        const label = document.createElement("td");
+        const value = document.createElement("td");
+        label.textContent = item.label;
+        value.textContent = item.value;
+        tr.appendChild(label);
+        tr.appendChild(value);
+        fragment.appendChild(tr);
+      });
+      body.replaceChildren(fragment);
+    }
+
+    function getHeatmapCellFromEvent(event, model) {
+      if (!model || !model.cellSize) return null;
+      const rect = event.target.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      const col = Math.floor((x - model.margin.left) / model.cellSize);
+      const row = Math.floor((y - model.margin.top) / model.cellSize);
+      if (row < 0 || col < 0 || row >= model.labels.length || col >= model.labels.length) return null;
+      return {
+        row: row,
+        col: col,
+        value: model.matrix[row][col],
+        xLabel: model.labels[col],
+        yLabel: model.labels[row],
+        centerX: model.margin.left + col * model.cellSize + model.cellSize / 2,
+        centerY: model.margin.top + row * model.cellSize + model.cellSize / 2
+      };
+    }
+
+    /* ═══════════════════════════════════════════════
+       UI STATE HELPERS (unchanged)
+    ═══════════════════════════════════════════════ */
+    function setStatsLoading(isLoading) {
+      [elements.statTotalStudents, elements.statPlacementRate, elements.statAvgCgpa, elements.statAvgInternships].forEach(function (node) {
+        if (isLoading) node.classList.add("skeleton"); else node.classList.remove("skeleton");
+      });
+    }
+
+    function setStatsError(message) {
+      if (!message) { elements.statsError.style.display = "none"; elements.statsError.textContent = ""; return; }
+      elements.statsError.style.display = "block"; elements.statsError.textContent = message;
+    }
+
+    function setStudentsLoading(isLoading) {
+      studentsLoading = isLoading; elements.filtersFieldset.disabled = isLoading;
+      elements.prevPageButton.disabled = isLoading || state.currentPage <= 1 || state.totalPages === 0;
+      elements.nextPageButton.disabled = isLoading || state.currentPage >= state.totalPages || state.totalPages === 0;
+      if (elements.nameFilterInput) elements.nameFilterInput.disabled = isLoading;
+      if (elements.sortSelect) elements.sortSelect.disabled = isLoading;
+    }
+
+    function setPredictionLoading(isLoading) {
+      elements.predictSubmitButton.disabled = isLoading;
+      elements.predictLoading.style.display = isLoading ? "inline-flex" : "none";
+    }
+
+    function setStudentsStatus(mode, message) {
+      if (mode === "loading") { elements.tableStatus.innerHTML = "<span class=\"spinner\"></span><span>" + escapeHtml(message) + "</span>"; return; }
+      elements.tableStatus.textContent = message || "";
+      if (mode === "error") elements.tableStatus.style.color = "var(--coral)";
+      else if (mode === "empty") elements.tableStatus.style.color = "var(--gold)";
+      else elements.tableStatus.style.color = "var(--text-dim)";
+    }
+
+    function updatePaginationUI() {
+      elements.pageInfo.textContent = state.totalPages === 0 ? "Page 0 of 0" : "Page " + state.currentPage + " of " + state.totalPages;
+      elements.prevPageButton.disabled = studentsLoading || state.currentPage <= 1 || state.totalPages === 0;
+      elements.nextPageButton.disabled = studentsLoading || state.currentPage >= state.totalPages || state.totalPages === 0;
+    }
+
+    function updateTotalLabel() { elements.tableTotalLabel.textContent = "Total: " + formatInteger(state.totalRecords); }
+    function clearFilterErrors() { elements.cgpaMinError.textContent = ""; elements.internshipsMinError.textContent = ""; }
+    function renderFilterErrors(errors) { elements.cgpaMinError.textContent = errors.cgpaMin || ""; elements.internshipsMinError.textContent = errors.internshipsMin || ""; }
+
+    /* ═══════════════════════════════════════════════
+       VALIDATION & PAYLOAD (unchanged)
+    ═══════════════════════════════════════════════ */
+    function validateFilters(filters) {
+      const errors = {};
+      const values = { cgpaMin: undefined, internshipsMin: undefined };
+      if (filters.cgpaMin !== "") {
+        const cgpaValue = Number(filters.cgpaMin);
+        if (!Number.isFinite(cgpaValue) || cgpaValue < 0 || cgpaValue > 10) errors.cgpaMin = "CGPA must be between 0 and 10.";
+        else values.cgpaMin = cgpaValue;
+      }
+      if (filters.internshipsMin !== "") {
+        const internshipValue = Number(filters.internshipsMin);
+        if (!Number.isInteger(internshipValue) || internshipValue < 0) errors.internshipsMin = "Whole number >= 0 required.";
+        else values.internshipsMin = internshipValue;
+      }
+      return { isValid: Object.keys(errors).length === 0, errors: errors, values: values };
+    }
+
+    function createPredictionPayload(formData) {
+      const required = {
+        cgpa: toNumber(formData.get("cgpa")), internships: toInteger(formData.get("internships")),
+        communication_skill: toInteger(formData.get("communication_skill")), problem_solving: toInteger(formData.get("problem_solving")),
+        branch: String(formData.get("branch") || "").trim(), gender: String(formData.get("gender") || "").trim()
+      };
+      const optAgeRaw = String(formData.get("age") || "").trim();
+      const optProjRaw = String(formData.get("projects") || "").trim();
+      
+      if (!Number.isFinite(required.cgpa) || required.cgpa < 0 || required.cgpa > 10) return { isValid: false, error: "CGPA must be 0-10." };
+      if (!Number.isInteger(required.internships) || required.internships < 0) return { isValid: false, error: "Internships must be integer >= 0." };
+      if (!Number.isInteger(required.communication_skill) || required.communication_skill < 0 || required.communication_skill > 9) return { isValid: false, error: "Comm skill must be 0-9." };
+      if (!Number.isInteger(required.problem_solving) || required.problem_solving < 0 || required.problem_solving > 9) return { isValid: false, error: "Problem solving must be 0-9." };
+      if (!required.branch) return { isValid: false, error: "Please select a branch." };
+      if (!required.gender) return { isValid: false, error: "Please select a gender." };
+
+      let age = 21, projects = 2;
+      if (optAgeRaw !== "") { age = toInteger(optAgeRaw); if (!Number.isInteger(age) || age < 16 || age > 100) return { isValid: false, error: "Age must be 16-100." }; }
+      if (optProjRaw !== "") { projects = toInteger(optProjRaw);
+      if (!Number.isInteger(projects) || projects < 0) return { isValid: false, error: "Projects must be integer >= 0." };
+      }
+
+      return {
+        isValid: true,
+        payload: {
+          include_explanation: true,
+          age: age, cgpa: required.cgpa, backlogs: 0, attendance: 85, tenth_percentage: 80, twelfth_percentage: 78,
+          branch: required.branch, college_tier: 2, python_skill: 6, "c++_skill": 6, java_skill: 6, ml_skill: 5, web_dev_skill: 6,
+          communication_skill: required.communication_skill, aptitude_score: 74, logical_reasoning: 72, internships: required.internships,
+          projects: projects, github_projects: Math.max(0, projects), hackathons: 1, certifications: 1, coding_contest_rating: 1200,
+          teamwork: 6, leadership: 5, problem_solving: required.problem_solving, time_management: 6, gender: required.gender,
+          city_tier: 2, family_income: 8
+        }
+      };
+    }
+
+    /* ═══════════════════════════════════════════════
+       HTTP UTILITY (unchanged)
+    ═══════════════════════════════════════════════ */
+    async function requestJson(path, options) {
+      const method = options.method || "GET";
+      const params = options.params || null;
+      const body = options.body || null;
+      const signal = options.signal || null;
+      const url = new URL(path, API_BASE_URL);
+      if (params) { Object.keys(params).forEach(k => { if (params[k] !== undefined && params[k] !== null && params[k] !== "") url.searchParams.set(k, String(params[k])); });
+      }
+
+      const timeoutController = new AbortController();
+      const timeoutId = window.setTimeout(function () { timeoutController.abort(); }, REQUEST_TIMEOUT_MS);
+      const combinedController = new AbortController();
+      const abortCombined = function () { if (!combinedController.signal.aborted) combinedController.abort(); };
+      timeoutController.signal.addEventListener("abort", abortCombined, { once: true });
+      if (signal) { if (signal.aborted) abortCombined(); else signal.addEventListener("abort", abortCombined, { once: true });
+      }
+
+      const headers = { "Accept": "application/json" };
+      if (body !== null) headers["Content-Type"] = "application/json";
+      try {
+        const response = await fetch(url.toString(), { method: method, headers: headers, body: body !== null ? JSON.stringify(body) : undefined, signal: combinedController.signal });
+        const contentType = response.headers.get("content-type") || "";
+        let data = null;
+        if (contentType.includes("application/json")) data = await response.json();
+        else throw new Error(await response.text() || "Unexpected response format.");
+
+        if (!response.ok) throw new Error((data && data.detail) ? data.detail : "Request failed with status " + response.status);
+        return data;
+      } catch (error) {
+        if (error.name === "AbortError" && timeoutController.signal.aborted && !(signal && signal.aborted)) throw new Error("Request timed out after " + Math.round(REQUEST_TIMEOUT_MS / 1000) + " seconds.");
+        if (error.name === "AbortError") { const e = new Error("Request canceled"); e.name = "CanceledError"; throw e; }
+        throw error;
+      } finally { window.clearTimeout(timeoutId); }
+    }
+
+    /* ═══════════════════════════════════════════════
+       PERSISTENCE (unchanged)
+    ═══════════════════════════════════════════════ */
+    function loadPersistedState() {
+      try {
+        const raw = window.localStorage.getItem(STORAGE_KEY);
+        if (!raw) return cloneDefaultState();
+        const parsed = JSON.parse(raw); const nextState = cloneDefaultState();
+        const cp = Number(parsed.currentPage), ps = Number(parsed.pageSize);
+        nextState.currentPage = Number.isInteger(cp) && cp > 0 ? cp : defaultState.currentPage;
+        nextState.pageSize = PAGE_SIZE_OPTIONS.includes(ps) ? ps : defaultState.pageSize;
+        nextState.filters.cgpaMin = (parsed.filters && typeof parsed.filters.cgpaMin === "string") ? parsed.filters.cgpaMin : "";
+        nextState.filters.internshipsMin = (parsed.filters && typeof parsed.filters.internshipsMin === "string") ? parsed.filters.internshipsMin : "";
+        return nextState;
+      } catch (_) { return cloneDefaultState(); }
+    }
+
+    function persistState() {
+      try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ currentPage: state.currentPage, pageSize: state.pageSize, filters: { cgpaMin: state.filters.cgpaMin, internshipsMin: state.filters.internshipsMin } }));
+      } catch (_) {}
+    }
+
+    /* ═══════════════════════════════════════════════
+       VALIDATORS & FORMATTERS (unchanged)
+    ═══════════════════════════════════════════════ */
+    function cloneDefaultState() { return { currentPage: defaultState.currentPage, totalPages: defaultState.totalPages, totalRecords: defaultState.totalRecords, pageSize: defaultState.pageSize, filters: { cgpaMin: defaultState.filters.cgpaMin, internshipsMin: defaultState.filters.internshipsMin } }; }
+    function isValidStatsResponse(data) { return data && isFiniteNumber(data.total_students) && isFiniteNumber(data.placement_rate) && isFiniteNumber(data.avg_cgpa) && isFiniteNumber(data.avg_internships); }
+    function isValidDatasetProfile(data) { return data && isFiniteNumber(data.row_count) && Array.isArray(data.columns) && data.placement_counts && Array.isArray(data.branch_distribution) && Array.isArray(data.gender_distribution); }
+    function isValidStudentsResponse(data) { return data && Array.isArray(data.data) && isFiniteNumber(data.total) && isFiniteNumber(data.page) && isFiniteNumber(data.limit) && isFiniteNumber(data.total_pages); }
+    
+    function isValidPredictResponse(data) { 
+      return (
+        data && 
+        isFiniteNumber(data.probability) && 
+        isFiniteNumber(data.prediction) &&
+        (data.shap_explanation === undefined || typeof data.shap_explanation === "object")
+      );
+    }
+    
+    function formatInteger(value) { return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(Number(value) || 0); }
+    function formatDecimal(value, precision) { const n = Number(value); return Number.isFinite(n) ? n.toFixed(precision) : "--"; }
+    function formatPercent(value) { const n = Number(value); if (!Number.isFinite(n)) return "--"; return (n <= 1 ? n * 100 : n).toFixed(2) + "%"; }
+    function safeText(value) { return (value === null || value === undefined || value === "") ? "--" : String(value); }
+    function safeInteger(value) { const num = Number(value); return Number.isFinite(num) ? String(Math.round(num)) : "--"; }
+    function safeDecimal(value, precision) { const num = Number(value); return Number.isFinite(num) ? num.toFixed(precision) : "--"; }
+    function isFiniteNumber(value) { return Number.isFinite(Number(value)); }
+    function toNumber(value) { return Number(String(value || "").trim()); }
+    function toInteger(value) { return Number.parseInt(String(value || "").trim(), 10); }
+    function getFriendlyError(error, fallback) { return (error && typeof error.message === "string" && error.message.trim()) ? error.message : fallback; }
+    function escapeHtml(value) { return String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
+
+    /* ═══════════════════════════════════════════════
+       SHAP BAR CHART (unchanged)
+    ═══════════════════════════════════════════════ */
+    function renderShapChart(shapData) {
+      if (shapChartInstance) {
+        shapChartInstance.destroy();
+      }
+
+      const sortedFeatures = Object.entries(shapData)
+        .map(([feature, value]) => ({ feature, value: Number(value) }))
+        .sort((a, b) => Math.abs(b.value) - Math.abs(a.value))
+        .slice(0, 10);
+
+      const formatLabel = (key) => key.replaceAll("_", " ").replace(/\b\w/g, c => c.toUpperCase());
+      const renameMap = {
+        avg_problem_solving: "Avg Problem Solving",
+        problem_solving: "Problem Solving (User Input)"
+      };
+
+      const labels = sortedFeatures.map(item => renameMap[item.feature] || formatLabel(item.feature));
+      const data = sortedFeatures.map(item => item.value);
+
+      const rootStyles = getComputedStyle(document.documentElement);
+      const colorPos = rootStyles.getPropertyValue('--sage').trim() || '#3a7d5c';
+      const colorNeg = rootStyles.getPropertyValue('--coral').trim() || '#d94f3d';
+      const backgroundColors = data.map(val => val > 0 ? colorPos : colorNeg);
+
+      const ctx = elements.shapChartCanvas.getContext("2d");
+      shapChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'SHAP Impact',
+            data: data,
+            backgroundColor: backgroundColors,
+            borderWidth: 0,
+            borderRadius: 3,
+            barPercentage: 0.7,
+            categoryPercentage: 0.8
+          }]
+        },
+        options: {
+          indexAxis: 'y', 
+          responsive: true,
+          maintainAspectRatio: false,
+          layout: {
+            padding: { left: 20, right: 20, top: 10, bottom: 10 }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const val = context.parsed.x.toFixed(4);
+                  return `Impact: ${val > 0 ? '+' : ''}${val}`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: 'Impact on Prediction',
+                font: { family: "'IBM Plex Mono', monospace", size: 15 },
+                color: '#8a8577'
+              },
+              grid: { 
+                color: (ctx) => ctx.tick.value === 0 ? '#1a2035' : 'rgba(216, 209, 196, 0.5)',
+                lineWidth: (ctx) => ctx.tick.value === 0 ? 2 : 1,
+                drawBorder: false 
+              },
+              ticks: { 
+                autoSkip: false,
+                font: { family: "'IBM Plex Mono', monospace", size: 14 } 
+              }
+            },
+            y: {
+              grid: { display: false },
+              ticks: { 
+                autoSkip: false,
+                font: { family: "'IBM Plex Mono', monospace", size: 14 } 
+              }
+            }
+          }
+        }
+      });
+      
+      const top3 = sortedFeatures.slice(0, 3);
+      
+      function formatFeatureName(name) {
+        return renameMap[name] || name.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      }
+      
+      function generateTopFactorsText(top3) {
+        return top3.map(item => {
+          const isPositive = item.value > 0;
+          const directionText = isPositive ? "contributed positively" : "contributed negatively";
+          const directionColor = isPositive ? "var(--sage)" : "var(--coral)"; 
+          const styledDirection = `<span style="color: ${directionColor}; font-weight: 600;">${directionText}</span>`;
+          
+          const sign = isPositive ? '+' : '';
+          const impact = sign + item.value.toFixed(3);
+          const featureName = formatFeatureName(item.feature);
+
+          return `• <strong>${featureName}</strong> ${styledDirection} to the prediction (impact: ${impact})`;
+        }).join("<br>");
+      }
+
+      const explanationHTML = `
+        <div style="font-weight:600; margin-bottom:6px;">
+          Factors that most influenced the model's decision:
+        </div>
+        ${generateTopFactorsText(top3)}
+      `;
+      elements.shapTopFactors.innerHTML = explanationHTML;
+    }
+
+    /* ═══════════════════════════════════════════════
+       WATERFALL CHART (unchanged)
+    ═══════════════════════════════════════════════ */
+    function renderWaterfallChart(shapData) {
+      if (waterfallChartInstance) {
+        waterfallChartInstance.destroy();
+      }
+
+      const sortedFeatures = Object.entries(shapData)
+        .map(([feature, value]) => ({ feature, value: Number(value) }))
+        .sort((a, b) => Math.abs(b.value) - Math.abs(a.value))
+        .slice(0, 8);
+
+      const renameMap = {
+        avg_problem_solving: "Avg Problem Solving",
+        problem_solving: "Problem Solving (User Input)"
+      };
+
+      function formatFeatureName(name) {
+        return renameMap[name] || name.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      }
+
+      const labels = [];
+      const baseData = [];
+      const contributionData = [];
+      
+      let sum = 0;
+      let minY = 0;
+      let maxY = 0;
+
+      for (let i = 0; i < sortedFeatures.length; i++) {
+        labels.push(formatFeatureName(sortedFeatures[i].feature));
+        
+        baseData.push(sum);
+        if (sum < minY) minY = sum;
+        if (sum > maxY) maxY = sum;
+
+        sum += sortedFeatures[i].value;
+        contributionData.push(sortedFeatures[i].value);
+        
+        if (sum < minY) minY = sum;
+        if (sum > maxY) maxY = sum;
+      }
+
+      const range = Math.abs(maxY - minY) || 1;
+      const padding = range * 0.15;
+      minY -= padding;
+      maxY += padding;
+
+      const rootStyles = getComputedStyle(document.documentElement);
+      const colorPos = rootStyles.getPropertyValue('--sage').trim() || '#3a7d5c';
+      const colorNeg = rootStyles.getPropertyValue('--coral').trim() || '#d94f3d';
+      const colors = sortedFeatures.map(item => item.value >= 0 ? colorPos : colorNeg);
+
+      const ctx = elements.waterfallChartCanvas.getContext("2d");
+      waterfallChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: contributionData,
+            base: baseData,
+            backgroundColor: colors,
+            borderWidth: 0,
+            borderRadius: 4,
+            barPercentage: 0.6,
+            categoryPercentage: 0.7
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          layout: {
+            padding: { left: 20, right: 20, top: 10, bottom: 10 }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const i = context.dataIndex;
+                  const start = baseData[i];
+                  const end = start + contributionData[i];
+                  const contribution = end - start;
+                  const sign = contribution >= 0 ? '+' : '';
+                  return [
+                    `Start: ${start.toFixed(3)}`,
+                    `Contribution: ${sign}${contribution.toFixed(3)}`,
+                    `End: ${end.toFixed(3)}`
+                  ];
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: {
+                font: { family: "'IBM Plex Mono', monospace", size: 14 },
+                maxRotation: 45,
+                minRotation: 45
+              }
+            },
+            y: {
+              min: minY,
+              max: maxY,
+              beginAtZero: false,
+              title: {
+                display: true,
+                text: 'Running Impact',
+                font: { family: "'IBM Plex Mono', monospace", size: 14 },
+                color: '#8a8577'
+              },
+              grid: {
+                color: (ctx) => ctx.tick.value === 0 ? '#1a2035' : 'rgba(216, 209, 196, 0.5)',
+                lineWidth: (ctx) => ctx.tick.value === 0 ? 2 : 1
+              },
+              ticks: {
+                font: { family: "'IBM Plex Mono', monospace", size: 14 }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function variance(values) {
+      const valid = (Array.isArray(values) ? values : []).filter(Number.isFinite);
+      if (valid.length < 2) return 0;
+      const mean = average(valid);
+      return valid.reduce(function (sum, value) {
+        const delta = value - mean;
+        return sum + delta * delta;
+      }, 0) / valid.length;
+    }
+
+    function stdDev(values) {
+      return Math.sqrt(variance(values));
+    }
+
+    function pearsonCorr(xs, ys) {
+      const pairedX = [];
+      const pairedY = [];
+      const size = Math.min(xs.length, ys.length);
+      for (let index = 0; index < size; index += 1) {
+        if (Number.isFinite(xs[index]) && Number.isFinite(ys[index])) {
+          pairedX.push(xs[index]);
+          pairedY.push(ys[index]);
+        }
+      }
+      if (pairedX.length < 2) return 0;
+      const meanX = average(pairedX);
+      const meanY = average(pairedY);
+      let numerator = 0;
+      let deltaX = 0;
+      let deltaY = 0;
+      for (let index = 0; index < pairedX.length; index += 1) {
+        const dx = pairedX[index] - meanX;
+        const dy = pairedY[index] - meanY;
+        numerator += dx * dy;
+        deltaX += dx * dx;
+        deltaY += dy * dy;
+      }
+      if (!deltaX || !deltaY) return 0;
+      return numerator / Math.sqrt(deltaX * deltaY);
+    }
+
+    function linearRegression(xs, ys) {
+      const cleanX = [];
+      const cleanY = [];
+      const size = Math.min(xs.length, ys.length);
+      for (let index = 0; index < size; index += 1) {
+        if (Number.isFinite(xs[index]) && Number.isFinite(ys[index])) {
+          cleanX.push(xs[index]);
+          cleanY.push(ys[index]);
+        }
+      }
+      if (cleanX.length < 2) return { slope: 0, intercept: 0, r2: 0, count: cleanX.length };
+      const meanX = average(cleanX);
+      const meanY = average(cleanY);
+      let numerator = 0;
+      let denominator = 0;
+      for (let index = 0; index < cleanX.length; index += 1) {
+        const dx = cleanX[index] - meanX;
+        numerator += dx * (cleanY[index] - meanY);
+        denominator += dx * dx;
+      }
+      const slope = denominator ? numerator / denominator : 0;
+      const intercept = meanY - slope * meanX;
+      const corr = pearsonCorr(cleanX, cleanY);
+      return { slope: slope, intercept: intercept, r2: corr * corr, count: cleanX.length };
+    }
+
+    function fetchVizData() {
+      if (analyticsState.loaded) renderDatasetWideVisuals();
+    }
+
+    function drawPlacementDoughnut(rows) {
+      const canvas = elements.doughnutChartCanvas;
+      const statusEl = elements.vizDoughnutStatus;
+      const palette = getThemeColors();
+      if (!canvas) return;
+
+      const placed = rows.filter(function (row) { return row.__pass; }).length;
+const notPlaced = rows.length - placed;
+      if (!rows.length) {
+        setVizState(statusEl, canvas, "Load or filter the dataset to see placement distribution.", false);
+        if (doughnutChartInstance) { doughnutChartInstance.destroy(); doughnutChartInstance = null; }
+        return;
+      }
+
+      const percentPlaced = rows.length ? (placed / rows.length) * 100 : 0;
+      const signature = [rows.length, placed, notPlaced].join("|");
+      if (analyticsState.renderKeys.placementDoughnut === signature && doughnutChartInstance) return;
+      analyticsState.renderKeys.placementDoughnut = signature;
+
+      showVizCanvas(statusEl, canvas);
+      if (doughnutChartInstance) doughnutChartInstance.destroy();
+
+      const centerTextPlugin = {
+        id: "placementCenterText",
+        afterDraw: function (chart) {
+          const meta = chart.getDatasetMeta(0);
+          if (!meta || !meta.data || !meta.data.length) return;
+          const ctx = chart.ctx;
+          const x = meta.data[0].x;
+          const y = meta.data[0].y;
+          ctx.save();
+          ctx.textAlign = "center";
+          ctx.fillStyle = palette.navy;
+          ctx.font = "700 26px 'IBM Plex Mono', monospace";
+          ctx.fillText(percentPlaced.toFixed(1) + "%", x, y - 6);
+          ctx.fillStyle = palette.dim;
+          ctx.font = "500 11px 'IBM Plex Mono', monospace";
+          ctx.fillText(placed + " placed / " + rows.length + " total", x, y + 18);
+          ctx.restore();
+        }
+      };
+
+      const shadowPlugin = {
+        id: "placementArcShadow",
+        beforeDatasetDraw: function (chart, args) {
+          if (args.index !== 0) return;
+          chart.ctx.save();
+          chart.ctx.shadowColor = hexToRgba(palette.navy, 0.18);
+          chart.ctx.shadowBlur = 24;
+          chart.ctx.shadowOffsetY = 10;
+        },
+        afterDatasetDraw: function (chart, args) {
+          if (args.index !== 0) return;
+          chart.ctx.restore();
+        }
+      };
+
+      doughnutChartInstance = new Chart(canvas.getContext("2d"), {
+        type: "doughnut",
+        plugins: [centerTextPlugin, shadowPlugin],
+        data: {
+          labels: ["Placed", "Not Placed"],
+          datasets: [{
+            data: [placed, notPlaced],
+            backgroundColor: [palette.sage, palette.coral],
+            hoverBackgroundColor: [hexToRgba(palette.sage, 0.92), hexToRgba(palette.coral, 0.92)],
+            borderColor: [palette.surface, palette.surface],
+            borderWidth: 6,
+            hoverOffset: 16,
+            spacing: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: "68%",
+          animation: { duration: 700, easing: "easeOutCubic" },
+          layout: { padding: { top: 10, right: 12, bottom: 8, left: 12 } },
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: {
+                usePointStyle: true,
+                pointStyle: "circle",
+                boxWidth: 8,
+                padding: 18,
+                color: palette.text,
+                font: { family: "'IBM Plex Mono', monospace", size: 15 }
+              }
+            },
+            tooltip: {
+              backgroundColor: hexToRgba(palette.navy, 0.94),
+              padding: 12,
+              callbacks: {
+                label: function (context) {
+                  const count = Number(context.parsed) || 0;
+                  const share = rows.length ? ((count / rows.length) * 100).toFixed(1) : "0.0";
+                  return context.label + ": " + formatInteger(count) + " students (" + share + "%)";
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function drawScatter(rows) {
+      const canvas = elements.scatterChartCanvas;
+      const statusEl = elements.vizScatterStatus;
+      const palette = getThemeColors();
+      if (!canvas) return;
+
+      const validRows = rows.filter(function (row) {
+        return Number.isFinite(Number(row.cgpa)) && isFiniteNumber(row.placed);
+      });
+      if (!validRows.length) {
+        setVizState(statusEl, canvas, "No valid CGPA and placement values are available.", false);
+        if (scatterChartInstance) { scatterChartInstance.destroy(); scatterChartInstance = null; }
+        return;
+      }
+
+      const sampled = sampleEvenly(validRows, 650);
+      const bucketCounts = Object.create(null);
+      const placedPoints = [];
+      const notPlacedPoints = [];
+      const regressionX = [];
+      const regressionY = [];
+
+      sampled.forEach(function (row) {
+        const cgpa = Number(row.cgpa);
+        const placed = Number(row.placed) === 1 ? 1 : 0;
+        const bucket = String(placed) + ":" + String(Math.round(cgpa * 10) / 10);
+        const bucketIndex = bucketCounts[bucket] || 0;
+        bucketCounts[bucket] = bucketIndex + 1;
+        const offsets = [0, 0.05, -0.05, 0.1, -0.1, 0.15, -0.15, 0.2, -0.2];
+        const jitter = offsets[bucketIndex % offsets.length] + Math.floor(bucketIndex / offsets.length) * 0.012;
+        const point = { x: cgpa, y: placed + jitter, score: row.__score, name: row.__name };
+        if (placed) placedPoints.push(point);
+        else notPlacedPoints.push(point);
+        regressionX.push(cgpa);
+        regressionY.push(placed);
+      });
+
+      const model = linearRegression(regressionX, regressionY);
+      const xMin = Math.min.apply(null, regressionX);
+      const xMax = Math.max.apply(null, regressionX);
+      const linePoints = [
+        { x: xMin, y: model.intercept + model.slope * xMin },
+        { x: xMax, y: model.intercept + model.slope * xMax }
+      ];
+      const signature = String(sampled.length) + "|" + model.slope.toFixed(4);
+      if (analyticsState.renderKeys.placementScatter === signature && scatterChartInstance) return;
+      analyticsState.renderKeys.placementScatter = signature;
+
+      showVizCanvas(statusEl, canvas);
+      if (scatterChartInstance) scatterChartInstance.destroy();
+
+      scatterChartInstance = new Chart(canvas.getContext("2d"), {
+        type: "scatter",
+        data: {
+          datasets: [
+            {
+              label: "Placed",
+              data: placedPoints,
+              backgroundColor: hexToRgba(palette.sage, 0.5),
+              borderColor: hexToRgba(palette.sage, 0.95),
+              pointRadius: 3,
+              pointHoverRadius: 5,
+              pointBorderWidth: 1
+            },
+            {
+              label: "Not Placed",
+              data: notPlacedPoints,
+              backgroundColor: hexToRgba(palette.coral, 0.45),
+              borderColor: hexToRgba(palette.coral, 0.95),
+              pointRadius: 3,
+              pointHoverRadius: 5,
+              pointBorderWidth: 1
+            },
+            {
+              label: "Linear Trend",
+              type: "line",
+              data: linePoints,
+              borderColor: palette.navy,
+              borderWidth: 2,
+              borderDash: [7, 5],
+              pointRadius: 0,
+              tension: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 600, easing: "easeOutQuad" },
+          parsing: false,
+          layout: { padding: { left: 8, right: 16, top: 8, bottom: 8 } },
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: {
+                usePointStyle: true,
+                padding: 18,
+                color: palette.text,
+                font: { family: "'IBM Plex Mono', monospace", size: 15 }
+              }
+            },
+            tooltip: {
+              backgroundColor: hexToRgba(palette.navy, 0.94),
+              padding: 12,
+              callbacks: {
+                label: function (context) {
+                  if (context.dataset.type === "line") return "Trend line";
+                  const point = context.raw;
+                  return [
+                    point.name,
+                    "CGPA: " + formatDecimal(point.x, 2),
+                    "Placement: " + (context.dataset.label === "Placed" ? "Placed" : "Not Placed"),
+                    "Score: " + (Number.isFinite(point.score) ? formatDecimal(point.score, 1) : "--")
+                  ];
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              title: { display: true, text: "CGPA", color: palette.dim, font: { family: "'IBM Plex Mono', monospace", size: 15 } },
+              grid: { color: hexToRgba(palette.navy, 0.08) },
+              ticks: { color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 14 } }
+            },
+            y: {
+              min: -0.32,
+              max: 1.32,
+              title: { display: true, text: "Placement Outcome", color: palette.dim, font: { family: "'IBM Plex Mono', monospace", size: 15 } },
+              grid: { color: hexToRgba(palette.navy, 0.08) },
+              ticks: {
+                color: palette.text,
+                font: { family: "'IBM Plex Mono', monospace", size: 14 },
+                callback: function (value) {
+                  if (Math.abs(value) < 0.04) return "Not Placed";
+                  if (Math.abs(value - 1) < 0.04) return "Placed";
+                  return "";
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function drawHeatmap(rows) {
+      const canvas = elements.heatmapChartCanvas;
+      const statusEl = elements.vizHeatmapStatus;
+      const palette = getThemeColors();
+      if (!canvas) return;
+
+      const columns = [
+        { key: "__score", label: "Score" },
+        { key: "__attendance", label: "Attendance" },
+        { key: "cgpa", label: "CGPA" },
+        { key: "internships", label: "Internships" },
+        { key: "communication_skill", label: "Communication" },
+        { key: "problem_solving", label: "Problem Solving" },
+        { key: "placed", label: "Placement" }
+      ];
+
+      const validRows = rows.filter(function (row) {
+        return columns.some(function (column) { return Number.isFinite(Number(row[column.key])); });
+      });
+      if (!validRows.length) {
+        setVizState(statusEl, canvas, "Not enough numeric data is available for the correlation heatmap.", false);
+        analyticsState.heatmapModel = null;
+        return;
+      }
+
+      const matrix = columns.map(function (_, rowIndex) {
+        return columns.map(function (_, colIndex) {
+          if (rowIndex === colIndex) return 1;
+          const xs = validRows.map(function (row) { return Number(row[columns[colIndex].key]); });
+          const ys = validRows.map(function (row) { return Number(row[columns[rowIndex].key]); });
+          return pearsonCorr(xs, ys);
+        });
+      });
+
+      showVizCanvas(statusEl, canvas);
+      const dpr = window.devicePixelRatio || 1;
+      const containerWidth = Math.max(420, canvas.parentElement.offsetWidth || 640);
+      const margin = { top: 78, right: 24, bottom: 74, left: 128 };
+      const gridWidth = containerWidth - margin.left - margin.right;
+      const cellSize = Math.max(42, Math.floor(gridWidth / columns.length));
+      const contentWidth = margin.left + cellSize * columns.length + margin.right;
+      const contentHeight = margin.top + cellSize * columns.length + margin.bottom;
+      canvas.width = contentWidth * dpr;
+      canvas.height = contentHeight * dpr;
+      canvas.style.width = contentWidth + "px";
+      canvas.style.height = contentHeight + "px";
+
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, contentWidth, contentHeight);
+
+      function mixColor(start, end, amount) {
+        return start.map(function (channel, index) { return Math.round(channel + (end[index] - channel) * amount); });
+      }
+      function toColor(value) {
+        const coral = [217, 79, 61];
+        const neutral = [245, 241, 235];
+        const sage = [58, 125, 92];
+        const intensity = Math.min(1, Math.abs(value));
+        const rgb = value < 0 ? mixColor(neutral, coral, intensity) : mixColor(neutral, sage, intensity);
+        return "rgb(" + rgb.join(",") + ")";
+      }
+
+      columns.forEach(function (_, rowIndex) {
+        columns.forEach(function (_, colIndex) {
+          const value = matrix[rowIndex][colIndex];
+          const x = margin.left + colIndex * cellSize;
+          const y = margin.top + rowIndex * cellSize;
+          const isHover = analyticsState.heatmapHoverCell && analyticsState.heatmapHoverCell.row === rowIndex && analyticsState.heatmapHoverCell.col === colIndex;
+          ctx.fillStyle = toColor(value);
+          ctx.fillRect(x + 4, y + 4, cellSize - 8, cellSize - 8);
+          ctx.strokeStyle = isHover ? palette.navy : hexToRgba(palette.navy, 0.08);
+          ctx.lineWidth = isHover ? 2 : 1;
+          ctx.strokeRect(x + 4, y + 4, cellSize - 8, cellSize - 8);
+          ctx.fillStyle = Math.abs(value) > 0.45 ? "#ffffff" : palette.navy;
+          ctx.font = "600 " + Math.max(11, Math.min(15, Math.floor(cellSize / 5))) + "px 'IBM Plex Mono', monospace";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(value.toFixed(2), x + cellSize / 2, y + cellSize / 2);
+        });
+      });
+
+      ctx.fillStyle = palette.navy;
+      ctx.font = "600 11px 'IBM Plex Mono', monospace";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      columns.forEach(function (column, index) {
+        ctx.fillText(column.label, margin.left + index * cellSize + cellSize / 2, margin.top - 26);
+      });
+      ctx.textAlign = "right";
+      columns.forEach(function (column, index) {
+        ctx.fillText(column.label, margin.left - 12, margin.top + index * cellSize + cellSize / 2);
+      });
+
+      const legendX = margin.left;
+      const legendY = margin.top + cellSize * columns.length + 22;
+      const legendWidth = Math.min(320, cellSize * columns.length);
+      const legendGradient = ctx.createLinearGradient(legendX, 0, legendX + legendWidth, 0);
+      legendGradient.addColorStop(0, toColor(-1));
+      legendGradient.addColorStop(0.5, toColor(0));
+      legendGradient.addColorStop(1, toColor(1));
+      ctx.fillStyle = legendGradient;
+      ctx.fillRect(legendX, legendY, legendWidth, 10);
+      ctx.strokeStyle = hexToRgba(palette.navy, 0.08);
+      ctx.strokeRect(legendX, legendY, legendWidth, 10);
+      ctx.fillStyle = palette.dim;
+      ctx.font = "500 10px 'IBM Plex Mono', monospace";
+      ctx.textAlign = "left";
+      ctx.fillText("-1.00", legendX, legendY + 24);
+      ctx.textAlign = "center";
+      ctx.fillText("0.00", legendX + legendWidth / 2, legendY + 24);
+      ctx.textAlign = "right";
+      ctx.fillText("+1.00", legendX + legendWidth, legendY + 24);
+      ctx.textAlign = "left";
+      ctx.fillText("Pearson correlation", legendX, legendY - 10);
+
+      analyticsState.heatmapModel = {
+        matrix: matrix,
+        labels: columns.map(function (column) { return column.label; }),
+        margin: margin,
+        cellSize: cellSize
+      };
+    }
+
+    function drawBarChart(rows) {
+      const canvas = elements.scoreBarChartCanvas;
+      const statusEl = elements.vizScoreBarStatus;
+      const palette = getThemeColors();
+      if (!canvas) return;
+
+      const topRows = rows.filter(function (row) { return Number.isFinite(row.__score); })
+        .sort(function (a, b) { return b.__score - a.__score; })
+        .slice(0, 10);
+      if (!topRows.length) {
+        setVizState(statusEl, canvas, "No valid score metric is available for the leaderboard.", false);
+        if (scoreBarChartInstance) { scoreBarChartInstance.destroy(); scoreBarChartInstance = null; }
+        return;
+      }
+
+      const labels = topRows.map(function (row) { return row.__name; });
+      const values = topRows.map(function (row) { return row.__score; });
+      const signature = labels.join("|") + "|" + values.map(function (value) { return value.toFixed(2); }).join("|");
+      if (analyticsState.renderKeys.scoreBar === signature && scoreBarChartInstance) return;
+      analyticsState.renderKeys.scoreBar = signature;
+
+      showVizCanvas(statusEl, canvas);
+      if (scoreBarChartInstance) scoreBarChartInstance.destroy();
+
+      const valueLabelPlugin = {
+        id: "scoreBarLabels",
+        afterDatasetsDraw: function (chart) {
+          const ctx = chart.ctx;
+          ctx.save();
+          ctx.fillStyle = palette.navy;
+          ctx.font = "600 10px 'IBM Plex Mono', monospace";
+          chart.getDatasetMeta(0).data.forEach(function (bar, index) {
+            ctx.textAlign = "left";
+            ctx.fillText(values[index].toFixed(1), bar.x + 8, bar.y + 3);
+          });
+          ctx.restore();
+        }
+      };
+
+      scoreBarChartInstance = new Chart(canvas.getContext("2d"), {
+        type: "bar",
+        plugins: [valueLabelPlugin],
+        data: {
+          labels: labels,
+          datasets: [{
+            data: values,
+            backgroundColor: values.map(function (value, index) {
+              const alpha = 0.38 + ((index + 1) / values.length) * 0.38;
+              return hexToRgba(index < 3 ? palette.sage : palette.navy, alpha);
+            }),
+            borderRadius: 10,
+            borderSkipped: false,
+            barThickness: 18
+          }]
+        },
+        options: {
+          indexAxis: "y",
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 650, easing: "easeOutQuart" },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: hexToRgba(palette.navy, 0.94),
+              padding: 12,
+              callbacks: {
+                label: function (context) {
+                  return "Score: " + formatDecimal(context.parsed.x, 1);
+                },
+                afterLabel: function (context) {
+                  const row = topRows[context.dataIndex];
+                  return "Attendance: " + (Number.isFinite(row.__attendance) ? formatDecimal(row.__attendance, 1) + "%" : "--");
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              title: { display: true, text: "Score", color: palette.dim, font: { family: "'IBM Plex Mono', monospace", size: 15 } },
+              grid: { color: hexToRgba(palette.navy, 0.08) },
+              ticks: { color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 14 } }
+            },
+            y: {
+              grid: { display: false },
+              ticks: { color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 14 }, autoSkip: false }
+            }
+          }
+        }
+      });
+    }
+
+    function drawScatterPlot(rows) {
+      const canvas = elements.attendanceScoreChartCanvas;
+      const statusEl = elements.vizAttendanceScatterStatus;
+      const palette = getThemeColors();
+      if (!canvas) return;
+
+      const validRows = rows.filter(function (row) {
+        return Number.isFinite(row.__attendance) && Number.isFinite(row.__score);
+      });
+      if (!validRows.length) {
+        setVizState(statusEl, canvas, "Attendance and score values are required for this chart.", false);
+        if (attendanceScoreChartInstance) { attendanceScoreChartInstance.destroy(); attendanceScoreChartInstance = null; }
+        return;
+      }
+
+      const sampled = sampleEvenly(validRows, 700);
+      const points = sampled.map(function (row) {
+        return { x: row.__attendance, y: row.__score, name: row.__name, pass: row.__pass, cgpa: row.cgpa };
+      });
+      const regression = linearRegression(
+        points.map(function (point) { return point.x; }),
+        points.map(function (point) { return point.y; })
+      );
+      const xMin = Math.min.apply(null, points.map(function (point) { return point.x; }));
+      const xMax = Math.max.apply(null, points.map(function (point) { return point.x; }));
+      const linePoints = [
+        { x: xMin, y: regression.intercept + regression.slope * xMin },
+        { x: xMax, y: regression.intercept + regression.slope * xMax }
+      ];
+      const signature = String(points.length) + "|" + regression.slope.toFixed(4) + "|" + regression.intercept.toFixed(2);
+      if (analyticsState.renderKeys.attendanceScatter === signature && attendanceScoreChartInstance) return;
+      analyticsState.renderKeys.attendanceScatter = signature;
+
+      showVizCanvas(statusEl, canvas);
+      if (attendanceScoreChartInstance) attendanceScoreChartInstance.destroy();
+
+      attendanceScoreChartInstance = new Chart(canvas.getContext("2d"), {
+        type: "scatter",
+        data: {
+          datasets: [
+            {
+              label: "Students",
+              data: points,
+              backgroundColor: points.map(function (point) { return point.pass ? hexToRgba(palette.sage, 0.42) : hexToRgba(palette.coral, 0.42); }),
+              borderColor: points.map(function (point) { return point.pass ? hexToRgba(palette.sage, 0.9) : hexToRgba(palette.coral, 0.9); }),
+              pointRadius: 4,
+              pointHoverRadius: 6,
+              pointBorderWidth: 1
+            },
+            {
+              label: "Regression",
+              type: "line",
+              data: linePoints,
+              borderColor: palette.navy,
+              borderDash: [7, 5],
+              borderWidth: 2,
+              pointRadius: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 650, easing: "easeOutQuart" },
+          parsing: false,
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: { usePointStyle: true, padding: 18, color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 15 } }
+            },
+            tooltip: {
+              backgroundColor: hexToRgba(palette.navy, 0.94),
+              padding: 12,
+              callbacks: {
+                label: function (context) {
+                  if (context.dataset.type === "line") return "Regression line";
+                  return [
+                    context.raw.name,
+                    "Attendance: " + formatDecimal(context.raw.x, 1) + "%",
+                    "Score: " + formatDecimal(context.raw.y, 1),
+                    "CGPA: " + safeDecimal(context.raw.cgpa, 2)
+                  ];
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              title: { display: true, text: "Attendance (%)", color: palette.dim, font: { family: "'IBM Plex Mono', monospace", size: 15 } },
+              grid: { color: hexToRgba(palette.navy, 0.08) },
+              ticks: { color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 14 } }
+            },
+            y: {
+              title: { display: true, text: "Score", color: palette.dim, font: { family: "'IBM Plex Mono', monospace", size: 15 } },
+              grid: { color: hexToRgba(palette.navy, 0.08) },
+              ticks: { color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 14 } }
+            }
+          }
+        }
+      });
+    }
+
+    function drawDoughnut(rows) {
+      const canvas = elements.gradeDoughnutChartCanvas;
+      const statusEl = elements.vizGradeDoughnutStatus;
+      const palette = getThemeColors();
+      if (!canvas) return;
+
+      const gradeOrder = ["A", "B", "C", "D", "F"];
+      const counts = gradeOrder.map(function (grade) {
+        return rows.filter(function (row) { return row.__grade === grade; }).length;
+      });
+      const total = counts.reduce(function (sum, value) { return sum + value; }, 0);
+      if (!total) {
+        setVizState(statusEl, canvas, "No valid score values are available for the grade distribution.", false);
+        if (gradeDoughnutChartInstance) { gradeDoughnutChartInstance.destroy(); gradeDoughnutChartInstance = null; }
+        return;
+      }
+
+      const signature = counts.join("|");
+      if (analyticsState.renderKeys.gradeDoughnut === signature && gradeDoughnutChartInstance) return;
+      analyticsState.renderKeys.gradeDoughnut = signature;
+
+      showVizCanvas(statusEl, canvas);
+      if (gradeDoughnutChartInstance) gradeDoughnutChartInstance.destroy();
+
+      gradeDoughnutChartInstance = new Chart(canvas.getContext("2d"), {
+        type: "doughnut",
+        data: {
+          labels: gradeOrder,
+          datasets: [{
+            data: counts,
+            backgroundColor: [
+              palette.sage,
+              hexToRgba(palette.sage, 0.7),
+              hexToRgba(palette.navy, 0.7),
+              hexToRgba(palette.coral, 0.72),
+              palette.coral
+            ],
+            borderColor: [palette.surface, palette.surface, palette.surface, palette.surface, palette.surface],
+            borderWidth: 5,
+            hoverOffset: 12
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: "62%",
+          animation: { duration: 680, easing: "easeOutCubic" },
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: { usePointStyle: true, padding: 18, color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 15 } }
+            },
+            tooltip: {
+              backgroundColor: hexToRgba(palette.navy, 0.94),
+              padding: 12,
+              callbacks: {
+                label: function (context) {
+                  const count = Number(context.parsed) || 0;
+                  const share = total ? ((count / total) * 100).toFixed(1) : "0.0";
+                  return "Grade " + context.label + ": " + formatInteger(count) + " students (" + share + "%)";
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function renderAnalysis(rows) {
+      const scores = rows.map(function (row) { return row.__score; }).filter(Number.isFinite);
+      const attendance = rows.map(function (row) { return row.__attendance; }).filter(Number.isFinite);
+      const cgpas = rows.map(function (row) { return Number(row.cgpa); }).filter(Number.isFinite);
+      const internships = rows.map(function (row) { return Number(row.internships); }).filter(Number.isFinite);
+      const pairRows = rows.filter(function (row) { return Number.isFinite(row.__attendance) && Number.isFinite(row.__score); });
+      const regression = linearRegression(
+        pairRows.map(function (row) { return row.__attendance; }),
+        pairRows.map(function (row) { return row.__score; })
+      );
+      const correlation = pearsonCorr(
+        pairRows.map(function (row) { return row.__attendance; }),
+        pairRows.map(function (row) { return row.__score; })
+      );
+      const passRate = rows.length ? rows.filter(function (row) { return row.__pass; }).length / rows.length : 0;
+
+      renderStatTable(elements.analysisOverviewBody, [
+        { label: "Records in Current View", value: formatInteger(rows.length) },
+        { label: "Mean Score", value: scores.length ? formatDecimal(average(scores), 2) : "--" },
+        { label: "Score Variance", value: scores.length ? formatDecimal(variance(scores), 2) : "--" },
+        { label: "Score Std. Dev.", value: scores.length ? formatDecimal(stdDev(scores), 2) : "--" },
+        { label: "Average Attendance", value: attendance.length ? formatDecimal(average(attendance), 2) + "%" : "--" },
+        { label: "Pass Rate", value: rows.length ? formatPercent(passRate) : "--" }
+      ]);
+
+      renderStatTable(elements.analysisRelationshipBody, [
+        { label: "Attendance vs Score Correlation", value: pairRows.length ? formatDecimal(correlation, 3) : "--" },
+        { label: "Regression Slope", value: pairRows.length ? formatDecimal(regression.slope, 4) : "--" },
+        { label: "Regression Intercept", value: pairRows.length ? formatDecimal(regression.intercept, 2) : "--" },
+        { label: "R²", value: pairRows.length ? formatDecimal(regression.r2, 3) : "--" },
+        { label: "Mean CGPA", value: cgpas.length ? formatDecimal(average(cgpas), 2) : "--" },
+        { label: "Avg. Internships", value: internships.length ? formatDecimal(average(internships), 2) : "--" }
+      ]);
+    }
+
+    function renderInsights(rows) {
+      if (!elements.insightsBody) return;
+      if (!rows.length) {
+        elements.insightsBody.innerHTML = '<div class="insight-item">Load the dataset to generate narrative insights.</div>';
+        return;
+      }
+
+      const scores = rows.map(function (row) { return row.__score; }).filter(Number.isFinite);
+      const gradeCounts = rows.reduce(function (acc, row) {
+        acc[row.__grade] = (acc[row.__grade] || 0) + 1;
+        return acc;
+      }, {});
+      const topGrade = Object.keys(gradeCounts).sort(function (left, right) {
+        return (gradeCounts[right] || 0) - (gradeCounts[left] || 0);
+      })[0] || "Unknown";
+      const correlation = pearsonCorr(
+        rows.map(function (row) { return row.__attendance; }),
+        rows.map(function (row) { return row.__score; })
+      );
+      const spread = stdDev(scores);
+      const passRate = rows.filter(function (row) { return row.__pass; }).length / rows.length;
+      const topRow = rows.filter(function (row) { return Number.isFinite(row.__score); }).sort(function (a, b) { return b.__score - a.__score; })[0];
+
+      function describeCorrelation(value) {
+        const abs = Math.abs(value);
+        if (abs >= 0.7) return "strong";
+        if (abs >= 0.4) return "moderate";
+        if (abs >= 0.2) return "light";
+        return "weak";
+      }
+
+      const insights = [
+        "Attendance and score show a " + describeCorrelation(correlation) + " " + (correlation >= 0 ? "positive" : "negative") + " relationship (r = " + formatDecimal(correlation, 3) + "), which makes the regression overlay easier to defend during presentation.",
+        "The dominant grade bucket in the current view is " + topGrade + ", while the score spread sits at a standard deviation of " + formatDecimal(spread, 2) + ".",
+        "The current pass rate is " + formatPercent(passRate) + (topRow ? ", and the highest-scoring student in this view is " + topRow.__name + " with a score of " + formatDecimal(topRow.__score, 1) + "." : ".")
+      ];
+
+      elements.insightsBody.innerHTML = insights.map(function (text) {
+        return '<div class="insight-item">' + escapeHtml(text) + '</div>';
+      }).join("");
+    }
+
+    async function drawTopFeatures() {
+      const canvas = elements.featuresChartCanvas;
+      const statusEl = elements.vizFeaturesStatus;
+      const palette = getThemeColors();
+      if (!canvas) return;
+
+      const representative = analyticsState.rows.find(function (row) {
+        return Number.isFinite(Number(row.cgpa)) && Number.isFinite(Number(row.internships));
+      });
+      const repPayload = representative ? {
+        include_explanation: true,
+        age: Number(representative.age) || 21,
+        cgpa: Number(representative.cgpa) || 7.5,
+        backlogs: Number(representative.backlogs) || 0,
+        attendance: Number(representative.attendance) || 80,
+        tenth_percentage: Number(representative.tenth_percentage) || 78,
+        twelfth_percentage: Number(representative.twelfth_percentage) || 76,
+        branch: representative.branch || "CSE",
+        college_tier: Number(representative.college_tier) || 2,
+        python_skill: Number(representative.python_skill) || 6,
+        "c++_skill": Number(representative["c++_skill"]) || 6,
+        java_skill: Number(representative.java_skill) || 6,
+        ml_skill: Number(representative.ml_skill) || 5,
+        web_dev_skill: Number(representative.web_dev_skill) || 5,
+        communication_skill: Number(representative.communication_skill) || 6,
+        aptitude_score: Number(representative.aptitude_score) || 72,
+        logical_reasoning: Number(representative.logical_reasoning) || 70,
+        internships: Number(representative.internships) || 1,
+        projects: Number(representative.projects) || 2,
+        github_projects: Number(representative.github_projects) || 2,
+        hackathons: Number(representative.hackathons) || 1,
+        certifications: Number(representative.certifications) || 1,
+        coding_contest_rating: Number(representative.coding_contest_rating) || 1200,
+        teamwork: Number(representative.teamwork) || 6,
+        leadership: Number(representative.leadership) || 5,
+        problem_solving: Number(representative.problem_solving) || 6,
+        time_management: Number(representative.time_management) || 6,
+        gender: representative.gender || "Male",
+        city_tier: Number(representative.city_tier) || 2,
+        family_income: Number(representative.family_income) || 8
+      } : createPredictionPayload(new FormData(elements.predictForm)).payload;
+
+      try {
+        const data = await requestJson("/predict", { method: "POST", body: repPayload });
+        if (!data.shap_explanation || typeof data.shap_explanation !== "object" || !Object.keys(data.shap_explanation).length) {
+          setVizState(statusEl, canvas, "SHAP explanation was not returned by the API.", true);
+          return;
+        }
+
+        const renameMap = {
+          avg_problem_solving: "Avg Problem Solving",
+          problem_solving: "Problem Solving",
+          communication_skill: "Communication Skill",
+          cgpa: "CGPA",
+          internships: "Internships",
+          family_income: "Family Income",
+          college_tier: "College Tier",
+          aptitude_score: "Aptitude Score",
+          logical_reasoning: "Logical Reasoning",
+          coding_contest_rating: "Contest Rating",
+          python_skill: "Python Skill",
+          ml_skill: "ML Skill",
+          web_dev_skill: "Web Dev Skill",
+          "c++_skill": "C++ Skill",
+          java_skill: "Java Skill",
+          teamwork: "Teamwork",
+          leadership: "Leadership",
+          time_management: "Time Management",
+          hackathons: "Hackathons",
+          certifications: "Certifications",
+          projects: "Projects",
+          github_projects: "GitHub Projects",
+          tenth_percentage: "10th Percentage",
+          twelfth_percentage: "12th Percentage",
+          attendance: "Attendance",
+          backlogs: "Backlogs",
+          city_tier: "City Tier",
+          age: "Age",
+          gender: "Gender"
+        };
+
+        const sorted = Object.keys(data.shap_explanation).map(function (key) {
+          return { key: key, raw: Number(data.shap_explanation[key]) };
+        }).filter(function (item) {
+          return Number.isFinite(item.raw);
+        }).sort(function (left, right) {
+          return Math.abs(right.raw) - Math.abs(left.raw);
+        }).slice(0, 10);
+
+        if (!sorted.length) {
+          setVizState(statusEl, canvas, "No valid SHAP values were returned for the representative prediction.", true);
+          return;
+        }
+
+        const labels = sorted.map(function (item) {
+          return renameMap[item.key] || item.key.replace(/_/g, " ").replace(/\b\w/g, function (letter) { return letter.toUpperCase(); });
+        });
+        const values = sorted.map(function (item) { return item.raw; });
+        showVizCanvas(statusEl, canvas);
+        if (featuresChartInstance) featuresChartInstance.destroy();
+
+        const shapLabelPlugin = {
+          id: "shapValueLabels",
+          afterDatasetsDraw: function (chart) {
+            const ctx = chart.ctx;
+            ctx.save();
+            ctx.fillStyle = palette.navy;
+            ctx.font = "600 10px 'IBM Plex Mono', monospace";
+            chart.getDatasetMeta(0).data.forEach(function (bar, index) {
+              const value = values[index];
+              ctx.textAlign = value >= 0 ? "left" : "right";
+              ctx.fillText((value >= 0 ? "+" : "") + value.toFixed(3), bar.x + (value >= 0 ? 8 : -8), bar.y + 3);
+            });
+            ctx.restore();
+          }
+        };
+
+        featuresChartInstance = new Chart(canvas.getContext("2d"), {
+          type: "bar",
+          plugins: [shapLabelPlugin],
+          data: {
+            labels: labels,
+            datasets: [{
+              data: values,
+              backgroundColor: values.map(function (value) {
+                return value >= 0 ? hexToRgba(palette.sage, 0.82) : hexToRgba(palette.coral, 0.82);
+              }),
+              borderRadius: 10,
+              borderSkipped: false,
+              barThickness: 16
+            }]
+          },
+          options: {
+            indexAxis: "y",
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 700, easing: "easeOutQuart" },
+            layout: { padding: { left: 10, right: 28, top: 10, bottom: 10 } },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: hexToRgba(palette.navy, 0.94),
+                padding: 12,
+                callbacks: {
+                  label: function (context) {
+                    const raw = values[context.dataIndex];
+                    return [
+                      "SHAP: " + (raw >= 0 ? "+" : "") + raw.toFixed(4),
+                      raw >= 0 ? "Direction: positive uplift" : "Direction: negative drag"
+                    ];
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                title: { display: true, text: "Signed SHAP Value", color: palette.dim, font: { family: "'IBM Plex Mono', monospace", size: 15 } },
+                grid: {
+                  color: function (context) { return context.tick.value === 0 ? hexToRgba(palette.navy, 0.3) : hexToRgba(palette.navy, 0.08); },
+                  lineWidth: function (context) { return context.tick.value === 0 ? 1.5 : 1; }
+                },
+                ticks: { color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 14 } }
+              },
+              y: {
+                grid: { display: false },
+                ticks: { color: palette.text, font: { family: "'IBM Plex Mono', monospace", size: 14 }, autoSkip: false }
+              }
+            }
+          }
+        });
+      } catch (_) {
+        setVizState(statusEl, canvas, "Feature importance is temporarily unavailable.", true);
+      }
+    }
+  })();
+</script>
+</body>
 </html>
