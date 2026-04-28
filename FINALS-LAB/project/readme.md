@@ -167,7 +167,7 @@ All dependencies are loaded automatically. A CRON job is implemented to call the
         +-- requirements.txt
         +-- start.sh
         +-- data/
-        |   +-- processed/
+        |   +-- processed/  <--- ML
         |   |   +-- feature_metadata.json
         |   |   +-- test.parquet
         |   |   +-- train.parquet
